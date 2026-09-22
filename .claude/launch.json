@@ -1,0 +1,38 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ai-reviews-api",
+      "runtimeExecutable": "C:/Program Files/Python310/python.exe",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "main:app",
+        "--reload",
+        "--port",
+        "8000"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "anime-manager",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "C:/Users/Admin/Desktop/게임기획/포트폴리오/anime-manager/server.py"
+      ],
+      "port": 8765
+    },
+    {
+      "name": "anime-herotest",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8799",
+        "--directory",
+        "C:/Users/Admin/Desktop/게임기획/포트폴리오/anime-manager"
+      ],
+      "port": 8799
+    }
+  ]
+}

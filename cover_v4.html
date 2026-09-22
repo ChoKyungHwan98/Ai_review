@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 분석 툴 표지</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+    <style>
+        /* A4 사이즈 및 인쇄 설정 */
+        @page { size: A4; margin: 0; }
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; 
+            background-color: #e8e5dc; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+        }
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            background-color: #FBF9F2;
+            color: #0B0B0F;
+            position: relative;
+            box-shadow: 0 4px 24px rgba(24,24,27,0.12);
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25mm 16mm 18mm;
+            overflow: hidden;
+        }
+        @media print {
+            body { background-color: #FBF9F2; }
+            .a4-page { box-shadow: none; width: 210mm; height: 297mm; }
+        }
+
+        /* 액센트 라인 */
+        .top-accent {
+            position: absolute; top: 0; left: 0; right: 0; height: 5px;
+            background: linear-gradient(135deg, #0047BB, #800020);
+        }
+        .bottom-accent {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+            background: rgba(24,24,27,0.09);
+        }
+
+        /* 뱃지 */
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 100px;
+            border: 1px solid rgba(0,71,187,0.2);
+            background: rgba(0,71,187,0.06);
+            color: #0047BB;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            margin-bottom: 20px;
+        }
+
+        /* 타이틀 */
+        .main-title {
+            font-size: 52px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.04em;
+            color: #0B0B0F;
+            margin: 0 0 6px;
+        }
+        .sub-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: #3F3F46;
+            letter-spacing: -0.03em;
+            margin: 0 0 20px;
+        }
+        .divider {
+            width: 50px;
+            height: 1px;
+            background: rgba(24,24,27,0.16);
+            margin: 0 auto 14px;
+        }
+        .proto-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #71717a;
+            letter-spacing: 0.12em;
+        }
+
+        /* 스크린샷 컨테이너 */
+        .screenshot-container {
+            position: relative;
+            width: 100%;
+            border: 1px solid rgba(24,24,27,0.09);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #FFFFFF;
+            box-shadow: 0 1px 3px rgba(24,24,27,0.05), 0 8px 24px -8px rgba(0,71,187,0.10);
+        }
+        .window-bar {
+            width: 100%;
+            height: 28px;
+            background: #F4F1E8;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            border-bottom: 1px solid rgba(24,24,27,0.09);
+            gap: 6px;
+        }
+        .window-dot {
+            width: 9px; height: 9px; border-radius: 50%;
+        }
+        .window-dot.red { background: #B12525; }
+        .window-dot.yellow { background: #A56B16; }
+        .window-dot.green { background: #1D7044; }
+        .screenshot-container img {
+            width: 100%;
+            display: block;
+        }
+
+        /* 스탯 카드 */
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            width: 100%;
+        }
+        .stat-card {
+            background: #FFFFFF;
+            border: 1px solid rgba(24,24,27,0.09);
+            border-radius: 10px;
+            padding: 14px 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+        }
+        .stat-card.blue::before { background: #0047BB; }
+        .stat-card.green::before { background: #1D7044; }
+        .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .stat-value.blue { color: #0047BB; }
+        .stat-value.green { color: #1D7044; }
+
+        /* 푸터 */
+        .footer-tech {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #71717a;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        .footer-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #3F3F46;
+            letter-spacing: 0.15em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="a4-page">
+        
+        <!-- 상단/하단 장식선 -->
+        <div class="top-accent"></div>
+        <div class="bottom-accent"></div>
+
+        <!-- 1. 헤더 -->
+        <div style="display:flex;flex-direction:column;align-items:center;margin-top:8mm">
+            <div class="badge">GAME ANALYTICS</div>
+            <h1 class="main-title">팰월드</h1>
+            <h2 class="sub-title">AI 리뷰데이터 분석 툴</h2>
+            <div class="divider"></div>
+            <p class="proto-label">PROTOTYPE · 2026</p>
+        </div>
+
+        <!-- 2. 스크린샷 -->
+        <div style="position:relative;width:100%;flex-grow:1;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:8mm 0">
+            <div class="screenshot-container">
+                <div class="window-bar">
+                    <div class="window-dot red"></div>
+                    <div class="window-dot yellow"></div>
+                    <div class="window-dot green"></div>
+                </div>
+                <!-- 실제 이미지 경로 -->
+                <img src="file:///C:/Users/Admin/Downloads/제목 없음.png" alt="Palworld Steam Screenshot">
+            </div>
+        </div>
+
+        <!-- 3. 스탯 카드 -->
+        <div class="stat-cards" style="margin-bottom:15mm">
+            <div class="stat-card blue">
+                <div class="stat-label">플레이 시간</div>
+                <div class="stat-value blue">149.2시간</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-label">도전 과제 달성</div>
+                <div class="stat-value green">57 / 57 (100%)</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-label">Steam 종합 평가</div>
+                <div class="stat-value green">매우 긍정적</div>
+            </div>
+        </div>
+
+        <!-- 4. 꼬리말 -->
+        <div style="display:flex;flex-direction:column;align-items:center;margin-top:auto">
+            <p class="footer-tech">
+                Steam Storefront API &middot; FastAPI &middot; SQLite &middot; Gemini 2.0 Flash &middot; Chart.js
+            </p>
+            <p class="footer-name">조경환</p>
+        </div>
+
+    </div>
+
+</body>
+</html>

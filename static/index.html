@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 리뷰데이터 분석</title>
+  <script>
+    if (new URLSearchParams(window.location.search).get('embedded') === 'studio') {
+      document.documentElement.classList.add('studio-embedded');
+    }
+  </script>
+  <style>
+    :root {
+      /* Toss Light Theme Tokens */
+      --color-bg-app: #F2F4F6;
+      --color-bg-surface: #FFFFFF;
+      --color-bg-card-img: #1A1C23; /* Dark area for project preview */
+      --color-text-title: #191F28;
+      --color-text-body: #333D4B;
+      --color-text-sub: #8B95A1;
+      --color-primary: #3182F6; /* Toss Blue */
+      --color-primary-hover: #1B64DA;
+      --color-border: #E5E8EB;
+      --color-nav-active: #F2F4F6;
+      --color-nav-hover: #FAFAFA;
+      
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --studio-sidebar-width: 260px;
+      
+      --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
+      
+      --font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html.studio-embedded {
+      height: 100%;
+      overflow: hidden;
+      background: #F2F2F4;
+    }
+    html.studio-embedded body {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    body {
+      font-family: var(--font-family);
+      font-size: 14px;
+      line-height: 1.5;
+      background-color: var(--color-bg-app);
+      color: var(--color-text-body);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--studio-sidebar-width);
+      min-width: var(--studio-sidebar-width);
+      max-width: var(--studio-sidebar-width);
+      flex: 0 0 var(--studio-sidebar-width);
+      background-color: var(--color-bg-surface);
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      z-index: 10;
+    }
+    
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--color-text-title);
+      margin-bottom: 40px;
+      padding: 0 8px;
+      cursor: pointer;
+    }
+    
+    .nav-group {
+      margin-bottom: 24px;
+    }
+    .nav-label {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--color-text-sub);
+      margin-bottom: 8px;
+      padding: 0 8px;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      color: var(--color-text-title);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      text-decoration: none;
+      margin-bottom: 4px;
+      position: relative;
+    }
+    
+    .nav-item:hover { background-color: var(--color-nav-hover); }
+    .nav-item.active {
+      background-color: var(--color-nav-active);
+      color: var(--color-primary);
+      /* font-weight 변경 없음 → 레이아웃 시프트 방지 */
+    }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 16px;
+      background-color: var(--color-primary);
+      border-radius: 2px;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 40px 60px;
+      overflow-y: auto;
+      scrollbar-gutter: stable;  /* 스크롤바 공간 항상 확보 */
+      background: linear-gradient(135deg, #F2F4F6 0%, #E8F3FF 100%);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 32px;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-text-title);
+      margin-bottom: 16px;
+    }
+    
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .search-input {
+      font-family: var(--font-family);
+      background-color: rgba(255, 255, 255, 0.6);
+      border: 1px solid transparent;
+      padding: 12px 40px 12px 16px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      width: 280px;
+      color: var(--color-text-title);
+      outline: none;
+      transition: all 0.2s;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%238B95A1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+      background-repeat: no-repeat;
+      background-position: calc(100% - 12px) center;
+    }
+    .search-input:focus {
+      background-color: #FFFFFF;
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-primary {
+  font-family: inherit;
+      background-color: var(--color-text-title);
+      color: #FFFFFF;
+      border: none;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+    .btn-primary:hover { background-color: #000000; }
+    .btn-primary:active { transform: scale(0.96); }
+
+    /* Project Grid */
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .project-card {
+      background-color: var(--color-bg-surface);
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .project-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+    
+    .card-preview {
+      background-color: var(--color-bg-card-img);
+      border-radius: var(--radius-lg);
+      height: 160px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .card-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.9;
+    }
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text-title);
+      margin-bottom: 6px;
+      padding: 0 4px;
+    }
+    
+    .card-meta {
+      font-size: 13px;
+      color: var(--color-text-sub);
+      padding: 0 4px;
+    }
+
+    /* Bottom Nav */
+    .sidebar-bottom {
+      margin-top: auto;
+      border-top: 1px solid var(--color-border);
+      padding-top: 16px;
+    }
+    
+    .bottom-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      line-height: 1;
+      color: var(--color-text-sub);
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: background-color 0.2s;
+    }
+    .bottom-item:hover { background-color: var(--color-nav-hover); color: var(--color-text-title); }
+
+    .bottom-item { width:100%; border:0; background:transparent; text-align:left; font-family:inherit; }
+    .main { scrollbar-width:thin; scrollbar-color:#c7ccd5 transparent; }
+    .main::-webkit-scrollbar { width:10px; }
+    .main::-webkit-scrollbar-track { background:transparent; margin:10px 3px; }
+    .main::-webkit-scrollbar-thumb { background:#c7ccd5; border:3px solid transparent; background-clip:padding-box; border-radius:999px; }
+    .main::-webkit-scrollbar-thumb:hover { background:#9ca5b3; border:3px solid transparent; background-clip:padding-box; }
+    .studio-modal-backdrop { position:fixed; inset:0; z-index:10; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(20,27,38,.34); }
+    .studio-modal-backdrop.open { display:flex; }
+    .studio-modal { width:min(440px,100%); background:#fff; border:1px solid var(--color-border); border-radius:16px; box-shadow:0 20px 60px rgba(20,27,38,.22); padding:22px; color:var(--color-text-title); }
+    .studio-modal h2 { margin:0 0 8px; font-size:18px; }
+    .studio-modal p { margin:0 0 18px; color:var(--color-text-sub); font-size:13px; line-height:1.55; }
+    .studio-field { display:grid; gap:7px; margin:16px 0; font-size:13px; font-weight:600; }
+    .studio-field input { width:100%; border:1px solid #d8dde5; border-radius:8px; padding:11px 12px; font:inherit; outline:none; }
+    .studio-field input:focus { border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(49,130,246,.12); }
+    .studio-status { min-height:20px; color:var(--color-text-sub); font-size:12px; }
+    .studio-modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+    .studio-modal button { border:0; border-radius:8px; padding:10px 13px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
+    .studio-modal .secondary { background:#f1f3f6; color:#344054; }
+    .studio-modal .primary { background:var(--color-text-title); color:#fff; }
+    .studio-modal .danger { margin-right:auto; background:transparent; color:#d92d20; }
+  </style>
+  <style>
+    /* 프로젝트 홈 — 우클릭 삭제. 이 도구는 폴더를 쓰지 않는다. */
+    .project-card { position: relative; }
+
+    .home-context-menu {
+      position: fixed; z-index: 150; width: 172px; padding: 5px;
+      border: 1px solid #dce1e8; border-radius: 11px; background: rgba(255,255,255,.97);
+      box-shadow: 0 18px 48px rgba(25,31,40,.18); transform-origin: top left;
+    }
+    .home-context-menu button {
+      width: 100%; height: 36px; padding: 0 11px; border: 0; border-radius: 7px;
+      background: transparent; color: #b33b35; font: 500 12px inherit; text-align: left; cursor: pointer;
+    }
+    .home-context-menu button:hover { background: #fff0ef; }
+
+    .home-delete-backdrop {
+      position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 24px;
+      background: rgba(24,33,48,.28); backdrop-filter: blur(8px);
+    }
+    .home-delete-dialog { width: min(430px, 100%); padding: 25px; border-radius: 18px; background: #fff; box-shadow: 0 26px 80px rgba(22,28,38,.24); }
+    .home-delete-dialog h2 { margin: 0; color: #191f28; font-size: 18px; }
+    .home-delete-dialog p { margin: 13px 0 0; color: #6b7684; font-size: 13px; line-height: 1.6; }
+    .home-delete-status { min-height: 18px; margin: 10px 0 14px; color: #b33b35; font-size: 12px; }
+    .home-delete-dialog footer { display: flex; justify-content: flex-end; gap: 8px; }
+    .home-delete-dialog footer button { height: 36px; padding: 0 15px; border: 1px solid #d8dde4; border-radius: 9px; background: #fff; color: #4d5868; font: 500 12px inherit; cursor: pointer; }
+    .home-delete-dialog footer .is-danger { border-color: #b43d37; background: #b43d37; color: #fff; }
+    .home-delete-dialog footer button[disabled] { opacity: .6; cursor: default; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      AI 리뷰데이터 분석
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">프로젝트 관리</div>
+      <a href="#" class="nav-item active">전체 프로젝트</a>
+    </div>
+
+    <div class="sidebar-bottom">
+      <button type="button" class="bottom-item" onclick="openApiKeyModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+        API Key 관리
+      </button>
+      <button type="button" class="bottom-item" onclick="openSystemSettings()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><circle cx="12" cy="12" r="4"></circle></svg>
+        시스템 설정
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="header">
+      <div>
+        <h1>전체 프로젝트</h1>
+      </div>
+      <div class="header-controls">
+        <input type="text" class="search-input" placeholder="프로젝트 검색" id="searchInput">
+        <!-- Dashboard 페이지로 이동하면서 새로운 분석 모달을 열도록 파라미터 전달 -->
+        <button class="btn-primary" onclick="openNewAnalysisFromHome()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          새로 분석하기
+        </button>
+      </div>
+    </div>
+
+    <div class="project-grid" id="projectGrid">
+      <!-- JS로 동적 생성됨 -->
+    </div>
+  </main>
+
+  <script>
+    function dashboardUrlFromHome(parameters) {
+      const query = new URLSearchParams(window.location.search);
+      Object.entries(parameters).forEach(([key, value]) => query.set(key, String(value)));
+      return `/dashboard?${query.toString()}`;
+    }
+
+    function openNewAnalysisFromHome() {
+      window.location.href = dashboardUrlFromHome({ new: 'true' });
+    }
+
+    /* ── 프로젝트 홈 ──────────────────────────────────────────────
+       이 도구는 폴더를 쓰지 않는다. 목록과 삭제만 다룬다.
+       우클릭 메뉴·삭제 확인·휴지통 규칙은
+       게임기획 스튜디오/SHARED_PRODUCT_UI_GUIDELINE.md를 따른다. */
+    let homeGames = [];
+    let homeQuery = '';
+    let homeMenuId = null;
+    let homeMenuAt = { x: 0, y: 0 };
+    let homeDeletingId = null;
+
+    const homeGameOf = (id) => homeGames.find((game) => String(game.app_id) === String(id));
+
+    function homeCard(game) {
+      const card = document.createElement('a');
+      card.className = 'project-card';
+      card.href = dashboardUrlFromHome({ app_id: game.app_id });
+      card.draggable = false;
+
+      const preview = document.createElement('div');
+      preview.className = 'card-preview';
+      if (game.header_image) {
+        const image = document.createElement('img');
+        image.src = game.header_image;
+        image.alt = '';
+        image.onerror = function () { this.style.display = 'none'; };
+        preview.appendChild(image);
+      }
+      const title = document.createElement('div');
+      title.className = 'card-title';
+      title.textContent = game.name;
+      const meta = document.createElement('div');
+      meta.className = 'card-meta';
+      meta.textContent = 'App ID: ' + game.app_id;
+      card.appendChild(preview);
+      card.appendChild(title);
+      card.appendChild(meta);
+
+      // WebView2는 기본 컨텍스트 메뉴를 끄기 때문에 두 경로 모두에서 연다.
+      card.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        openHomeMenu(String(game.app_id), event.clientX, event.clientY);
+      });
+      card.addEventListener('pointerdown', (event) => {
+        if (event.button !== 2) return;
+        event.preventDefault();
+        event.stopPropagation();
+        openHomeMenu(String(game.app_id), event.clientX, event.clientY);
+      });
+      return card;
+    }
+
+    function renderHome() {
+      const grid = document.getElementById('projectGrid');
+      grid.innerHTML = '';
+      const visible = homeGames.filter((game) => !homeQuery || String(game.name).toLowerCase().includes(homeQuery));
+      if (visible.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'color:var(--color-text-sub); padding:20px;';
+        empty.textContent = homeQuery ? '검색 결과가 없습니다.' : '진행 중인 프로젝트가 없습니다.';
+        grid.appendChild(empty);
+      } else {
+        visible.forEach((game) => grid.appendChild(homeCard(game)));
+      }
+      renderHomeMenu();
+      renderHomeDeleteDialog();
+    }
+
+    /* ── 우클릭 메뉴 ────────────────────────────────────────────── */
+
+    function openHomeMenu(id, x, y) {
+      homeMenuId = id;
+      homeMenuAt = { x, y };
+      renderHomeMenu();
+    }
+
+    function closeHomeMenu() {
+      if (homeMenuId === null) return;
+      homeMenuId = null;
+      renderHomeMenu();
+    }
+
+    function renderHomeMenu() {
+      const existing = document.getElementById('homeContextMenu');
+      if (existing) existing.remove();
+      if (homeMenuId === null) return;
+
+      const menu = document.createElement('div');
+      menu.id = 'homeContextMenu';
+      menu.className = 'home-context-menu';
+      menu.style.left = homeMenuAt.x + 'px';
+      menu.style.top = homeMenuAt.y + 'px';
+      menu.addEventListener('pointerdown', (event) => event.stopPropagation());
+
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = '프로젝트 삭제';
+      remove.addEventListener('click', () => {
+        homeDeletingId = homeMenuId;
+        homeMenuId = null;
+        renderHomeMenu();
+        renderHomeDeleteDialog();
+      });
+      menu.appendChild(remove);
+      document.body.appendChild(menu);
+
+      // 메뉴를 연 그 이벤트가 곧바로 닫지 않도록 다음 차례에 등록한다.
+      window.setTimeout(() => {
+        if (homeMenuId === null) return;
+        window.addEventListener('pointerdown', closeHomeMenu, { once: true });
+      }, 0);
+    }
+
+    /* ── 삭제 ───────────────────────────────────────────────────── */
+
+    function renderHomeDeleteDialog() {
+      const existing = document.getElementById('homeDeleteBackdrop');
+      if (existing) existing.remove();
+      if (homeDeletingId === null) return;
+      const game = homeGameOf(homeDeletingId);
+
+      const backdrop = document.createElement('div');
+      backdrop.id = 'homeDeleteBackdrop';
+      backdrop.className = 'home-delete-backdrop';
+      const dialog = document.createElement('section');
+      dialog.className = 'home-delete-dialog';
+      dialog.setAttribute('role', 'alertdialog');
+      dialog.setAttribute('aria-modal', 'true');
+
+      const heading = document.createElement('h2');
+      heading.textContent = '‘' + (game ? game.name : homeDeletingId) + '’ 프로젝트를 삭제할까요?';
+      const note = document.createElement('p');
+      note.textContent = '프로젝트 폴더는 AI 리뷰데이터 분석 휴지통으로 옮겨지므로 직접 복구할 수 있습니다.';
+      const status = document.createElement('div');
+      status.className = 'home-delete-status';
+
+      const footer = document.createElement('footer');
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.textContent = '취소';
+      cancel.addEventListener('click', () => { homeDeletingId = null; renderHomeDeleteDialog(); });
+      const confirm = document.createElement('button');
+      confirm.type = 'button';
+      confirm.className = 'is-danger';
+      confirm.textContent = '삭제';
+      confirm.addEventListener('click', async () => {
+        confirm.disabled = true;
+        status.textContent = '삭제하는 중입니다...';
+        const id = homeDeletingId;
+        let response;
+        // 서버가 꺼져 있으면 여기서 예외가 난다. 감싸지 않으면 삭제가 아무 표시 없이 사라진다.
+        try { response = await fetch('/api/games/' + encodeURIComponent(id), { method: 'DELETE' }); }
+        catch (e) { status.textContent = '분석 서버에 연결하지 못해 삭제하지 못했습니다.'; confirm.disabled = false; return; }
+        if (!response.ok) {
+          const value = await response.json().catch(() => ({}));
+          status.textContent = value.detail || '프로젝트를 삭제하지 못했습니다.';
+          confirm.disabled = false;
+          return;
+        }
+        homeGames = homeGames.filter((game) => String(game.app_id) !== String(id));
+        homeDeletingId = null;
+        renderHome();
+      });
+      footer.appendChild(cancel);
+      footer.appendChild(confirm);
+
+      dialog.appendChild(heading);
+      dialog.appendChild(note);
+      dialog.appendChild(status);
+      dialog.appendChild(footer);
+      backdrop.appendChild(dialog);
+      document.body.appendChild(backdrop);
+    }
+
+    /* ── 마우스 사이드 버튼 ─────────────────────────────────────── */
+
+    // 뒤로는 열려 있는 겹침 화면을 먼저 닫는다. 닫을 것이 없으면 브라우저 기본 이동에 맡긴다.
+    window.addEventListener('mouseup', (event) => {
+      if (event.button !== 3) return;
+      if (homeMenuId !== null) { event.preventDefault(); closeHomeMenu(); return; }
+      if (homeDeletingId !== null) { event.preventDefault(); homeDeletingId = null; renderHomeDeleteDialog(); }
+    });
+
+    /* ── 불러오기 ───────────────────────────────────────────────── */
+
+    async function loadGames() {
+      const grid = document.getElementById('projectGrid');
+      grid.innerHTML = '<div style="color:var(--color-text-sub); padding:20px;">프로젝트를 불러오는 중입니다...</div>';
+      try {
+        const response = await fetch('/api/games');
+        if (!response.ok) throw new Error('목록을 불러오지 못했습니다.');
+        const data = await response.json();
+        homeGames = data.games || [];
+        renderHome();
+      } catch (e) {
+        grid.innerHTML = '<div style="color:red; padding:20px;">데이터를 불러오지 못했습니다.</div>';
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function (event) {
+      homeQuery = event.target.value.toLowerCase();
+      renderHome();
+    });
+
+    document.addEventListener('DOMContentLoaded', loadGames);
+    const STUDIO_TOOL_CHANNEL = 'gds:tool';
+    const STUDIO_EMBEDDED = new URLSearchParams(window.location.search).get('embedded') === 'studio';
+    function studioRequest(type, extra = {}) {
+      if (!STUDIO_EMBEDDED || window.parent === window) {
+        setStudioStatus('게임기획 스튜디오에서만 안전한 키 관리가 가능합니다.');
+        return false;
+      }
+      const requestId = `review-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      window.parent.postMessage({ channel: STUDIO_TOOL_CHANNEL, type, requestId, monthlyLimit: 10, ...extra }, '*');
+      return true;
+    }
+    function setStudioStatus(message) { document.getElementById('apiKeyStatus').textContent = message; }
+    function closeStudioModal(id) { document.getElementById(id).classList.remove('open'); }
+    function closeStudioModalOnBackdrop(event, id) {
+      if (event.target === event.currentTarget) closeStudioModal(id);
+    }
+    function openApiKeyModal() {
+      document.getElementById('apiKeyModal').classList.add('open');
+      setStudioStatus(STUDIO_EMBEDDED ? '저장 상태를 확인하는 중입니다.' : '게임기획 스튜디오에서 안전하게 관리됩니다.');
+      if (STUDIO_EMBEDDED) studioRequest('ai:keyStatus');
+    }
+    function saveApiKey() {
+      const input = document.getElementById('apiKeyInput');
+      const key = input.value.trim();
+      if (!key) return setStudioStatus('키를 입력해 주세요.');
+      if (studioRequest('ai:keySave', { key })) { input.value = ''; setStudioStatus('안전하게 저장하는 중입니다.'); }
+    }
+    function openSystemSettings() { document.getElementById('systemSettingsModal').classList.add('open'); }
+    window.addEventListener('message', (event) => {
+      if (!STUDIO_EMBEDDED || event.source !== window.parent) return;
+      const message = event.data || {};
+      if (message.channel !== STUDIO_TOOL_CHANNEL) return;
+      if (message.type === 'ai:keyStatus') setStudioStatus(message.configured ? 'Windows 자격 증명 관리자에 저장됨' : '저장된 키가 없습니다.');
+      if (message.type === 'ai:error') setStudioStatus(message.message || '키 관리 중 오류가 발생했습니다.');
+    });
+  </script>
+  <div class="studio-modal-backdrop" id="apiKeyModal" role="dialog" aria-modal="true" aria-labelledby="apiKeyTitle" onclick="closeStudioModalOnBackdrop(event, 'apiKeyModal')">
+    <div class="studio-modal"><h2 id="apiKeyTitle">API Key 관리</h2><p>한 번 연결하면 프로그램을 다시 열어도 계속 사용합니다. 키는 브라우저나 프로젝트 파일에 저장하지 않습니다.</p><label class="studio-field">OpenRouter API Key<input id="apiKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="sk-or-…"></label><div class="studio-status" id="apiKeyStatus"></div><div class="studio-modal-actions"><button type="button" class="secondary" onclick="closeStudioModal('apiKeyModal')">닫기</button><button type="button" class="primary" onclick="saveApiKey()">연결</button></div></div>
+  </div>
+  <div class="studio-modal-backdrop" id="systemSettingsModal" role="dialog" aria-modal="true" aria-labelledby="systemSettingsTitle" onclick="closeStudioModalOnBackdrop(event, 'systemSettingsModal')">
+    <div class="studio-modal"><h2 id="systemSettingsTitle">시스템 설정</h2><p>현재 분석 화면은 게임기획 스튜디오의 밝은 화면 밀도와 스크롤 규칙을 따릅니다.</p><div class="studio-modal-actions"><button type="button" class="primary" onclick="closeStudioModal('systemSettingsModal')">확인</button></div></div>
+  </div>
+</body>
+</html>
