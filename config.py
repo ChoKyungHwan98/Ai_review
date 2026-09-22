@@ -45,7 +45,7 @@ class Config:
     BUDGET_USD: float = float(os.getenv("BUDGET_USD", "5.0"))  # 기본 예산 $5
 
     # ── 표본 설계 ───────────────────────────────────────────
-    TARGET_ERROR_PCT: int = int(os.getenv("TARGET_ERROR_PCT", "5"))
+    TARGET_ERROR_PCT: float = float(os.getenv("TARGET_ERROR_PCT", "5"))
     MIN_NEG_REVIEWS: int = int(os.getenv("MIN_NEG_REVIEWS", "100"))
     Z_95: float = 1.96
     MIN_REVIEW_LEN: int = int(os.getenv("MIN_REVIEW_LEN", "8"))

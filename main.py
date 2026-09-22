@@ -1263,7 +1263,7 @@ class PipelineRunRequest(BaseModel):
     app_id: int
     lang: str = "koreana"
     budget: float = 10.0
-    target_error_pct: Optional[int] = None
+    target_error_pct: Optional[float] = None  # 슬라이더가 2.5 같은 소수 오차를 보낸다
     custom_sample_size: Optional[int] = None
     incremental: bool = False
 
