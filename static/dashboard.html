@@ -1451,6 +1451,12 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
     .precision-label { font-size: 14px; font-weight: 600; color: var(--color-text-title); }
     .precision-badge { font-size: 13px; color: var(--color-text-sub); }
     .precision-badge b { font-size: 17px; color: var(--color-primary); font-weight: 700; }
+    .precision-sub {
+      margin: -8px 0 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--color-text-sub);
+    }
 
     .precision-curve-wrap { margin-bottom: 4px; }
     .precision-curve { display: block; width: 100%; height: 72px; overflow: visible; }
@@ -2394,8 +2400,9 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
         <div class="precision" id="precisionBlock">
           <div class="precision-top">
             <span class="precision-label">분석 정밀도</span>
-            <span class="precision-badge"><b id="precMargin">±5%</b> 오차 · 95% 신뢰수준</span>
+            <span class="precision-badge"><b id="precMargin">±5%</b></span>
           </div>
+          <p class="precision-sub">리뷰를 몇 건 읽을지 정합니다. 전부 읽지 않아도 전체 여론을 알 수 있습니다.</p>
 
           <div class="precision-curve-wrap">
             <svg id="precCurve" class="precision-curve" viewBox="0 0 320 72" preserveAspectRatio="none" aria-hidden="true">
@@ -2404,25 +2411,25 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
               <line id="precCurveMark" class="precision-curve-mark" x1="0" y1="0" x2="0" y2="72" />
               <circle id="precCurveDot" class="precision-curve-dot" cx="0" cy="0" r="4" />
             </svg>
-            <div class="precision-curve-caption">오른쪽으로 갈수록 필요한 리뷰가 가파르게 늘어납니다</div>
+            <div class="precision-curve-caption">오른쪽으로 갈수록 읽어야 할 리뷰가 빠르게 늘어납니다</div>
           </div>
 
           <input type="range" id="precSlider" class="precision-slider" min="0" max="10" step="1" value="4"
                  oninput="updatePrecision()" aria-label="분석 정밀도" />
 
           <div class="precision-ends">
-            <span>싸게 · 거칠게</span>
-            <span>비싸게 · 정밀하게</span>
+            <span>대략적인 흐름만</span>
+            <span>세밀한 차이까지</span>
           </div>
 
           <div class="precision-readout">
             <div class="precision-cell">
               <b id="precCount">—</b>
-              <small>수집할 리뷰</small>
+              <small>읽을 리뷰</small>
             </div>
             <div class="precision-cell">
               <b id="precShare">—</b>
-              <small>한국어 리뷰 중</small>
+              <small id="precShareLabel">전체 중</small>
             </div>
             <div class="precision-cell">
               <b id="precCost">—</b>
@@ -4200,32 +4207,38 @@ function updatePrecision() {
   shareEl.textContent = (share < 0.1 ? share.toFixed(2) : share.toFixed(1)) + '%';
   costEl.textContent = '$' + (n * precisionCostPerReview()).toFixed(2);
 
+  document.getElementById('precShareLabel').textContent = '전체 ' + plan.total.toLocaleString() + '건 중';
+
   if (usingCustom) {
     noteEl.className = 'precision-note';
-    noteEl.innerHTML = '직접 지정한 <b>' + n.toLocaleString() + '건</b>으로 수집합니다. 한국어 리뷰 <b>' + plan.total.toLocaleString() + '건</b> 중 일부입니다.';
+    noteEl.innerHTML = '직접 정한 <b>' + n.toLocaleString() + '건</b>을 읽습니다.';
     return;
   }
 
   const next = index < PRECISION_STOPS.length - 1 ? precisionPlan(PRECISION_STOPS[index + 1]) : null;
-  let note = '';
+  noteEl.className = 'precision-note';
+
+  // 먼저 ±X%가 무슨 뜻인지 예시로 말한다. 용어만 던지면 아무도 모른다.
+  const digits = margin % 1 === 0 ? 0 : 1;
+  const low = Math.max(0, 93 - margin).toFixed(digits);
+  const high = Math.min(100, 93 + margin).toFixed(digits);
+  let note = '<b>±' + margin + '%</b>는 결과가 실제와 ' + margin + '%포인트 안에서 맞다는 뜻입니다.'
+    + ' 추천률이 93%로 나오면 실제는 ' + low + '~' + high + '% 사이입니다.';
+
   if (plan.minNegDriven) {
-    noteEl.className = 'precision-note is-warn';
-    note = '통계상 <b>' + plan.cochran.toLocaleString() + '건</b>이면 충분하지만, 비추천 리뷰를 최소 100건 확보하려고 <b>' + plan.actual.toLocaleString() + '건</b>으로 늘렸습니다.';
-  } else {
-    noteEl.className = 'precision-note';
-    note = '한국어 리뷰 <b>' + plan.total.toLocaleString() + '건</b> 중 <b>' + n.toLocaleString() + '건</b>만 봐도 ±' + margin + '% 안에서 맞습니다.';
+    note += '<br>통계만 보면 <b>' + plan.cochran.toLocaleString() + '건</b>으로 충분하지만,'
+      + ' 불만 리뷰를 최소 100건은 봐야 해서 <b>' + plan.actual.toLocaleString() + '건</b>을 읽습니다.';
   }
   if (next && next.actual > plan.actual) {
     const times = next.actual / plan.actual;
-    const step = '한 칸 더 정밀하게(±' + PRECISION_STOPS[index + 1] + '%) 가면 ';
     note += times >= 1.1
-      ? ' ' + step + '<b>' + times.toFixed(1) + '배</b>인 ' + next.actual.toLocaleString() + '건이 필요합니다.'
-      : ' ' + step + next.actual.toLocaleString() + '건으로 거의 같습니다.';
+      ? '<br>한 칸 더 정확하게(±' + PRECISION_STOPS[index + 1] + '%) 가려면 <b>' + times.toFixed(1) + '배</b>인 ' + next.actual.toLocaleString() + '건을 읽어야 합니다.'
+      : '<br>한 칸 더 정확하게(±' + PRECISION_STOPS[index + 1] + '%) 가도 ' + next.actual.toLocaleString() + '건으로 거의 같습니다.';
   }
   const best = precisionBestIndex();
   if (best > index) {
-    note += ' <b>같은 비용으로 ±' + PRECISION_STOPS[best] + '%까지 정밀하게 갈 수 있습니다.</b>'
-      + ' <button type="button" class="precision-snap" onclick="snapToPrecisionSweetSpot()">가성비 지점으로</button>';
+    note += '<br><b>돈을 더 쓰지 않고 ±' + PRECISION_STOPS[best] + '%까지 갈 수 있습니다.</b>'
+      + ' <button type="button" class="precision-snap" onclick="snapToPrecisionSweetSpot()">여기로 맞추기</button>';
   }
   noteEl.innerHTML = note;
 }
