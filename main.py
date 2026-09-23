@@ -413,6 +413,26 @@ def download_analysis_csv(app_id: int = None):
     filename = f"analysis_{app_id or 'all'}.csv"
     return FileResponse(csv_path, media_type="text/csv", filename=filename)
 
+@app.get("/dashboard/data/v5", summary="기획자용 결론 데이터", include_in_schema=False)
+def dashboard_data_v5(app_id: int = None):
+    """요약 · 영향도 · 재미 종류 · 플레이 시간 · 할 일. 분석 전이면 404."""
+    games = _load_games()
+    if app_id is None:
+        app_id = games[0]["app_id"] if games else 1623730
+    game_info = next((g for g in games if g["app_id"] == app_id), None)
+    path = _game_file(app_id, "insights_v5.json")
+    if not path or not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="insights_v5.json 없음 — 분석을 먼저 실행하세요")
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["game"] = {
+        "app_id": app_id,
+        "name": (game_info.get("name_kr") or game_info.get("name")) if game_info else f"App {app_id}",
+        "header_image": (game_info or {}).get("header_image", ""),
+    }
+    return data
+
+
 @app.get("/dashboard/data/v4", summary="가중치 보정 대시보드 데이터", include_in_schema=False)
 def dashboard_data_v4(app_id: int = None):
     """v4 가중치 보정 + 편향 점검 + 시계열 통합 JSON — 대시보드용 전처리 포함."""

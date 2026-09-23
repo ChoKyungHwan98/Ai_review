@@ -192,7 +192,8 @@ def step_analyze(result: PipelineResult):
         raise FileNotFoundError("reviews.csv가 없습니다. 먼저 수집을 실행하세요.")
 
     try:
-        from analyze_reviews_v2 import main as analyze_main
+        # v3: 게임별 주제 + 재미 종류 + 불만 심층. analysis_v2.csv도 함께 써서 기존 화면을 유지한다.
+        from analyze_reviews_v3 import main as analyze_main
         analyze_main()
         result.record("analyze", "done")
     except Exception as e:
@@ -256,13 +257,21 @@ def step_insights(result: PipelineResult):
     print("=" * 60)
 
     try:
-        from build_insights_v4 import main as insights_main
-        insights_main()
-        result.record("insights", "done")
+        from build_insights_v5 import main as insights_v5
+        insights_v5()
     except Exception as e:
         print(f"  ❌ 인사이트 생성 실패: {e}")
         result.record("insights", "failed", {"error": str(e)})
         raise
+
+    # v4는 리뷰 탐색·표본 설계 같은 다른 화면이 쓴다. 실패해도 대시보드는 v5로 뜬다.
+    try:
+        from build_insights_v4 import main as insights_v4
+        insights_v4()
+        result.record("insights", "done")
+    except Exception as e:
+        print(f"  ⚠️ 보조 인사이트(v4) 생성 실패: {e}")
+        result.record("insights", "done", {"warning": f"v4: {str(e)[:120]}"})
 
 
 def run_pipeline(app_id: int = None, lang: str = None, budget: float = None, target_error_pct: float = None, custom_sample_size: int = None, incremental: bool = False, model: str = None) -> dict:

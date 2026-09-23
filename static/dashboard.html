@@ -1604,6 +1604,75 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       background: var(--color-primary); transition: width .4s ease-out;
     }
     .run-analyze-text { margin-top: 4px; font-size: 12px; color: var(--color-text-sub); font-variant-numeric: tabular-nums; }
+
+/* ============ 요약 화면 (v5) ============ */
+body:not(.no-analysis) #ovEmpty { display: none; }
+body.no-analysis #ovBody { display: none; }
+.ov-coverage { font-variant-numeric: tabular-nums; }
+.ov-summary { display: flex; gap: 24px; align-items: center; background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 20px 22px; margin-bottom: 12px; }
+.ov-summary p { margin: 0; font-size: 15px; line-height: 1.7; color: var(--color-text-body); }
+.ov-rate { display: flex; flex-direction: column; align-items: flex-start; flex-shrink: 0; padding-right: 24px; border-right: 1px solid var(--color-border); }
+.ov-rate b { font-size: 32px; line-height: 1.1; color: var(--color-success-green); font-variant-numeric: tabular-nums; }
+.ov-rate span { font-size: 12px; color: var(--color-text-sub); margin-top: 4px; }
+.ov-tools { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 16px; flex-wrap: wrap; }
+.ov-btn { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-bg-surface); color: var(--color-text-title); font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; font-family: inherit; }
+.ov-btn:hover { background: var(--color-nav-hover); }
+.ov-btn.primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.ov-btn.primary:hover { background: var(--color-primary-hover); }
+.ov-card { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 20px 22px; margin-bottom: 12px; }
+.ov-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.ov-card-head h2 { margin: 0; font-size: 16px; font-weight: 700; color: var(--color-text-title); }
+.ov-card-head span { font-size: 12px; color: var(--color-text-sub); }
+.ov-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ov-grid2 > .ov-card { margin-bottom: 12px; }
+.ov-impact { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.ov-impact h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; }
+.ov-impact h3.up { color: var(--color-success-green); }
+.ov-impact h3.down { color: var(--color-error-red); }
+.ov-impact h3 small { font-weight: 400; font-size: 12px; color: var(--color-text-sub); margin-left: 4px; }
+.ov-imp-list, .ov-bars, .ov-actions { list-style: none; margin: 0; padding: 0; }
+.ov-imp-list > li { padding: 10px 0; border-top: 1px solid var(--color-border); }
+.ov-imp-list > li:first-child { border-top: 0; padding-top: 0; }
+.ov-imp-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; color: var(--color-text-title); }
+.ov-imp-row span, .ov-act-head .neg { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ov-card .pos { color: var(--color-success-green); }
+.ov-card .neg { color: var(--color-error-red); }
+.ov-imp-sub { font-size: 12px; color: var(--color-text-sub); margin-top: 4px; }
+.ov-meter { height: 6px; background: var(--color-nav-active); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+.ov-meter i { display: block; height: 100%; border-radius: 3px; }
+.ov-meter i.pos { background: var(--color-success-green); }
+.ov-meter i.neg { background: var(--color-error-red); }
+.ov-meter i.acc { background: var(--color-primary); }
+.ov-quote { margin: 8px 0 0; padding: 6px 10px; border-left: 2px solid var(--color-border); font-size: 12.5px; line-height: 1.6; color: var(--color-text-body); background: var(--color-ghost-fill); border-radius: 0 6px 6px 0; }
+.ov-bars > li { display: grid; grid-template-columns: 1fr 48px; column-gap: 10px; align-items: center; padding: 8px 0; }
+.ov-bars .ov-bar-label { grid-column: 1 / -1; display: flex; gap: 8px; align-items: baseline; font-size: 14px; color: var(--color-text-title); }
+.ov-bars .ov-bar-label span { font-size: 12px; color: var(--color-text-sub); }
+.ov-bars .ov-bar-label em { font-style: normal; color: var(--color-warn-amber); }
+.ov-bars .ov-meter { margin-top: 4px; }
+.ov-bars .ov-bar-val { font-size: 13px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; color: var(--color-text-title); }
+.ov-bars .ov-imp-sub { grid-column: 1 / -1; }
+.ov-bars > li.small .ov-meter i { opacity: .45; }
+.ov-actions > li { padding: 14px 0; border-top: 1px solid var(--color-border); }
+.ov-actions > li:first-child { border-top: 0; padding-top: 0; }
+.ov-act-head { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--color-text-title); }
+.ov-act-head .neg { margin-left: auto; }
+.ov-rank { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: rgba(240,68,82,.08); color: var(--color-error-red); }
+.ov-actions dl { display: grid; grid-template-columns: 88px 1fr; gap: 4px 10px; margin: 10px 0 0; font-size: 13.5px; line-height: 1.6; }
+.ov-actions dt { color: var(--color-text-sub); }
+.ov-actions dd { margin: 0; color: var(--color-text-body); }
+.ov-actions small, .ov-trust small { color: var(--color-text-sub); font-size: 11.5px; }
+.ov-none { font-size: 13px; color: var(--color-text-sub); padding: 4px 0; }
+.ov-timeline { font-size: 13px; color: var(--color-text-sub); margin: 4px 2px 12px; }
+.ov-trust { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--color-text-sub); padding: 12px 2px; border-top: 1px solid var(--color-border); }
+.ov-trust b { color: var(--color-text-body); font-weight: 600; }
+@media (max-width: 760px) {
+  .ov-summary { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .ov-rate { border-right: 0; padding-right: 0; }
+  .ov-grid2, .ov-impact { grid-template-columns: 1fr; }
+  .ov-impact { gap: 20px; }
+  .ov-tools { justify-content: stretch; }
+  .ov-tools > * { flex: 1; justify-content: center; }
+}
 </style>
 </head>
 <body>
@@ -1660,7 +1729,7 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
         </div>
 
         <div class="topbar-right">
-          <span><span class="dot"></span><span id="serverStatus">server live</span></span>
+          <span><span class="dot"></span><span id="serverStatus">연결됨</span></span>
           <span class="mono" id="lastUpdate">—</span>
         </div>
       </div>
@@ -1682,195 +1751,62 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
     <!-- ================================================================ -->
     <section class="page active" data-page="overview">
       <h1 class="title">분석 요약</h1>
-      <p class="subtitle">한국 Steam 유저 리뷰를 분석해 실제 시장 반응을 추정한 결과입니다</p>
+      <p class="subtitle ov-coverage" id="ovCoverage"></p>
 
-      <!-- Executive Summary -->
-      <div class="hero">
+      <!-- 분석 전·옛 방식일 때만 보이는 안내 -->
+      <div class="hero ov-empty" id="ovEmpty">
         <div style="flex:1">
-          <h2 class="hero-title" id="execTitle">분석 결과 로딩 중…</h2>
-          <p class="hero-body" id="execSummary">—</p>
+          <h2 class="hero-title" id="execTitle">분석 결과를 불러오는 중입니다</h2>
+          <p class="hero-body" id="execSummary"></p>
         </div>
       </div>
 
-      <!-- 핵심 지표 -->
-      <div class="result-strip">
-        <div class="result-strip-item">
-          <div class="result-strip-label">분석 리뷰</div>
-          <div class="result-strip-value" id="strip-total">—</div>
-          <div class="result-strip-sub">유효 리뷰 기준</div>
-        </div>
-        <div class="result-strip-item">
-          <div class="result-strip-label">실제 추천률</div>
-          <div class="result-strip-value" style="color:var(--color-success-green)" id="strip-pos">—</div>
-          <div class="result-strip-sub" id="strip-pos-sub">Steam 공식 대비</div>
-        </div>
-        <div class="result-strip-item">
-          <div class="result-strip-label">긍정 감정</div>
-          <div class="result-strip-value" style="font-size:15px;line-height:1.4" id="strip-emotion">—</div>
-          <div class="result-strip-sub">상위 반응 유형</div>
-        </div>
-        <div class="result-strip-item">
-          <div class="result-strip-label">개선 필요 영역</div>
-          <div class="result-strip-value" style="font-size:14px;line-height:1.4;color:var(--color-error-red)" id="strip-neg-kw">—</div>
-          <div class="result-strip-sub">부정 언급 1위</div>
-        </div>
-      </div>
+      <div id="ovBody">
+        <!-- ① 한 문단 요약 -->
+        <div class="ov-summary" id="ovSummary"></div>
 
-      <!-- Action Bar -->
-      <div class="card" style="margin-bottom:16px; border:1px solid var(--color-steel-border)">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px">
-          <div style="font-size:var(--text-body-sm); color:var(--color-silver-whisper)">데이터를 추가로 수집하거나, 결과를 내보낼 수 있습니다</div>
-          <div style="display:flex; gap:8px; align-items:center">
-            <button onclick="startNewAnalysis(currentAppId, null, null, true)" class="search-result-action" style="background:transparent; border:1px solid var(--color-steel-border); color:var(--color-white-canvas); cursor:pointer">
-              추가 수집
-            </button>
-            <a id="btnQuickReviews" href="" download class="search-result-action" style="background:var(--color-ghost-fill); border:1px solid var(--color-steel-border); text-decoration:none; display:inline-flex; align-items:center; gap:6px; color:var(--color-white-canvas)">
-              리뷰 원문
-            </a>
-            <a id="btnQuickAnalysis" href="" download class="search-result-action" style="background:var(--color-electric-blue); color:#080809; border:none; text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-weight:var(--font-weight-medium)">
-              분석 결과 CSV
-            </a>
+        <div class="ov-tools">
+          <button type="button" class="ov-btn" onclick="startNewAnalysis(currentAppId, null, null, true)">추가 수집</button>
+          <a id="btnQuickReviews" href="" download class="ov-btn">리뷰 원문</a>
+          <a id="btnQuickAnalysis" href="" download class="ov-btn primary">분석 결과 내려받기</a>
+        </div>
+
+        <!-- ② 추천률을 움직인 것 -->
+        <div class="ov-card">
+          <div class="ov-card-head">
+            <h2>유저가 좋아한 것 · 추천률을 깎은 것</h2>
+          </div>
+          <div class="ov-impact">
+            <div><h3 class="up">좋아한 것 <small>칭찬 많은 순</small></h3><ul class="ov-imp-list" id="ovLifts"></ul></div>
+            <div><h3 class="down">깎은 것 <small>이 불만이 없었다면 추천률이 이만큼 높았음</small></h3><ul class="ov-imp-list" id="ovDrags"></ul></div>
           </div>
         </div>
-      </div>
 
-      <!-- 추천률 비교 -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title" id="compareCardTitle">추천률 개요</div>
-        <div class="compare3" id="compareGrid">
-          <div class="compare-col">
-            <h4>Steam 전체</h4>
-            <div class="role">한국 유저 리뷰 전체 기준</div>
-            <div class="grid grid-2" style="margin-bottom:10px">
-              <div><div class="tiny">총 리뷰</div><div class="mono" style="font-size:18px"><span id="popTotal">—</span>건</div></div>
-              <div><div class="tiny">종합 평가</div><div style="font-size:12px;color:var(--color-success-green)" id="popScore">—</div></div>
-            </div>
-            <div class="tiny">추천률</div>
-            <div class="bar bar-pair">
-              <div id="popBarPos" style="background:var(--color-success-green);color:#ffffff;width:0%">—</div>
-              <div id="popBarNeg" style="background:var(--color-error-red);color:#fff;width:0%">—</div>
-            </div>
-            <div class="tiny muted" style="margin-top:6px">비교 기준</div>
+        <!-- ③ 무엇이 재밌었나 · 누가 불만인가 -->
+        <div class="ov-grid2">
+          <div class="ov-card">
+            <div class="ov-card-head"><h2>추천한 유저가 느낀 재미</h2></div>
+            <ul class="ov-bars" id="ovFun"></ul>
           </div>
-          <div class="compare-col">
-            <h4>수집 데이터</h4>
-            <div class="role">부정 리뷰를 더 수집해 실제보다 낮게 나옴</div>
-            <div class="grid grid-2" style="margin-bottom:10px">
-              <div><div class="tiny">분석 리뷰</div><div class="mono" style="font-size:18px"><span id="smpAnalyzed">—</span>건</div></div>
-              <div><div class="tiny">표본 오차</div><div class="mono acc" style="font-size:12px">±<span id="smpError">—</span>%</div></div>
-            </div>
-            <div class="tiny">추천률</div>
-            <div class="bar bar-pair">
-              <div id="smpBarPos" style="background:var(--color-success-green);color:#ffffff;width:0%">—</div>
-              <div id="smpBarNeg" style="background:var(--color-error-red);color:#fff;width:0%">—</div>
-            </div>
-            <div class="tiny muted" style="margin-top:6px">의도적 과표집 데이터</div>
-          </div>
-          <!-- 보정 컬럼 -->
-          <div class="compare-col highlight" id="colCorrection">
-            <h4>실제 시장 추정</h4>
-            <div class="role">수집 편향을 보정한 최종 추정값</div>
-            <div class="grid grid-2" style="margin-bottom:10px">
-              <div><div class="tiny">추천 보정계수</div><div class="mono" style="font-size:18px">×<span id="wposVal">—</span></div></div>
-              <div><div class="tiny">비추천 보정계수</div><div class="mono" style="font-size:18px;color:var(--color-error-red)">×<span id="wnegVal">—</span></div></div>
-            </div>
-            <div class="tiny">추정 추천률</div>
-            <div class="bar bar-pair">
-              <div id="wBarPos" style="background:var(--color-electric-blue);color:#ffffff;width:0%">—</div>
-              <div id="wBarNeg" style="background:#71717a;color:#ffffff;width:0%">—</div>
-            </div>
-            <div class="tiny muted" style="margin-top:6px">Steam 공식값과 일치</div>
+          <div class="ov-card">
+            <div class="ov-card-head"><h2>플레이 시간별 추천률</h2></div>
+            <ul class="ov-bars" id="ovPlaytime"></ul>
           </div>
         </div>
-      </div>
 
-      <!-- 상세 수치는 비교 카드에 집중하고, 이 영역은 차트 탐색을 위한 보조 정보로만 유지합니다. -->
-      <div class="grid grid-4" style="margin-bottom:24px" id="kpiGrid" hidden>
-        <div class="card kpi"><div class="kpi-label">분석 리뷰 수</div><div class="kpi-value mono" id="kpi-total">—</div><div class="kpi-sub">유효 리뷰 기준</div></div>
-        <div class="card kpi"><div class="kpi-label">수집 데이터 추천률</div><div class="kpi-value neg mono" id="kpi-rec">—</div><div class="kpi-sub">과표집 보정 전</div></div>
-        <div class="card kpi" id="kpiRecW"><div class="kpi-label">실제 시장 추정치</div><div class="kpi-value acc mono" id="kpi-rec-w">—</div><div class="kpi-sub">보정 후 최종값</div></div>
-        <div class="card kpi"><div class="kpi-label">Steam 추천률</div><div class="kpi-value pos mono" id="kpi-pop">—</div><div class="kpi-sub">공식 기준</div></div>
-      </div>
-
-      <!-- 차트: 감성 + 감정 -->
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-title" id="cardTitleSentiment">유저 반응 분석</div>
-        <div class="chart-pair">
-          <div class="chart-pair-half">
-            <div class="chart-pair-label">
-              <span class="label-text">긍정 / 부정 비율</span>
-              <span class="label-sub">전체 감성 분류</span>
-            </div>
-            <div class="chart-wrap chart-md"><canvas id="chartSentiment"></canvas></div>
+        <!-- ④ 할 일 -->
+        <div class="ov-card">
+          <div class="ov-card-head">
+            <h2>할 일</h2>
+            <span>추천률을 많이 깎는 순서</span>
           </div>
-          <div class="chart-pair-divider"></div>
-          <div class="chart-pair-half">
-            <div class="chart-pair-label">
-              <span class="label-text">세부 감정</span>
-              <span class="label-sub">기쁨 · 만족 · 분노 · 실망 등</span>
-            </div>
-            <div class="chart-wrap chart-md"><canvas id="chartEmotion"></canvas></div>
-          </div>
+          <ol class="ov-actions" id="ovActions"></ol>
         </div>
-      </div>
 
-      <!-- 차트: 영역별 평가 -->
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-title" id="cardTitleAspects">영역별 평가</div>
-        <div class="chart-pair with-arrow">
-          <div class="chart-pair-half">
-            <div class="chart-pair-label">
-              <span class="chip before">수집 데이터</span>
-              <span class="label-text">과표집 보정 전</span>
-            </div>
-            <div class="chart-wrap chart-lg"><canvas id="chartAspectsSample"></canvas></div>
-          </div>
-          <div class="chart-pair-arrow">
-            <div class="arrow-icon">→</div>
-          </div>
-          <div class="chart-pair-half">
-            <div class="chart-pair-label">
-              <span class="chip after">시장 추정</span>
-              <span class="label-text">보정 후 실제 시장 기준</span>
-            </div>
-            <div class="chart-wrap chart-lg"><canvas id="chartAspectsWeighted"></canvas></div>
-          </div>
-        </div>
-      </div>
+        <p class="ov-timeline" id="ovTimeline"></p>
 
-      <!-- 차트: 플레이타임 -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title">플레이타임별 추천률</div>
-        <div class="chart-wrap chart-md"><canvas id="chartPlaytime"></canvas></div>
-      </div>
-
-      <!-- 차트: 월별 추이 -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title">월별 추천률 추이</div>
-        <div class="chart-wrap chart-lg"><canvas id="chartTimeline"></canvas></div>
-        <div id="changePoints" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap"></div>
-      </div>
-
-      <!-- 주요 발견 & 개선 제안 -->
-      <div class="grid grid-2">
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-            <div class="card-title" style="margin-bottom:0">주요 발견</div>
-            <span id="insightsBadge" style="display:none; font-size:10px; color:var(--color-mute-whisper); font-family:var(--font-mono)"></span>
-          </div>
-          <div id="keyFindings"><div class="muted tiny">로딩 중…</div></div>
-        </div>
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-            <div class="card-title" id="cardTitleRec" style="margin-bottom:0">개선 제안</div>
-            <button id="btnGenInsights" onclick="generateLLMInsights(false)"
-              style="font-size:11px; padding:4px 10px; border-radius:6px; border:1px solid var(--color-steel-border);
-                     background:transparent; color:var(--color-silver-whisper); cursor:pointer; white-space:nowrap">
-              AI 재생성
-            </button>
-          </div>
-          <div id="recommendations"><div class="muted tiny">로딩 중…</div></div>
-        </div>
+        <!-- ⑤ 믿을 수 있는 범위 -->
+        <div class="ov-trust" id="ovTrust"></div>
       </div>
     </section>
 
@@ -3138,7 +3074,7 @@ async function startAnalysis(appId, gameName) {
 /* ============ 분석 전 상태 ============ */
 // 결과가 없을 때 숫자만 "—"로 남겨두면 고장난 화면처럼 보인다.
 // 무엇이 없고 무엇을 하면 되는지 한 문장으로 말한다.
-function setNoAnalysisState(on, title, body) {
+function setNoAnalysisState(on, title, body, cta) {
   document.body.classList.toggle('no-analysis', !!on);
   if (!on) return;
   const titleEl = document.getElementById('execTitle');
@@ -3146,32 +3082,46 @@ function setNoAnalysisState(on, title, body) {
   if (titleEl) titleEl.textContent = title;
   if (bodyEl) {
     bodyEl.innerHTML = body
-      + ' <button type="button" class="hero-cta" onclick="openNewAnalysisModal()">분석 시작하기</button>';
+      + ' <button type="button" class="hero-cta" onclick="openNewAnalysisModal()">' + (cta || '분석 시작하기') + '</button>';
   }
 }
 
 /* ============ Load data ============ */
 async function load(appId) {
-  const url = appId ? `/dashboard/data/v4?app_id=${appId}` : '/dashboard/data/v4';
-  let r;
-  try { r = await fetch(url); }
-  catch (e) { setNoAnalysisState(true, '서버에 연결하지 못했습니다', '분석 서버가 꺼져 있습니다. 스튜디오를 다시 시작해보세요.'); return; }
-  if (r.status === 404) {
+  const q = appId ? `?app_id=${appId}` : '';
+  let r5, r4;
+  try {
+    [r5, r4] = await Promise.all([fetch('/dashboard/data/v5' + q), fetch('/dashboard/data/v4' + q)]);
+  } catch (e) {
+    setNoAnalysisState(true, '서버에 연결하지 못했습니다', '분석 서버가 꺼져 있습니다. 스튜디오를 다시 시작해보세요.');
+    return;
+  }
+  currentAppId = appId || currentAppId;
+
+  if (r5.status === 404 && r4.status === 404) {
     // 아직 분석하지 않은 게임이다. 실패가 아니라 시작 전 상태다.
     setNoAnalysisState(true, '아직 분석하지 않은 게임입니다',
       'Steam 리뷰를 수집하고 AI로 분석해야 결과가 나옵니다. 아래 버튼으로 시작하세요.');
     return;
   }
-  if (!r.ok) {
-    setNoAnalysisState(true, '결과를 불러오지 못했습니다', '분석 서버가 ' + r.status + '를 돌려줬습니다.');
-    return;
+  if (r5.ok) {
+    setNoAnalysisState(false);
+    V5 = await r5.json();
+    set('lastUpdate', V5.generated_at || '—');
+    try { renderOverviewV5(V5); } catch (e) { console.error('renderOverviewV5 error:', e); }
+  } else if (r5.status === 404) {
+    // 옛 방식(7감정)으로만 분석된 게임. 다른 화면은 v4로 계속 보여준다.
+    setNoAnalysisState(true, '예전 방식으로 분석한 게임입니다',
+      '새 요약을 보려면 다시 분석해야 합니다. 이미 모은 리뷰를 그대로 씁니다.', '다시 분석하기');
+  } else {
+    setNoAnalysisState(true, '결과를 불러오지 못했습니다', '분석 서버가 ' + r5.status + '를 돌려줬습니다.');
   }
-  setNoAnalysisState(false);
-  DATA = await r.json();
-  currentAppId = appId || currentAppId;
-  document.getElementById('lastUpdate').textContent = DATA.generated_at || '—';
 
-  try { renderOverview(); } catch(e) { console.error('renderOverview error:', e); }
+  if (!r4.ok) return;
+  DATA = await r4.json();
+  if (!r5.ok) set('lastUpdate', DATA.generated_at || '—');
+  if (DATA.llm_hypothesis) renderHypothesis(DATA.llm_hypothesis);
+  else { const h = document.getElementById('hypoContent'); if (h) h.style.display = 'none'; }
   try { renderReviews(); } catch(e) { console.error('renderReviews error:', e); }
   try { renderAspects(); } catch(e) { console.error('renderAspects error:', e); }
   try { renderBiasAudit(); } catch(e) { console.error('renderBiasAudit error:', e); }
@@ -3182,412 +3132,92 @@ async function load(appId) {
 }
 
 /* ============ Overview ============ */
-function renderOverview() {
-  const D = DATA;
-  const n = D.n_total;
-  const smpPosPct = D.n_pos / n * 100;
-  const smpNegPct = D.n_neg / n * 100;
+// 요약 화면은 insights_v5.json 하나로 그린다. 숫자 설명은 짧게, 원문 인용으로 근거를 보인다.
+function renderOverviewV5(V) {
+  const n = x => (x ?? 0).toLocaleString();
+  const pp = x => (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(2) + '%p';
+  const quote = q => q ? `<blockquote class="ov-quote">${escapeHtml(q.length > 110 ? q.slice(0, 110) + '…' : q)}</blockquote>` : '';
+  const cov = V.coverage || {};
 
-  /* --- 3-Way 비교 --- */
-  const pop = D.population;
-  const popPosPct = pop.pos_rate * 100, popNegPct = pop.neg_rate * 100;
-  set('popTotal', pop.total.toLocaleString());
-  const SCORE_KR = {
-    'Overwhelmingly Positive': '압도적으로 긍정적',
-    'Very Positive': '매우 긍정적',
-    'Positive': '긍정적',
-    'Mostly Positive': '대체로 긍정적',
-    'Mixed': '복합적',
-    'Mostly Negative': '대체로 부정적',
-    'Very Negative': '매우 부정적',
-    'Overwhelmingly Negative': '압도적으로 부정적',
-  };
-  set('popScore', SCORE_KR[pop.score] || pop.score || '압도적으로 긍정적');
-  setBar('popBarPos', 'popBarNeg', popPosPct, popNegPct, '추천', '비추천');
+  set('ovCoverage', `한국어 리뷰 ${n(cov.population)}건 중 ${n(cov.collected)}건 수집 · ${n(cov.analyzed)}건 분석`);
 
-  set('smpAnalyzed', n);
-  set('smpError', D.sample_design?.error_pct ?? '—');
-  setBar('smpBarPos', 'smpBarNeg', smpPosPct, smpNegPct, '추천', '비추천');
+  // ① 요약
+  document.getElementById('ovSummary').innerHTML = `
+    <div class="ov-rate"><b>${V.rates?.steam ?? '—'}%</b><span>스팀 추천률</span></div>
+    <p>${escapeHtml(V.summary || '')}</p>`;
 
-  /* 보정 데이터 유무 감지 */
-  const wts = D.weights || {};
-  const sw = D.sentiment_weighted || {};
-  const hasWeights = !!(wts.w_pos && wts.w_neg && wts.w_pos !== 1 && wts.w_neg !== 1
-    && D.n_pos > 0 && D.n_neg > 0);
+  // 내려받기
+  document.getElementById('btnQuickReviews').href = `/api/reviews/download?app_id=${currentAppId}`;
+  document.getElementById('btnQuickAnalysis').href = `/api/analysis/download?app_id=${currentAppId}`;
 
-  // 보정 컬럼 표시/숨김
-  const colCorr = document.getElementById('colCorrection');
-  const kpiRecW = document.getElementById('kpiRecW');
-  const compareTitle = document.getElementById('compareCardTitle');
-  const compareGrid = document.getElementById('compareGrid');
-  if (colCorr) colCorr.style.display = hasWeights ? '' : 'none';
-  if (kpiRecW) kpiRecW.style.display = hasWeights ? '' : 'none';
-  if (compareTitle) compareTitle.textContent = hasWeights
-    ? '추천률 비교 — 전체 vs AI 분석 vs 보정 후'
-    : '추천률 비교 — 전체 vs AI 분석';
-  // 2-way일 때 그리드 2컬럼으로
-  if (compareGrid) compareGrid.style.gridTemplateColumns = hasWeights ? '' : '1fr 1fr';
+  // ② 좋아한 것 / 깎은 것
+  const lifts = V.lifts || [], drags = V.drags || [];
+  const maxPos = Math.max(1, ...lifts.map(t => t.pos));
+  const maxDrag = Math.max(0.01, ...drags.map(t => Math.abs(t.impact)));
+  const empty = '<li class="ov-none">뚜렷한 주제가 없습니다</li>';
+  document.getElementById('ovLifts').innerHTML = lifts.map(t => `
+    <li>
+      <div class="ov-imp-row"><b>${escapeHtml(t.name)}</b><span class="pos">칭찬 ${t.pos}건</span></div>
+      <div class="ov-meter"><i class="pos" style="width:${(t.pos / maxPos * 100).toFixed(0)}%"></i></div>
+      ${quote(t.quote_pos)}
+    </li>`).join('') || empty;
+  document.getElementById('ovDrags').innerHTML = drags.map(t => `
+    <li>
+      <div class="ov-imp-row"><b>${escapeHtml(t.name)}</b><span class="neg">${pp(t.impact)}</span></div>
+      <div class="ov-meter"><i class="neg" style="width:${(Math.abs(t.impact) / maxDrag * 100).toFixed(0)}%"></i></div>
+      <div class="ov-imp-sub">불만 ${t.neg}건</div>
+    </li>`).join('') || empty;
 
-  // 카드 타이틀 동적 조정 (보정 데이터 유무)
-  const titleSentiment = document.getElementById('cardTitleSentiment');
-  const titleAspects   = document.getElementById('cardTitleAspects');
-  const titleMobile    = document.getElementById('cardTitleMobile');
-  const titleRec       = document.getElementById('cardTitleRec');
-  const cmpTitle       = document.getElementById('compareCardTitle');
-  if (titleSentiment) titleSentiment.textContent = '유저 반응 분석';
-  if (titleAspects) titleAspects.textContent = '영역별 평가';
-  if (titleRec) titleRec.textContent = '개선 제안';
-  if (cmpTitle) cmpTitle.textContent = hasWeights ? '추천률 개요' : 'Steam 공식 기준';
+  // ③ 재미 · 플레이 시간
+  document.getElementById('ovFun').innerHTML = (V.fun || []).map(f => `
+    <li>
+      <div class="ov-bar-label"><b>${f.name}</b><span>${escapeHtml(f.desc)}</span></div>
+      <div class="ov-meter"><i class="acc" style="width:${f.share}%"></i></div>
+      <span class="ov-bar-val">${f.share}%</span>
+    </li>`).join('') || empty;
+  document.getElementById('ovPlaytime').innerHTML = (V.playtime || []).map(p => `
+    <li class="${p.small ? 'small' : ''}">
+      <div class="ov-bar-label"><b>${p.label}</b><span>${n(p.n)}건${p.small ? ' · <em>표본 적음</em>' : ''}</span></div>
+      <div class="ov-meter"><i class="${p.rate < (V.rates?.steam ?? 0) - 10 ? 'neg' : 'pos'}" style="width:${p.rate}%"></i></div>
+      <span class="ov-bar-val">${p.rate}%</span>
+      ${p.top_neg?.length ? `<div class="ov-imp-sub">불만: ${p.top_neg.map(x => escapeHtml(x.name)).join(' · ')}</div>` : ''}
+    </li>`).join('') || empty;
 
-  const wDenom = hasWeights ? (wts.w_pos * D.n_pos) + (wts.w_neg * D.n_neg) : 0;
-  const wVotedPosPct = wDenom > 0 ? (wts.w_pos * D.n_pos) / wDenom * 100 : 0;
-  const wVotedNegPct = 100 - wVotedPosPct;
-  set('wposVal', hasWeights ? D.weights?.w_pos ?? '—' : '—');
-  set('wnegVal', hasWeights ? D.weights?.w_neg ?? '—' : '—');
-  if (hasWeights) setBar('wBarPos', 'wBarNeg', wVotedPosPct, wVotedNegPct, '추천', '비추천');
+  // ④ 할 일
+  document.getElementById('ovActions').innerHTML = (V.actions || []).map(a => `
+    <li>
+      <div class="ov-act-head">
+        <span class="ov-rank">${a.rank}순위</span><b>${escapeHtml(a.theme)}</b>
+        <span class="neg">${pp(a.impact)}</span>
+      </div>
+      <dl>
+        ${a.prob ? `<dt>문제</dt><dd>${escapeHtml(a.prob)}</dd>` : ''}
+        ${a.why ? `<dt>유저가 본 원인</dt><dd>${escapeHtml(a.why)}</dd>` : ''}
+        ${a.fix?.length ? `<dt>유저 제안</dt><dd>${a.fix.map(escapeHtml).join(' · ')} <small>(참고)</small></dd>` : ''}
+      </dl>
+      ${quote(a.quote)}
+    </li>`).join('') || '<li class="ov-none">큰 불만이 없습니다</li>';
 
-  /* --- KPI (voted_up 기준 4-way 일관) --- */
-  set('kpi-total', n + '건');
-  set('kpi-rec', smpPosPct.toFixed(0) + '%');
-  set('kpi-rec-w', hasWeights ? wVotedPosPct.toFixed(0) + '%' : '—');
-  set('kpi-pop', (pop.pos_rate * 100).toFixed(0) + '%');
+  // 시간 흐름: 바뀐 달이 있을 때만 월별 수치를 보인다
+  const tl = V.timeline || {};
+  document.getElementById('ovTimeline').innerHTML = escapeHtml(tl.note || '') + (tl.changed
+    ? ' — ' + (tl.months || []).map(m => `${m.month} ${m.rate}%`).join(' · ')
+    : '');
 
-  // Update Overview Quick Download links
-  const reviewsLink = document.getElementById('btnQuickReviews');
-  const analysisLink = document.getElementById('btnQuickAnalysis');
-  if (reviewsLink && analysisLink) {
-    reviewsLink.href = `/api/reviews/download?app_id=${currentAppId}`;
-    analysisLink.href = `/api/analysis/download?app_id=${currentAppId}`;
-  }
-
-  /* --- Exec --- */
-  // 보정 데이터 없을 때 exec_title에서 "보정 후 추정" 부분 제거
-  if (!hasWeights && D.exec_title) {
-    const titleParts = D.exec_title.split('·');
-    const filteredTitle = titleParts.filter(p => !p.includes('보정')).join('·').trim();
-    document.getElementById('execTitle').innerHTML = filteredTitle || D.exec_title;
-  } else {
-    document.getElementById('execTitle').innerHTML = D.exec_title || '—';
-  }
-  document.getElementById('execSummary').innerHTML = D.exec_summary || '—';
-
-  /* --- Result Strip 채우기 --- */
-  // ① 분석된 리뷰 수
-  set('strip-total', n.toLocaleString() + '건');
-
-  // ② 표본 추천률 vs 모집단
-  const popPosPct2 = Math.round(pop.pos_rate * 100);
-  const smpPosPctRounded = Math.round(smpPosPct);
-  set('strip-pos', smpPosPctRounded + '%');
-  const diff = smpPosPctRounded - popPosPct2;
-  const diffStr = diff >= 0 ? '+' + diff : '' + diff;
-  set('strip-pos-sub', `모집단 ${popPosPct2}% 대비 ${diffStr}%p`);
-
-  // ③ 주요 감정 TOP 2 (긍정 리뷰 기준)
-  const emoMap = D.emotion || {};
-  const EMO_KR2 = { JOY:'기쁨', SATISFACTION:'만족', SURPRISE:'놀람', ANGER:'분노', DISAPPOINTMENT:'실망', BOREDOM:'지루함', NEUTRAL:'중립' };
-  const posEmoKeys = ['JOY','SATISFACTION','SURPRISE'];
-  const topPosEmo = posEmoKeys.filter(k => (emoMap[k]||0) > 0).sort((a,b)=>(emoMap[b]||0)-(emoMap[a]||0)).slice(0,2);
-  set('strip-emotion', topPosEmo.length > 0 ? topPosEmo.map(k => EMO_KR2[k]).join(' · ') : '—');
-
-  // ④ 주요 부정 측면 (aspects에서 neg 비율 TOP 1)
-  const aspects = D.aspects || {};
-  let topNegAspect = '—';
-  let maxNegPct = 0;
-  const aspKR = { graphics:'그래픽', gameplay:'게임플레이', story:'스토리', performance:'성능', value:'가성비' };
-  Object.entries(aspects).forEach(([k, v]) => {
-    const total = (v.pos||0)+(v.neg||0)+(v.mix||0)+(v.neu||0);
-    const negPct = total > 0 ? (v.neg||0)/total : 0;
-    if (negPct > maxNegPct) { maxNegPct = negPct; topNegAspect = aspKR[k] || k; }
-  });
-  set('strip-neg-kw', topNegAspect !== '—' ? topNegAspect + ' (' + Math.round(maxNegPct*100) + '%)' : '—');
-
-  /* --- 감성 도넛 (표본 vs 가중치) --- */
-  const ss = D.sentiment || {};
-  destroy('chartSentiment');
-  charts.chartSentiment = new Chart(document.getElementById('chartSentiment'), {
-    type: 'bar',
-    data: {
-      labels: ['긍정', '부정', '혼합', '중립'],
-      datasets: [
-        { label: 'AI 분석 결과', data: [ss.POSITIVE||0, ss.NEGATIVE||0, ss.MIXED||0, ss.NEUTRAL||0], backgroundColor: 'rgba(82,82,91,0.35)', borderRadius: 4 },
-        { label: '보정 후', data: [Math.round(sw.POSITIVE||0), Math.round(sw.NEGATIVE||0), Math.round(sw.MIXED||0), Math.round(sw.NEUTRAL||0)], backgroundColor: [COLORS.pos, COLORS.neg, COLORS.mix, COLORS.neu], borderRadius: 4 },
-      ]
-    },
-    options: {
-      plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '건' } } },
-      scales: { y: { beginAtZero: true } },
-      maintainAspectRatio: false,
-    }
-  });
-
-  /* --- 감정 bar (표본 vs 가중치) --- */
-  const EMO_ORDER = ['JOY','SATISFACTION','SURPRISE','ANGER','DISAPPOINTMENT','BOREDOM','NEUTRAL'];
-  const EMO_KR = { JOY:'기쁨', SATISFACTION:'만족', SURPRISE:'놀람', ANGER:'분노', DISAPPOINTMENT:'실망', BOREDOM:'지루', NEUTRAL:'중립' };
-  const emoS = D.emotion || {}, emoW = D.emotion_weighted || {};
-  const visible = EMO_ORDER.filter(e => (emoS[e] || 0) > 0 || (emoW[e] || 0) > 0);
-
-  destroy('chartEmotion');
-  charts.chartEmotion = new Chart(document.getElementById('chartEmotion'), {
-    type: 'bar',
-    data: {
-      labels: visible.map(e => EMO_KR[e]),
-      datasets: [
-        { label: 'AI 분석 결과', data: visible.map(e => emoS[e] || 0), backgroundColor: 'rgba(82,82,91,0.3)', borderRadius: 4 },
-        { label: '보정 후', data: visible.map(e => emoW[e] || 0), backgroundColor: visible.map(e => ['JOY','SATISFACTION','SURPRISE'].includes(e) ? COLORS.pos : ['ANGER','DISAPPOINTMENT','BOREDOM'].includes(e) ? COLORS.neg : COLORS.neu), borderRadius: 4 },
-      ]
-    },
-    options: {
-      plugins: { legend: { position: 'top' } },
-      scales: { y: { beginAtZero: true } },
-      maintainAspectRatio: false,
-    }
-  });
-
-  /* --- ABSA --- */
-  buildAspChart();
-
-  /* --- 플레이타임 (n<10 구간 제외, ~1h은 Steam 환불 구간으로 별도 처리) --- */
-  const play = D.playtime || {};
-  const MIN_PLAY_N = 10;
-  const playKeys = Object.keys(play).filter(k => {
-    const n = play[k].n || 0;
-    if (n < MIN_PLAY_N) return false;      // 샘플 너무 적으면 제외
-    if (k === '~1h' && n < 20) return false; // ~1h는 더 엄격한 기준 적용
-    return true;
-  });
-  destroy('chartPlaytime');
-  if (playKeys.length) {
-    const playColors = playKeys.map(k => {
-      const n = play[k].n || 0;
-      return n < 30 ? COLORS.neu : COLORS.acc;  // 30건 미만은 회색으로 신뢰도 표시
-    });
-    charts.chartPlaytime = new Chart(document.getElementById('chartPlaytime'), {
-      type: 'bar',
-      data: {
-        labels: playKeys,
-        datasets: [{ data: playKeys.map(k => parseFloat((play[k].recommend_rate || 0).toFixed(1))), backgroundColor: playColors, borderRadius: 4 }]
-      },
-      options: {
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: ctx => {
-            const k = ctx.label;
-            const n = play[k]?.n || 0;
-            const warn = n < 30 ? ' · 소규모 표본' : '';
-            return ctx.parsed.y + '% (n=' + n + warn + ')';
-          }}}
-        },
-        scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
-        maintainAspectRatio: false,
-      }
-    });
-  }
-
-  /* --- 월별 추이 (분석 리뷰 30건 미만 월은 null로 마스킹) --- */
-  const tl = D.timeline || {};
-  const months = tl.months || [];
-  const totals = tl.totals || [];
-  const reliableN = tl.reliable_threshold || 30;
-  destroy('chartTimeline');
-  if (months.length) {
-    charts.chartTimeline = new Chart(document.getElementById('chartTimeline'), {
-      type: 'line',
-      data: {
-        labels: months,
-        datasets: [
-          {
-            label: '분석 결과 추천률',
-            data: tl.sample_rates || [],
-            borderColor: '#52525b', backgroundColor: 'rgba(82,82,91,0.06)',
-            tension: 0.35, fill: false,
-            pointRadius: 5, pointBackgroundColor: '#fff', pointBorderWidth: 2.5,
-            borderWidth: 2.5, spanGaps: false,
-          },
-          {
-            label: '보정 후 추천률',
-            data: tl.weighted_rates || [],
-            borderColor: COLORS.acc, backgroundColor: 'rgba(131,195,255,0.10)',
-            tension: 0.35, fill: true,
-            pointRadius: 6, pointBackgroundColor: COLORS.acc, pointBorderColor: '#fff', pointBorderWidth: 2,
-            borderWidth: 3, spanGaps: false,
-          },
-          {
-            label: '3개월 평균',
-            data: tl.moving_avg || [],
-            borderColor: COLORS.mix, backgroundColor: 'transparent',
-            tension: 0.35, fill: false,
-            pointRadius: 0, borderDash: [8, 4], borderWidth: 2.5,
-            spanGaps: false,
-          },
-        ]
-      },
-      options: {
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: { callbacks: {
-            label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y != null ? ctx.parsed.y.toFixed(1) + '%' : `분석 리뷰 ${totals[ctx.dataIndex]||0}건 (${reliableN}건 미만, 데이터 부족)`),
-            afterBody: items => items.length ? `\n해당 월 분석 리뷰: ${totals[items[0].dataIndex] || 0}건` : ''
-          } }
-        },
-        scales: { y: { beginAtZero: true, max: 105, ticks: { callback: v => v + '%' } } },
-        maintainAspectRatio: false,
-      }
-    });
-
-    /* 변화점 배지 (분석 리뷰가 충분한 월 사이에서만) */
-    const cpEl = document.getElementById('changePoints');
-    const cps = tl.change_points || [];
-    const lowCount = totals.filter(t => (t || 0) < reliableN).length;
-    const note = lowCount > 0
-      ? ` <span class="tiny muted">· ${lowCount}개월은 분석 리뷰가 ${reliableN}건 미만이라 데이터 부족 → 차트에서 제외</span>`
-      : '';
-    cpEl.innerHTML = (cps.length
-      ? '<span class="tiny" style="color:var(--color-silver-whisper)">유의미한 변화: </span>' + cps.map(c =>
-          `<span class="tag ${c.direction === '상승' ? 'pos' : 'neg'}">${c.from_month}→${c.to_month} ${c.direction} ${Math.abs(c.delta).toFixed(1)}%p</span>`
-        ).join('')
-      : '<span class="tiny muted">유의미한 변동 없음 (±10%p 이상 변화 없음)</span>') + note;
-  }
-
-  /* --- Findings & Recommendations: LLM 캐시 우선, 없으면 알고리즘 폴백 --- */
-  function renderInsights(findings, recs, meta) {
-    const badge = document.getElementById('insightsBadge');
-    if (meta) {
-      badge.textContent = `AI · ${meta.generated_at} · ${meta.tokens_in}in/${meta.tokens_out}out tok`;
-      badge.style.display = 'inline';
-    } else {
-      badge.style.display = 'none';
-    }
-
-    const findingsHtml = (findings || []).map(f => `
-      <div class="finding">
-        <div class="head">${f.type}</div>
-        <div class="body">${f.finding}</div>
-        <div class="impact">→ ${f.impact}</div>
-      </div>`).join('');
-    document.getElementById('keyFindings').innerHTML = findingsHtml
-      ? `<div class="findings-list">${findingsHtml}</div>`
-      : '<div class="muted tiny">없음</div>';
-
-    const recsHtml = (recs || []).map(r => `
-      <div class="rec p${r.priority}-item">
-        <div class="pri P${r.priority}">P${r.priority}</div>
-        <div>
-          <div class="text">${r.action}</div>
-          <div class="reason">${r.reason}</div>
-        </div>
-      </div>`).join('');
-    document.getElementById('recommendations').innerHTML = recsHtml
-      ? `<div class="recs-list">${recsHtml}</div>`
-      : '<div class="muted tiny">없음</div>';
-  }
-
-  // LLM 캐시가 있으면 우선 표시
-  const llm = D.llm_insights;
-  if (D.llm_hypothesis) { renderHypothesis(D.llm_hypothesis); } else { document.getElementById('hypoContent').style.display = 'none'; }
-    if (llm && llm.key_findings && llm.key_findings.length) {
-    renderInsights(llm.key_findings, llm.recommendations, llm);
-  } else {
-    // 폴백: 알고리즘 인사이트
-    renderInsights(D.key_findings, D.recommendations, null);
-    // 백그라운드에서 LLM 인사이트 자동 생성 시도
-    generateLLMInsights(false);
-  }
+  // ⑤ 믿을 수 있는 범위
+  const pr = V.precision || {};
+  document.getElementById('ovTrust').innerHTML = `
+    <b>믿을 수 있는 범위</b>
+    <span>추천률 ±${pr.rate}%p</span>
+    <span>주제 비율 ±${pr.themes}%p</span>
+    <span>불만 내용 ±${pr.complaints}%p <small>(불만 리뷰 ${n(cov.complaints)}건)</small></span>
+    <span>짧은 리뷰 ${n(cov.short)}건은 추천 여부만 셈</span>`;
 }
-
-async function generateLLMInsights(force = false) {
-  const btn = document.getElementById('btnGenInsights');
-  if (btn) { btn.disabled = true; btn.textContent = '생성 중…'; }
-  try {
-    const gameName = document.querySelector('.game-tab.active')?.textContent?.trim()
-                     || 'Unknown Game';
-    const r = await fetch('/api/generate-insights', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ app_id: currentAppId, game_name: gameName, force }),
-    });
-    if (!r.ok) throw new Error(`${r.status}`);
-    const j = await r.json();
-    const llm = j.insights;
-    if (llm && llm.key_findings) {
-      // DOM이 살아있을 때만 업데이트
-      const badge = document.getElementById('insightsBadge');
-      if (badge) {
-        badge.textContent = `AI · ${llm.generated_at} · ${llm.tokens_in}in/${llm.tokens_out}out tok`;
-        badge.style.display = 'inline';
-      }
-      const findingsHtml = (llm.key_findings || []).map(f => `
-        <div class="finding">
-          <div class="head">${f.type}</div>
-          <div class="body">${f.finding}</div>
-          <div class="impact">→ ${f.impact}</div>
-        </div>`).join('');
-      const kfEl = document.getElementById('keyFindings');
-      if (kfEl) kfEl.innerHTML = findingsHtml ? `<div class="findings-list">${findingsHtml}</div>` : '<div class="muted tiny">없음</div>';
-
-      const recsHtml = (llm.recommendations || []).map(r2 => `
-        <div class="rec p${r2.priority}-item">
-          <div class="pri P${r2.priority}">P${r2.priority}</div>
-          <div>
-            <div class="text">${r2.action}</div>
-            <div class="reason">${r2.reason}</div>
-          </div>
-        </div>`).join('');
-      const recEl = document.getElementById('recommendations');
-      if (recEl) recEl.innerHTML = recsHtml ? `<div class="recs-list">${recsHtml}</div>` : '<div class="muted tiny">없음</div>';
-    }
-  } catch(e) {
-    console.warn('LLM 인사이트 생성 실패 (폴백 유지):', e.message);
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'AI 재생성'; }
-  }
-}
-
-/* ============ Aspect Chart — 좌(AI 분석) · 우(편향 보정) 동시 렌더 ============ */
-function buildAspChart(_mode) {
-  /* _mode 인자는 하위 호환용 (기존 toggle 코드에서 호출). 실제로는 두 차트 모두 렌더. */
-  const D = DATA;
-  if (!D || !D.aspects_pos || D.aspects_pos.length === 0) return;
-
-  /* 두 차트의 y축 max를 같은 값으로 맞춰 좌우 비교 직관성 ↑ */
-  const maxSample   = Math.max(...D.aspects_pos.map((v,i) => v + D.aspects_neu[i] + D.aspects_neg[i]));
-  const maxWeighted = Math.max(...D.aspects_pos_w.map((v,i) => v + D.aspects_neu_w[i] + D.aspects_neg_w[i]));
-  const yMax = Math.ceil(Math.max(maxSample, maxWeighted) / 50) * 50;
-
-  const buildConfig = (pos, neu, neg) => ({
-    type: 'bar',
-    data: {
-      labels: D.aspects_kr,
-      datasets: [
-        { label: '긍정', data: pos, backgroundColor: COLORS.pos, borderRadius: { topLeft: 0, topRight: 0 } },
-        { label: '중립', data: neu, backgroundColor: COLORS.neu },
-        { label: '부정', data: neg, backgroundColor: COLORS.neg, borderRadius: { topLeft: 4, topRight: 4 } },
-      ]
-    },
-    options: {
-      plugins: { legend: { position: 'top' } },
-      scales: {
-        x: { stacked: true },
-        y: { stacked: true, beginAtZero: true, max: yMax }
-      },
-      maintainAspectRatio: false,
-    }
-  });
-
-  destroy('chartAspectsSample');
-  destroy('chartAspectsWeighted');
-  const sEl = document.getElementById('chartAspectsSample');
-  const wEl = document.getElementById('chartAspectsWeighted');
-  if (sEl) charts.chartAspectsSample   = new Chart(sEl, buildConfig(D.aspects_pos, D.aspects_neu, D.aspects_neg));
-  if (wEl) charts.chartAspectsWeighted = new Chart(wEl, buildConfig(D.aspects_pos_w, D.aspects_neu_w, D.aspects_neg_w));
-}
-
-/* 하위 호환: 외부에서 호출 가능 (no-op으로 동작) */
-function switchAspChart(_mode) { buildAspChart(_mode); }
 
 function destroy(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
 
 /* ============ Helpers ============ */
+let V5 = null;
 function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 
 function setBar(posId, negId, posPct, negPct, posLabel, negLabel) {
@@ -4159,7 +3789,8 @@ function precisionCostPerReview() {
   const select = document.getElementById('modalModel');
   const model = (typeof cachedModels !== 'undefined' && cachedModels || []).find(m => m.id === select.value)
     || { input_cost: 0.075, output_cost: 0.3 };
-  return 1100 * (model.input_cost + model.output_cost) / 2 / 1000000;
+  // 팰월드 실측(2,188건 수집): 짧은 리뷰는 AI를 거치지 않아 수집 1건당 입력 약 93 · 출력 약 43토큰
+  return (95 * model.input_cost + 45 * model.output_cost) / 1000000;
 }
 
 // 오차를 줄일수록 표본이 가파르게 늘어나는 것을 곡선으로 보여준다.
