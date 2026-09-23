@@ -1352,15 +1352,70 @@ def pipeline_config():
     }
 
 
+def _count_csv_rows(path: str) -> int:
+    """CSV 데이터 행 수. 리뷰 본문에 줄바꿈이 있으므로 줄 수로 세면 안 된다."""
+    if not os.path.exists(path):
+        return 0
+    try:
+        with open(path, "r", encoding="utf-8-sig", newline="") as f:
+            reader = csv.reader(f)
+            next(reader, None)  # 헤더
+            return sum(1 for _ in reader)
+    except Exception:
+        return 0
+
+
 @app.get(
     "/pipeline/result",
     summary="마지막 파이프라인 결과",
     description="가장 최근 파이프라인 실행 결과를 반환합니다.",
 )
-def pipeline_last_result():
-    result_path = cfg.PIPELINE_RESULT
+def pipeline_last_result(app_id: Optional[int] = None):
+    # app_id를 주면 그 게임을 본다. 서버를 다시 켜면 cfg는 기본 게임을 가리키므로
+    # 화면이 보고 있는 게임과 달라질 수 있다.
+    if app_id:
+        folder = cfg.project_dir(app_id)
+        result_path = os.path.join(folder, "pipeline_result.json")
+        analysis_csv = os.path.join(folder, "analysis_v2.csv")
+        reviews_csv = os.path.join(folder, "reviews.csv")
+    else:
+        result_path = cfg.PIPELINE_RESULT
+        analysis_csv = cfg.ANALYSIS_CSV
+        reviews_csv = cfg.REVIEWS_CSV
+
     if not os.path.exists(result_path):
         return {"status": "no_runs", "message": "아직 파이프라인이 실행된 적 없습니다."}
     with open(result_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+
+    # 분석 단계는 오래 걸린다. 지금 몇 건까지 했는지 보여줄 수 있어야
+    # 멈춘 것인지 도는 것인지 구분된다.
+    analyzed = _count_csv_rows(analysis_csv)
+    collected = _count_csv_rows(reviews_csv)
+
+    target = 0
+    steps = data.get("steps") or {}
+    cost = (steps.get("cost_estimate") or {}).get("detail") or {}
+    if isinstance(cost.get("n_reviews"), int):
+        target = cost["n_reviews"]
+    if not target:
+        target = collected
+
+    elapsed = None
+    started = data.get("started_at")
+    if started:
+        try:
+            end = datetime.fromisoformat(data["finished_at"]) if data.get("finished_at") else datetime.now()
+            elapsed = max(0, int((end - datetime.fromisoformat(started)).total_seconds()))
+        except Exception:
+            elapsed = None
+
+    data["live"] = {
+        "collected": collected,
+        "analyzed": analyzed,
+        "analyze_target": target,
+        "analyze_pct": round(analyzed / target * 100, 1) if target else 0.0,
+        "elapsed_sec": elapsed,
+    }
+    return data
 
