@@ -321,7 +321,7 @@ def review_population_stats(app_id: int):
                 "est_cost_5pct": est_cost_5,
                 "est_cost_3pct": est_cost_3,
                 "p_applied": round(p_val, 4),
-                "model": "google/gemini-2.0-flash-001",
+                "model": "google/gemini-2.5-flash-lite",
                 # 실제 수집 결정 근거
                 "cochran_5pct": sample_5pct,
                 "cochran_3pct": sample_3pct,
@@ -340,7 +340,7 @@ def get_openrouter_models():
     """OpenRouter API를 통해 최신 모델 정보를 가져와 동적으로 반환합니다."""
     import httpx
     curated = {
-        "google/gemini-2.0-flash-001": "Google Gemini 2.0 Flash (초고속 & 초저가 - 추천)",
+        "google/gemini-2.5-flash-lite": "Google Gemini 2.5 Flash Lite (초고속 & 초저가 - 추천)",
         "google/gemini-2.0-pro-exp-02-15": "Google Gemini 2.0 Pro Experimental (고성능 종합 추론)",
         "meta-llama/llama-3.3-70b-instruct": "Llama 3.3 70B Instruct (균형 잡힌 오픈소스)",
         "anthropic/claude-3.5-sonnet": "Anthropic Claude 3.5 Sonnet (최상급 감성 판단력)",
@@ -348,7 +348,7 @@ def get_openrouter_models():
     }
     
     fallback = [
-        {"id": "google/gemini-2.0-flash-001", "name": "Google Gemini 2.0 Flash (초고속 & 초저가 - 추천)", "input_cost": 0.075, "output_cost": 0.3},
+        {"id": "google/gemini-2.5-flash-lite", "name": "Google Gemini 2.5 Flash Lite (초고속 & 초저가 - 추천)", "input_cost": 0.10, "output_cost": 0.40},
         {"id": "google/gemini-2.0-pro-exp-02-15", "name": "Google Gemini 2.0 Pro Experimental (고성능 종합 추론)", "input_cost": 0.0, "output_cost": 0.0},
         {"id": "meta-llama/llama-3.3-70b-instruct", "name": "Llama 3.3 70B Instruct (균형 잡힌 오픈소스)", "input_cost": 0.23, "output_cost": 0.4},
         {"id": "anthropic/claude-3.5-sonnet", "name": "Anthropic Claude 3.5 Sonnet (최상급 감성 판단력)", "input_cost": 3.0, "output_cost": 15.0},
@@ -874,7 +874,7 @@ def api_usage():
         "total_tokens": in_tok + out_tok,
         "cost_usd": round(cost, 4),
         "balance_left": round(BUDGET - cost, 4),
-        "model": "google/gemini-2.0-flash-001",
+        "model": "google/gemini-2.5-flash-lite",
         "pricing": {"input_per_1m": 0.10, "output_per_1m": 0.40},
     }
 
@@ -884,7 +884,7 @@ def api_test_analyze(payload: dict):
     """리뷰 텍스트 1건을 선택한 모델로 분석. (API Lab의 시연용)"""
     import httpx
     content = (payload.get("content") or "").strip()
-    model   = (payload.get("model") or "google/gemini-2.0-flash-001").strip()
+    model   = (payload.get("model") or "google/gemini-2.5-flash-lite").strip()
     if not content:
         raise HTTPException(status_code=400, detail="content가 비어 있음")
     api_key = os.getenv("OPENROUTER_API_KEY", "")
@@ -973,7 +973,7 @@ def api_generate_insights(payload: dict):
     app_id    = str(payload.get("app_id", ""))
     game_name = payload.get("game_name", "Unknown Game")
     force     = payload.get("force", False)
-    model     = payload.get("model", "google/gemini-2.0-flash-001")
+    model     = payload.get("model", "google/gemini-2.5-flash-lite")
 
     ins_path = _game_file(app_id or cfg.APP_ID, "insights_v4.json")
     if not ins_path:
@@ -1042,7 +1042,7 @@ async def api_generate_hypothesis(payload: dict):
     app_id    = str(payload.get("app_id", ""))
     game_name = payload.get("game_name", "Unknown Game")
     force     = payload.get("force", False)
-    model     = payload.get("model", "google/gemini-2.0-flash-001")
+    model     = payload.get("model", "google/gemini-2.5-flash-lite")
 
     ins_path = _game_file(app_id or cfg.APP_ID, "insights_v4.json")
     if not ins_path:
@@ -1264,6 +1264,7 @@ class PipelineRunRequest(BaseModel):
     lang: str = "koreana"
     budget: float = 10.0
     target_error_pct: Optional[float] = None  # 슬라이더가 2.5 같은 소수 오차를 보낸다
+    model: Optional[str] = None                # 화면에서 고른 분석 모델
     custom_sample_size: Optional[int] = None
     incremental: bool = False
 
@@ -1300,6 +1301,7 @@ def trigger_pipeline(request: PipelineRunRequest, background_tasks: BackgroundTa
         lang=request.lang,
         budget=request.budget,
         target_error_pct=request.target_error_pct,
+        model=request.model,
         custom_sample_size=request.custom_sample_size,
         incremental=request.incremental
     )

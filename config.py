@@ -35,7 +35,7 @@ class Config:
     # ── LLM 분석 ────────────────────────────────────────────
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
     OPENROUTER_URL: str = "https://openrouter.ai/api/v1/chat/completions"
-    MODEL: str = os.getenv("MODEL", "google/gemini-2.0-flash-001")
+    MODEL: str = os.getenv("MODEL", "google/gemini-2.5-flash-lite")
 
     # 비용 설정 (USD per 1M tokens 기준)
     MODEL_COST_INPUT: float = float(os.getenv("MODEL_COST_INPUT", "0.10"))   # $/1M input tokens

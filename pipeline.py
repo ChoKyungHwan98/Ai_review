@@ -265,7 +265,7 @@ def step_insights(result: PipelineResult):
         raise
 
 
-def run_pipeline(app_id: int = None, lang: str = None, budget: float = None, target_error_pct: float = None, custom_sample_size: int = None, incremental: bool = False) -> dict:
+def run_pipeline(app_id: int = None, lang: str = None, budget: float = None, target_error_pct: float = None, custom_sample_size: int = None, incremental: bool = False, model: str = None) -> dict:
     """전체 파이프라인 실행
 
     Args:
@@ -288,6 +288,8 @@ def run_pipeline(app_id: int = None, lang: str = None, budget: float = None, tar
         cfg.BUDGET_USD = budget
     if target_error_pct is not None:
         cfg.TARGET_ERROR_PCT = target_error_pct
+    if model:
+        cfg.MODEL = model
     if custom_sample_size is not None:
         cfg.CUSTOM_SAMPLE_SIZE = custom_sample_size
     else:

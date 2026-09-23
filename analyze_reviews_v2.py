@@ -240,7 +240,21 @@ async def run_pipeline():
                 print(f"  진행 {i}/{len(batches)} 배치 처리 완료 (누적 ok={stats['ok']} fail={stats['fail']})")
 
     f_out.close()
-    print(f"\n✅ 완료: {stats['ok']}건 분석 / {stats['fail']}건 실패 → {get_out_csv()}")
+    print(f"\n완료: {stats['ok']}건 분석 / {stats['fail']}건 실패 → {get_out_csv()}")
+
+    # 전부 실패했는데 "완료"로 넘어가면 뒤 단계가 빈 파일을 붙들고 엉뚱한 곳에서 죽는다.
+    if stats['ok'] == 0:
+        raise RuntimeError(
+            f"분석 결과가 0건입니다 ({stats['fail']}건 모두 실패). "
+            f"모델 이름이 맞는지, API 키가 유효한지 확인하세요. 현재 모델: {MODEL}"
+        )
+    # 절반 넘게 실패하면 결과를 믿을 수 없다.
+    total = stats['ok'] + stats['fail']
+    if total and stats['fail'] / total > 0.5:
+        raise RuntimeError(
+            f"분석 실패율이 {stats['fail'] / total * 100:.0f}%입니다 "
+            f"({stats['fail']}/{total}건). 결과를 신뢰할 수 없어 중단합니다."
+        )
 
 def main():
     asyncio.run(run_pipeline())
