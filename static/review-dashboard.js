@@ -52,14 +52,9 @@ window.ReviewDashboard = (() => {
     document.getElementById('rdPageArt').innerHTML = V.game?.header_image
       ? `<img src="${esc(V.game.header_image)}" alt="" />` : '<span>게임 이미지 없음</span>';
     document.getElementById('rdPageActions').innerHTML = `<button class="rd-btn" type="button" onclick="startNewAnalysis(${Number(id)},null,null,true)">추가 수집</button><a class="rd-btn" href="/api/reviews/download?app_id=${Number(id)}" download>원문 내려받기</a><a class="rd-btn primary" href="/api/analysis/download?app_id=${Number(id)}" download>분석 결과 내려받기</a>`;
-    const finding = concern && strength
-      ? `<b>${esc(strength.name)}</b>은 칭찬 ${num(strength.pos)}건, <b>${esc(concern.name)}</b>은 불만 ${num(concern.neg)}건으로 가장 많이 언급됐습니다.`
-      : concern ? `<b>${esc(concern.name)}</b>에서 불만 ${num(concern.neg)}건이 가장 많이 모였습니다.`
-      : strength ? `<b>${esc(strength.name)}</b>에서 칭찬 ${num(strength.pos)}건이 가장 많이 모였습니다.`
-      : '주제별 반응을 판단할 분석 결과가 없습니다.';
     root.innerHTML = `
       <section class="rd-findings rd-card" aria-labelledby="rdFindingsTitle">
-        <div class="rd-findings-head"><h2 id="rdFindingsTitle">핵심 발견</h2><p>${finding}</p></div>
+        <div class="rd-findings-head"><h2 id="rdFindingsTitle">핵심 인사이트</h2></div>
         <div class="rd-signals">
           <button class="rd-signal rd-signal-strength" data-action="select" data-theme="${esc(strength?.name || '')}"><span class="rd-signal-icon" aria-hidden="true">+</span><span class="rd-signal-copy"><span class="rd-eyebrow">긍정 반응 최다</span><strong>${esc(strength?.name || '분석 대기')}</strong><small>칭찬이 가장 많이 모인 주제</small></span><span class="rd-big">${num(strength?.pos)}<small>건</small></span></button>
           <button class="rd-signal rd-signal-concern rd-signal-primary" data-action="select" data-theme="${esc(concern?.name || '')}"><span class="rd-signal-icon" aria-hidden="true">−</span><span class="rd-signal-copy"><span class="rd-eyebrow">부정 반응 최다</span><strong>${esc(concern?.name || '뚜렷한 불만 없음')}</strong><small>불만이 가장 많이 모인 주제</small></span><span class="rd-big">${num(concern?.neg)}<small>건</small></span></button>
@@ -161,11 +156,26 @@ window.ReviewDashboard = (() => {
     }).join('');
     const leading = visible.reduce((a,b) => Number(mood[a.key]) >= Number(mood[b.key]) ? a : b);
     const leadingRate = Math.max(...visible.map(g => Number(mood[g.key]))) / total * 100;
+    const rates = Object.fromEntries(groups.map(g => [g.key, Number(mood[g.key] || 0) / total * 100]));
     target.innerHTML = `<div class="rd-mood-visual">
       <div class="rd-mood-donut" role="img" aria-label="${visible.map(g => `${g.label} ${num(mood[g.key])}건`).join(', ')}"><svg viewBox="0 0 140 140" aria-hidden="true"><g transform="rotate(-90 70 70)">${rings}</g></svg><div><strong>${num(total)}</strong><small>분석 건수</small></div></div>
       <div class="rd-mood-key">${visible.map(g => `<span><i class="${g.cls}"></i><b>${g.label}</b><strong>${pct(mood[g.key] / total * 100)}</strong><small>${num(mood[g.key])}건</small></span>`).join('')}</div>
     </div>`;
-    document.getElementById('rdHeaderVerdict').innerHTML = `<span class="rd-verdict-icon" aria-hidden="true"><i></i><i></i><i></i></span><div><strong>${leading.label} 반응이 ${pct(leadingRate)}로 가장 많습니다.</strong><p>${leading.key === 'P' ? '전반적인 평가는 긍정적입니다.' : leading.key === 'N' ? '부정 의견의 원인을 먼저 확인하세요.' : '서로 다른 평가가 함께 나타납니다.'}</p></div>`;
+    let verdictTitle, verdictBody;
+    if (rates.P >= 70) {
+      verdictTitle = '대체로 긍정적인 반응이 많은 게임입니다.';
+      verdictBody = `분석한 리뷰의 ${pct(rates.P)}가 긍정 반응으로 분류되어, 전반적인 평가가 양호합니다.`;
+    } else if (rates.P >= 55) {
+      verdictTitle = '긍정적인 반응이 다소 우세한 게임입니다.';
+      verdictBody = `긍정 반응이 ${pct(rates.P)}로 절반을 넘지만, 부정과 혼합 반응도 함께 확인할 필요가 있습니다.`;
+    } else if (rates.N >= 40) {
+      verdictTitle = '부정적인 반응을 먼저 살펴볼 필요가 있습니다.';
+      verdictBody = `분석한 리뷰의 ${pct(rates.N)}가 부정 반응으로 분류됐습니다. 반복해서 언급된 문제부터 확인하세요.`;
+    } else {
+      verdictTitle = '긍정과 부정이 함께 나타나는 게임입니다.';
+      verdictBody = `가장 큰 반응은 ${leading.label} ${pct(leadingRate)}이며, 한쪽 평가만으로 전체 반응을 설명하기 어렵습니다.`;
+    }
+    document.getElementById('rdHeaderVerdict').innerHTML = `<span class="rd-verdict-icon" aria-hidden="true"><i></i><i></i><i></i></span><div><strong>${verdictTitle}</strong><p>${verdictBody}</p></div>`;
   }
 
   function renderCohorts() {
