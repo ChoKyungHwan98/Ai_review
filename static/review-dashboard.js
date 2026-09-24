@@ -46,26 +46,36 @@ window.ReviewDashboard = (() => {
     expanded = false;
     const small = smallCohort();
     const language = ({koreana:'한국어',english:'영어',all:'전체 언어',japanese:'일본어',schinese:'중국어 간체',unknown:'언어 정보 없음'})[evidence.language] || evidence.language;
+    const coverage = counts.collected ? ` (${pct(counts.analyzed / counts.collected * 100)})` : '';
     document.getElementById('overviewTitle').textContent = `${V.game?.name || '게임'} 리뷰 진단`;
-    document.getElementById('ovCoverage').textContent = `${language} · ${evidence.period ? `${evidence.period.start.replaceAll('-','.')} – ${evidence.period.end.replaceAll('-','.')}` : '기간 정보 없음'} · 수집 ${num(counts.collected)}건 / AI 분석 ${num(counts.analyzed)}건`;
+    document.getElementById('ovCoverage').textContent = `${language} · ${evidence.period ? `${evidence.period.start.replaceAll('-','.')} – ${evidence.period.end.replaceAll('-','.')}` : '기간 정보 없음'} · 수집 ${num(counts.collected)}건 중 AI 분석 ${num(counts.analyzed)}건${coverage}`;
+    document.getElementById('rdPageArt').innerHTML = V.game?.header_image
+      ? `<img src="${esc(V.game.header_image)}" alt="" />` : '<span>게임 이미지 없음</span>';
+    document.getElementById('rdPageActions').innerHTML = `<button class="rd-btn" type="button" onclick="startNewAnalysis(${Number(id)},null,null,true)">추가 수집</button><a class="rd-btn" href="/api/reviews/download?app_id=${Number(id)}" download>원문 내려받기</a><a class="rd-btn primary" href="/api/analysis/download?app_id=${Number(id)}" download>분석 결과 내려받기</a>`;
+    const finding = concern && strength
+      ? `<b>${esc(strength.name)}</b>은 칭찬 ${num(strength.pos)}건, <b>${esc(concern.name)}</b>은 불만 ${num(concern.neg)}건으로 가장 많이 언급됐습니다.`
+      : concern ? `<b>${esc(concern.name)}</b>에서 불만 ${num(concern.neg)}건이 가장 많이 모였습니다.`
+      : strength ? `<b>${esc(strength.name)}</b>에서 칭찬 ${num(strength.pos)}건이 가장 많이 모였습니다.`
+      : '주제별 반응을 판단할 분석 결과가 없습니다.';
     root.innerHTML = `
-      <div class="rd-toolbar">
-        <div class="rd-tools"><button class="rd-btn" data-action="collect">추가 수집</button><a class="rd-btn" href="/api/reviews/download?app_id=${appId}" download>원문 CSV</a><a class="rd-btn" href="/api/analysis/download?app_id=${appId}" download>분석 CSV ↓</a></div></div>
-      <div class="rd-hero">
-        <div class="rd-game-image">${V.game?.header_image ? `<img src="${esc(V.game.header_image)}" alt="${esc(V.game.name || '게임')} 대표 이미지" />` : '<span>게임 이미지 없음</span>'}</div>
+      <div class="rd-overview-grid">
         <section class="rd-mood rd-card" aria-labelledby="rdMoodTitle">
-          <div class="rd-mood-intro"><h2 id="rdMoodTitle">리뷰 감정 분포</h2><p>분석 ${num(counts.analyzed)}건 · 추천 여부와 별개</p></div>
+          <div class="rd-mood-intro"><h2 id="rdMoodTitle">리뷰 반응 분포</h2><p>AI가 읽은 ${num(counts.analyzed)}건 · 게임 추천 여부와 별개</p></div>
           <div id="rdMoodChart"></div>
         </section>
-      </div>
-      <div class="rd-signals">
-        <button class="rd-signal" data-action="select" data-theme="${esc(strength?.name || '')}"><span class="rd-eyebrow">긍정 반응 최다</span><strong>${esc(strength?.name || '분석 대기')}</strong><span class="rd-big">${num(strength?.pos)}<small>건</small></span><small>칭찬이 가장 많이 모인 주제</small></button>
-        <button class="rd-signal rd-signal-concern" data-action="select" data-theme="${esc(concern?.name || '')}"><span class="rd-eyebrow">부정 반응 최다</span><strong>${esc(concern?.name || '뚜렷한 불만 없음')}</strong><span class="rd-big">${num(concern?.neg)}<small>건</small></span><small>${concern ? '불만이 가장 많이 모인 주제' : '원문이 쌓이면 다시 확인하세요'}</small></button>
-        <button class="rd-signal" data-action="${small ? 'cohort' : 'recommended'}"><span class="rd-eyebrow">${small ? '추가 확인 필요' : '놓치기 쉬운 의견'}</span><strong>${esc(small?.label || '추천 속 불만')}</strong><span class="rd-big">${num(small?.n ?? counts.recommended_complaints)}<small>건</small></span><small>${small ? `비추천 ${num(small.negative)} / ${num(small.n)}건 · 판단 보류` : counts.recommended_complaints ? '추천 리뷰에도 불만이 있습니다' : '이번 자료에서는 발견되지 않았습니다'}</small></button>
+        <section class="rd-findings rd-card" aria-labelledby="rdFindingsTitle">
+          <div class="rd-findings-head"><h2 id="rdFindingsTitle">한눈에 보는 핵심 발견</h2><p>칭찬과 불만을 함께 비교하고, 표본이 적은 구간은 따로 표시합니다.</p></div>
+          <p class="rd-finding-line">${finding}</p>
+          <div class="rd-signals">
+            <button class="rd-signal rd-signal-concern rd-signal-primary" data-action="select" data-theme="${esc(concern?.name || '')}"><span class="rd-eyebrow">가장 많은 불만</span><strong>${esc(concern?.name || '뚜렷한 불만 없음')}</strong><span class="rd-big">${num(concern?.neg)}<small>건</small></span><small>${concern ? '주제 선택 시 원문 근거 확인' : '원문이 쌓이면 다시 확인하세요'}</small></button>
+            <button class="rd-signal rd-signal-strength" data-action="select" data-theme="${esc(strength?.name || '')}"><span class="rd-eyebrow">가장 많은 칭찬</span><strong>${esc(strength?.name || '분석 대기')}</strong><span class="rd-big">${num(strength?.pos)}<small>건</small></span><small>강점으로 검토할 주제</small></button>
+            <button class="rd-signal rd-signal-caution" data-action="${small ? 'cohort' : 'recommended'}"><span class="rd-eyebrow">${small ? '추가 확인 필요' : '놓치기 쉬운 의견'}</span><strong>${esc(small?.label || '추천 속 불만')}</strong><span class="rd-big">${small ? pct(small.negative_rate) : num(counts.recommended_complaints)}<small>${small ? '' : '건'}</small></span><small>${small ? `비추천 ${num(small.negative)} / ${num(small.n)}건 · 표본 적음` : counts.recommended_complaints ? '추천 리뷰에도 불만이 있습니다' : '이번 자료에서는 발견되지 않았습니다'}</small></button>
+          </div>
+        </section>
       </div>
       <div class="rd-main">
         <section class="rd-card" aria-labelledby="rdTopicsTitle">
-          <div class="rd-card-head"><div><h2 id="rdTopicsTitle">주제별 반응</h2><p>AI 분석 ${num(counts.analyzed)}건 · 주제별 리뷰 수</p></div>
+          <div class="rd-card-head"><div><h2 id="rdTopicsTitle">주제별 반응</h2><p>${concern ? `불만은 <b>${esc(concern.name)}</b>에 가장 많이 모였습니다. ` : ''}한 리뷰에 여러 주제가 담길 수 있습니다.</p></div>
           <div class="rd-toggle" aria-label="주제 정렬"><button data-action="sort" data-sort="negative">불만순</button><button data-action="sort" data-sort="mentions">언급순</button></div></div>
           <div class="rd-chart-key"><span>← 불만</span><span>칭찬 →</span></div><div id="rdTopicChart"></div>
           <div class="rd-chart-footer"><p class="rd-caption">같은 축 · 한 리뷰에서 칭찬과 불만을 함께 셀 수 있음</p><button class="rd-text-btn" data-action="expand" id="rdExpand">전체 주제</button></div>
@@ -73,7 +83,7 @@ window.ReviewDashboard = (() => {
         <section class="rd-card rd-detail" id="rdDetail" aria-live="polite" aria-label="선택한 주제의 근거"></section>
       </div>
       <div class="rd-lower" id="rdCohorts">
-        <section class="rd-card"><div class="rd-card-head"><div><h2>플레이 시간별 비추천 비율</h2><p>작성 당시 플레이 시간 기준 · 전체 ${pct(evidence.sample_negative_rate)}</p></div></div><div id="rdCohortChart"></div>
+        <section class="rd-card"><div class="rd-card-head"><div><h2>플레이 시간별 비추천 비율</h2><p>${small ? `${esc(small.label)} ${pct(small.negative_rate)} · 표본 ${num(small.n)}건으로 판단 보류` : `작성 당시 플레이 시간 기준 · 전체 ${pct(evidence.sample_negative_rate)}`}</p></div></div><div id="rdCohortChart"></div>
           ${small ? `<div class="rd-small-note">${esc(small.label)}은 비추천 ${num(small.negative)} / ${num(small.n)}건. 표본이 적어 판단을 보류합니다.</div>` : ''}
           <p class="rd-caption">각 구간은 서로 다른 리뷰 작성자입니다. 유저 이탈률이나 시간이 흐른 뒤의 만족도 변화가 아닙니다.${counts.unknown_playtime ? ` 작성 시 플레이 시간 미상 ${num(counts.unknown_playtime)}건 제외.` : ''}</p>
         </section>
@@ -153,7 +163,7 @@ window.ReviewDashboard = (() => {
     target.innerHTML = `<div class="rd-mood-visual">
       <div class="rd-mood-donut" role="img" aria-label="${visible.map(g => `${g.label} ${num(mood[g.key])}건`).join(', ')}" style="background:conic-gradient(${slices.join(',')})"><div><strong>${num(total)}</strong><small>분석 건수</small></div></div>
       <div class="rd-mood-key">${visible.map(g => `<span><i class="${g.cls}"></i><b>${g.label}</b><strong>${pct(mood[g.key] / total * 100)}</strong><small>${num(mood[g.key])}건</small></span>`).join('')}</div>
-    </div>`;
+    </div><p class="rd-mood-takeaway">${visible.length ? `${visible.reduce((a,b) => Number(mood[a.key]) >= Number(mood[b.key]) ? a : b).label} 반응 ${pct(Math.max(...visible.map(g => Number(mood[g.key]))) / total * 100)}가 가장 많습니다.` : ''}</p>`;
   }
 
   function renderCohorts() {

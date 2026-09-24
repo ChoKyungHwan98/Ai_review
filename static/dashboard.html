@@ -1609,8 +1609,8 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260924f">
-<script src="/static/review-dashboard.js?v=20260924f"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260924g">
+<script src="/static/review-dashboard.js?v=20260924g"></script>
 </head>
 <body>
 <div class="app">
@@ -1687,8 +1687,14 @@ body.no-analysis #ovBody { display: none; }
     <!-- 1) OVERVIEW                                                       -->
     <!-- ================================================================ -->
     <section class="page active" data-page="overview">
-      <h1 class="title" id="overviewTitle">리뷰 진단</h1>
-      <p class="subtitle ov-coverage" id="ovCoverage"></p>
+      <div class="rd-page-header">
+        <div class="rd-page-art" id="rdPageArt" aria-hidden="true"></div>
+        <div class="rd-page-copy">
+          <h1 class="title" id="overviewTitle">리뷰 진단</h1>
+          <p class="subtitle ov-coverage" id="ovCoverage"></p>
+        </div>
+        <div class="rd-page-actions" id="rdPageActions"></div>
+      </div>
 
       <!-- 분석 전·옛 방식일 때만 보이는 안내 -->
       <div class="hero ov-empty" id="ovEmpty">
@@ -2984,6 +2990,8 @@ async function startAnalysis(appId, gameName) {
 function setNoAnalysisState(on, title, body, cta) {
   document.body.classList.toggle('no-analysis', !!on);
   if (!on) return;
+  document.getElementById('rdPageArt')?.replaceChildren();
+  document.getElementById('rdPageActions')?.replaceChildren();
   const titleEl = document.getElementById('execTitle');
   const bodyEl = document.getElementById('execSummary');
   if (titleEl) titleEl.textContent = title;
@@ -3004,6 +3012,10 @@ async function load(appId) {
     return;
   }
   currentAppId = appId || currentAppId;
+  if (!r5.ok) {
+    document.getElementById('overviewTitle').textContent = '리뷰 진단';
+    document.getElementById('ovCoverage').textContent = '';
+  }
 
   if (r5.status === 404 && r4.status === 404) {
     // 아직 분석하지 않은 게임이다. 실패가 아니라 시작 전 상태다.
