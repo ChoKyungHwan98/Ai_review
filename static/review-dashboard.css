@@ -394,6 +394,25 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 .rd-detail > .rd-detail-metrics > div:first-child { padding-left:0; }
 .rd-detail > .rd-detail-metrics > div + div { border-left:1px solid var(--rd-line); }
 .rd-detail > .rd-detail-metrics > div:last-child { padding-right:0; }
+.rd-detail-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.rd-detail-head h2 { margin-bottom:0; }
+.rd-evidence-link { flex:none; padding-top:2px; }
+.rd-problem-summary { margin:16px 0 14px; padding:13px 14px; border-radius:10px; background:#F2F7FE; color:#355477; }
+.rd-problem-summary b { display:block; margin-bottom:5px; color:#1B64DA; font-size:13px; }
+.rd-problem-summary p { margin:0; font-size:13px; line-height:1.65; }
+
+/* Wide desktop: keep the insight row compact and information dense. */
+@media (min-width:1500px) {
+  .rd-findings { padding:14px 18px 16px; }
+  .rd-findings .rd-signals { gap:8px; }
+  .rd-findings .rd-signal { grid-template-columns:44px minmax(0,1fr); min-height:116px; padding:14px 16px; align-items:center; }
+  .rd-signal-icon { width:42px; height:42px; }
+  .rd-findings .rd-signal-copy { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto auto auto; align-items:center; column-gap:12px; row-gap:2px; width:100%; }
+  .rd-findings .rd-signal .rd-eyebrow { grid-column:1/-1; }
+  .rd-findings .rd-signal strong { grid-column:1; grid-row:2; font-size:20px; }
+  .rd-findings .rd-signal .rd-big { grid-column:2; grid-row:2/4; font-size:29px; }
+  .rd-findings .rd-signal-copy > small { grid-column:1; grid-row:3; }
+}
 
 @media (max-width:1380px) {
   .page[data-page="overview"] .rd-page-header { grid-template-columns:1fr; }

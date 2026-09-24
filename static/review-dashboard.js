@@ -97,9 +97,9 @@ window.ReviewDashboard = (() => {
 
   function renderTopics() {
     const rows = [...evidence.themes].sort((a,b) => sort === 'negative' ? b.neg - a.neg || b.mentions - a.mentions : b.mentions - a.mentions || b.neg - a.neg);
-    let visible = expanded ? rows : rows.slice(0,8);
+    let visible = expanded ? rows : rows.slice(0,10);
     const chosen = themeByName(selected);
-    if (chosen && !visible.includes(chosen) && !expanded) visible = [...visible.slice(0,7), chosen];
+    if (chosen && !visible.includes(chosen) && !expanded) visible = [...visible.slice(0,9), chosen];
     const max = Math.max(10, Math.ceil(Math.max(0, ...evidence.themes.flatMap(t => [t.pos,t.neg])) / 10) * 10);
     const width = value => value / max * 200;
     const tickXs = [40,140,240,340,440];
@@ -120,13 +120,14 @@ window.ReviewDashboard = (() => {
     const example = t.examples[sentiment][0];
     const definition = data.themes?.find(row => row.name === t.name)?.desc;
     const action = data.actions?.find(row => row.theme === t.name);
-    target.innerHTML = `<span class="rd-eyebrow">${isAssociation ? '비추천과의 연관 차이가 큰 주제' : '선택한 주제 · 원문으로 확인'}</span><h2>${esc(t.name)}</h2><p class="rd-desc">${esc(definition || '칭찬과 불만을 함께 살펴보세요.')}</p>
+    target.innerHTML = `<div class="rd-detail-head"><div><span class="rd-eyebrow">선택한 주제 상세</span><h2>${esc(t.name)}</h2></div><button class="rd-text-btn rd-evidence-link" data-action="evidence" data-sentiment="${sentiment}">원문으로 확인 →</button></div><p class="rd-desc">${esc(definition || '칭찬과 불만을 함께 살펴보세요.')}</p>
       <div class="rd-detail-metrics"><div><strong>${num(t.neg)}<small>건</small></strong><span>불만 리뷰</span></div><div><strong>${num(t.pos)}<small>건</small></strong><span>칭찬 리뷰</span></div><div><strong style="font-size:22px">${signed(t.exclusion_delta)}</strong><span>주제 제외 시 추천률 차이</span></div></div>
       <p class="rd-caption">관찰된 연관 차이입니다. 이 문제를 고쳤을 때의 상승 예상치는 아닙니다.</p>
+      ${action?.prob ? `<div class="rd-problem-summary"><b>핵심 문제</b><p>${esc(action.prob)}</p></div>` : ''}
       ${example ? `<blockquote class="rd-quote"><p>“${esc(example.content)}${example.truncated?'…':''}”</p><footer>${sentiment==='N'?'불만':'칭찬'}으로 분류 · ${example.recommended?'게임 추천':'게임 비추천'} · ${example.hours==null?'시간 미상':`${num(Math.round(example.hours))}시간`}</footer></blockquote>` : '<p class="rd-caption">연결된 원문이 없습니다.</p>'}
       ${t.neg ? `<span class="rd-inline-note">불만 ${num(t.neg)}건 중 <b>${num(t.negative_recommended)}건은 게임을 추천</b>했습니다.</span>` : '<span class="rd-inline-note">현재 분석에서 이 주제의 불만은 발견되지 않았습니다.</span>'}
-      <div class="rd-detail-actions"><button class="rd-btn primary" data-action="evidence" data-sentiment="${sentiment}">원문 ${sentiment==='N'?'불만':'칭찬'} ${num(t[sentiment==='N'?'neg':'pos'])}건 보기 →</button><button class="rd-btn" data-action="evidence" data-sentiment="all">전체 근거</button></div>
-      ${action ? `<details class="rd-ai-detail"><summary>AI가 정리한 문제와 제안</summary><p><b>경험한 문제</b><br>${esc(action.prob || '정리된 문제 없음')}</p>${action.why?`<p><b>AI가 정리한 원인 추정</b><br>${esc(action.why)}</p>`:''}${action.fix?.length?`<p><b>리뷰에서 추출한 제안</b><br>${action.fix.map(esc).join(' · ')}</p>`:''}<p class="rd-caption">AI 요약에는 추정이나 잘못된 연결이 포함될 수 있습니다. 원문 확인 후 기획에 반영하세요.</p></details>`:''}`;
+      <div class="rd-detail-actions"><button class="rd-btn" data-action="evidence" data-sentiment="all">전체 근거 보기</button></div>
+      ${action ? `<details class="rd-ai-detail"><summary>원인과 개선 제안</summary>${action.why?`<p><b>원인 추정</b><br>${esc(action.why)}</p>`:''}${action.fix?.length?`<p><b>리뷰에서 추출한 제안</b><br>${action.fix.map(esc).join(' · ')}</p>`:''}<p class="rd-caption">AI 요약에는 추정이나 잘못된 연결이 포함될 수 있습니다. 원문 확인 후 기획에 반영하세요.</p></details>`:''}`;
   }
 
   function renderMood() {
