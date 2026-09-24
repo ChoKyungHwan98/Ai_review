@@ -51,15 +51,18 @@ window.ReviewDashboard = (() => {
     root.innerHTML = `
       <div class="rd-toolbar">
         <div class="rd-tools"><button class="rd-btn" data-action="collect">추가 수집</button><a class="rd-btn" href="/api/reviews/download?app_id=${appId}" download>원문 CSV</a><a class="rd-btn" href="/api/analysis/download?app_id=${appId}" download>분석 CSV ↓</a></div></div>
+      <div class="rd-hero">
+        <div class="rd-game-image">${V.game?.header_image ? `<img src="${esc(V.game.header_image)}" alt="${esc(V.game.name || '게임')} 대표 이미지" />` : '<span>게임 이미지 없음</span>'}</div>
+        <section class="rd-mood rd-card" aria-labelledby="rdMoodTitle">
+          <div class="rd-mood-intro"><h2 id="rdMoodTitle">리뷰 감정 분포</h2><p>분석 ${num(counts.analyzed)}건 · 추천 여부와 별개</p></div>
+          <div id="rdMoodChart"></div>
+        </section>
+      </div>
       <div class="rd-signals">
         <button class="rd-signal" data-action="select" data-theme="${esc(strength?.name || '')}"><span class="rd-eyebrow">긍정 반응 최다</span><strong>${esc(strength?.name || '분석 대기')}</strong><span class="rd-big">${num(strength?.pos)}<small>건</small></span><small>칭찬이 가장 많이 모인 주제</small></button>
         <button class="rd-signal rd-signal-concern" data-action="select" data-theme="${esc(concern?.name || '')}"><span class="rd-eyebrow">부정 반응 최다</span><strong>${esc(concern?.name || '뚜렷한 불만 없음')}</strong><span class="rd-big">${num(concern?.neg)}<small>건</small></span><small>${concern ? '불만이 가장 많이 모인 주제' : '원문이 쌓이면 다시 확인하세요'}</small></button>
         <button class="rd-signal" data-action="${small ? 'cohort' : 'recommended'}"><span class="rd-eyebrow">${small ? '추가 확인 필요' : '놓치기 쉬운 의견'}</span><strong>${esc(small?.label || '추천 속 불만')}</strong><span class="rd-big">${num(small?.n ?? counts.recommended_complaints)}<small>건</small></span><small>${small ? `비추천 ${num(small.negative)} / ${num(small.n)}건 · 판단 보류` : counts.recommended_complaints ? '추천 리뷰에도 불만이 있습니다' : '이번 자료에서는 발견되지 않았습니다'}</small></button>
       </div>
-      <section class="rd-mood rd-card" aria-labelledby="rdMoodTitle">
-        <div class="rd-mood-intro"><h2 id="rdMoodTitle">리뷰 감정 분포</h2><p>분석 ${num(counts.analyzed)}건 · 추천 여부와 별개</p></div>
-        <div id="rdMoodChart"></div>
-      </section>
       <div class="rd-main">
         <section class="rd-card" aria-labelledby="rdTopicsTitle">
           <div class="rd-card-head"><div><h2 id="rdTopicsTitle">주제별 반응</h2><p>AI 분석 ${num(counts.analyzed)}건 · 주제별 리뷰 수</p></div>

@@ -186,7 +186,13 @@ def _game_file(app_id, filename):
 
 @app.get("/api/games", summary="분석된 게임 목록", include_in_schema=False)
 def list_games():
-    return {"games": _load_games()}
+    # An abandoned or failed analysis is not a project in the library.
+    visible = []
+    for game in _load_games():
+        folder = os.path.join(cfg.PROJECTS_DIR, str(game.get("app_id")))
+        if any(os.path.isfile(os.path.join(folder, name)) for name in ("insights_v5.json", "insights_v4.json")):
+            visible.append(game)
+    return {"games": visible}
 
 
 @app.delete("/api/games/{app_id}", summary="프로젝트 삭제", include_in_schema=False)
@@ -238,15 +244,20 @@ def search_steam_game(app_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+REVIEW_LANGUAGES = {"koreana", "english", "japanese", "schinese", "tchinese", "all"}
+
+
 @app.get("/api/games/review-stats", summary="Steam 리뷰 모집단 통계", include_in_schema=False)
-def review_population_stats(app_id: int):
-    """Steam appreviews API로 한국어 리뷰 모집단 통계를 조회합니다."""
+def review_population_stats(app_id: int, language: str = "koreana"):
+    """Steam appreviews API로 선택한 언어의 리뷰 통계를 조회합니다."""
     import httpx, math
+    if language not in REVIEW_LANGUAGES:
+        raise HTTPException(status_code=422, detail="지원하지 않는 리뷰 언어입니다")
     url = f"https://store.steampowered.com/appreviews/{app_id}"
     try:
-        # 한국어 리뷰 통계
+        # 선택 언어의 리뷰 통계
         r_kr = httpx.get(url, params={
-            "json": 1, "filter": "recent", "language": "koreana",
+            "json": 1, "filter": "recent", "language": language,
             "review_type": "all", "purchase_type": "all",
             "num_per_page": 0, "filter_offtopic_activity": 0,
         }, timeout=15.0)
@@ -296,33 +307,28 @@ def review_population_stats(app_id: int):
         driver_5 = "MIN_NEG" if n_for_neg > sample_5pct else "Cochran"
         driver_3 = "MIN_NEG" if n_for_neg > sample_3pct else "Cochran"
 
-        # 예상 비용 (Gemini 2.0 Flash 기준)
-        avg_tokens = 1100  # 입출력 합산 평균
-        cost_per_review = avg_tokens * (0.10 + 0.40) / 2 / 1_000_000
-        est_cost_5 = round(actual_5pct * cost_per_review, 4)
-        est_cost_3 = round(actual_3pct * cost_per_review, 4)
-
         return {
             "app_id": app_id,
             "global": {
                 "total": total_all,
                 "score": score,
             },
-            "korean": {
+            "selected": {
                 "total": total_kr,
                 "positive": pos_kr,
                 "negative": neg_kr,
                 "pos_rate": round(pos_kr / total_kr * 100, 1) if total_kr > 0 else 0,
                 "neg_rate": round(neg_kr / total_kr * 100, 1) if total_kr > 0 else 0,
             },
+            "language": language,
+            "korean": {"total": total_kr, "positive": pos_kr, "negative": neg_kr,
+                       "pos_rate": round(pos_kr / total_kr * 100, 1) if total_kr else 0,
+                       "neg_rate": round(neg_kr / total_kr * 100, 1) if total_kr else 0} if language == "koreana" else None,
             "sample_design": {
                 # Cochran 순수 통계 최솟값
                 "sample_5pct": actual_5pct,
                 "sample_3pct": actual_3pct,
-                "est_cost_5pct": est_cost_5,
-                "est_cost_3pct": est_cost_3,
                 "p_applied": round(p_val, 4),
-                "model": "google/gemini-2.5-flash-lite",
                 # 실제 수집 결정 근거
                 "cochran_5pct": sample_5pct,
                 "cochran_3pct": sample_3pct,
@@ -338,51 +344,14 @@ def review_population_stats(app_id: int):
 
 @app.get("/api/models", summary="OpenRouter 모델 목록 조회", include_in_schema=False)
 def get_openrouter_models():
-    """OpenRouter API를 통해 최신 모델 정보를 가져와 동적으로 반환합니다."""
-    import httpx
-    curated = {
-        "google/gemini-2.5-flash-lite": "Google Gemini 2.5 Flash Lite (초고속 & 초저가 - 추천)",
-        "google/gemini-2.0-pro-exp-02-15": "Google Gemini 2.0 Pro Experimental (고성능 종합 추론)",
-        "meta-llama/llama-3.3-70b-instruct": "Llama 3.3 70B Instruct (균형 잡힌 오픈소스)",
-        "anthropic/claude-3.5-sonnet": "Anthropic Claude 3.5 Sonnet (최상급 감성 판단력)",
-        "deepseek/deepseek-chat": "DeepSeek V3 (초고효율 가성비 모델)"
-    }
-    
-    fallback = [
-        {"id": "google/gemini-2.5-flash-lite", "name": "Google Gemini 2.5 Flash Lite (초고속 & 초저가 - 추천)", "input_cost": 0.10, "output_cost": 0.40},
-        {"id": "google/gemini-2.0-pro-exp-02-15", "name": "Google Gemini 2.0 Pro Experimental (고성능 종합 추론)", "input_cost": 0.0, "output_cost": 0.0},
-        {"id": "meta-llama/llama-3.3-70b-instruct", "name": "Llama 3.3 70B Instruct (균형 잡힌 오픈소스)", "input_cost": 0.23, "output_cost": 0.4},
-        {"id": "anthropic/claude-3.5-sonnet", "name": "Anthropic Claude 3.5 Sonnet (최상급 감성 판단력)", "input_cost": 3.0, "output_cost": 15.0},
-        {"id": "deepseek/deepseek-chat", "name": "DeepSeek V3 (초고효율 가성비 모델)", "input_cost": 0.14, "output_cost": 0.28}
-    ]
-    
+    """Live text-capable models with published prices; never label an old slug free."""
+    from model_catalog import list_models
     try:
-        r = httpx.get("https://openrouter.ai/api/v1/models", timeout=3.0)
-        if r.status_code == 200:
-            data = r.json()
-            models = data.get("data", [])
-            available_models = []
-            for m in models:
-                if m["id"] in curated:
-                    pricing = m.get("pricing", {})
-                    # pricing values are in dollars per token, convert to $ per 1M tokens
-                    input_cost = float(pricing.get("prompt", 0)) * 1_000_000
-                    output_cost = float(pricing.get("completion", 0)) * 1_000_000
-                    available_models.append({
-                        "id": m["id"],
-                        "name": curated[m["id"]],
-                        "input_cost": input_cost,
-                        "output_cost": output_cost
-                    })
-            if available_models:
-                # Sort available models in the original curated order
-                curated_order = list(curated.keys())
-                available_models.sort(key=lambda x: curated_order.index(x["id"]))
-                return {"models": available_models}
-    except Exception:
-        pass
-        
-    return {"models": fallback}
+        models = list_models()
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"모델 목록을 확인할 수 없습니다: {exc}") from exc
+    return {"models": models, "free_count": sum(m["free"] for m in models),
+            "paid_count": sum(not m["free"] for m in models)}
 
 
 
@@ -419,7 +388,9 @@ def dashboard_data_v5(app_id: int = None):
     """요약 · 영향도 · 재미 종류 · 플레이 시간 · 할 일. 분석 전이면 404."""
     games = _load_games()
     if app_id is None:
-        app_id = games[0]["app_id"] if games else 1623730
+        if not games:
+            raise HTTPException(status_code=404, detail="완료된 분석 프로젝트가 없습니다")
+        app_id = games[0]["app_id"]
     game_info = next((g for g in games if g["app_id"] == app_id), None)
     path = _game_file(app_id, "insights_v5.json")
     if not path or not os.path.exists(path):
@@ -451,7 +422,9 @@ def dashboard_data_v4(app_id: int = None):
     """v4 가중치 보정 + 편향 점검 + 시계열 통합 JSON — 대시보드용 전처리 포함."""
     games = _load_games()
     if app_id is None:
-        app_id = games[0]["app_id"] if games else 1623730
+        if not games:
+            raise HTTPException(status_code=404, detail="완료된 분석 프로젝트가 없습니다")
+        app_id = games[0]["app_id"]
     
     game_info = next((g for g in games if g["app_id"] == app_id), None)
     game_name = (game_info.get("name_kr") or game_info.get("name")) if game_info else f"App {app_id}"
@@ -893,11 +866,13 @@ def api_usage(app_id: int = None):
     if os.path.exists(usage_path):
         with open(usage_path, "r", encoding="utf-8") as f:
             usage = json.load(f)
-    stages = [usage.get(stage) or {} for stage in ("A", "B", "C", "D")]
+    stages = [usage.get(stage) or {} for stage in ("A", "B", "C", "D", "V")]
     calls = sum(int(stage.get("calls") or 0) for stage in stages)
     in_tok = sum(int(stage.get("input") or 0) for stage in stages)
     out_tok = sum(int(stage.get("output") or 0) for stage in stages)
-    cost = (in_tok * cfg.MODEL_COST_INPUT + out_tok * cfg.MODEL_COST_OUTPUT) / 1_000_000
+    pricing = usage.get("pricing") or {"input_per_1m": cfg.MODEL_COST_INPUT,
+                                       "output_per_1m": cfg.MODEL_COST_OUTPUT}
+    cost = (in_tok * float(pricing["input_per_1m"]) + out_tok * float(pricing["output_per_1m"])) / 1_000_000
     return {
         "calls": calls,
         "input_tokens": in_tok,
@@ -905,7 +880,7 @@ def api_usage(app_id: int = None):
         "total_tokens": in_tok + out_tok,
         "cost_usd": round(cost, 4),
         "model": usage.get("model") or cfg.MODEL,
-        "pricing": {"input_per_1m": cfg.MODEL_COST_INPUT, "output_per_1m": cfg.MODEL_COST_OUTPUT},
+        "pricing": pricing,
         "budget_usd": cfg.BUDGET_USD,
         "cost_basis": "configured_rates",
     }
@@ -1229,7 +1204,7 @@ async def api_generate_hypothesis(payload: dict):
         "── 분석 지시사항 ──\n"
         "Step 1. 게임명과 리뷰 패턴을 바탕으로 이 게임의 장르와 핵심 메카닉을 먼저 파악하세요.\n"
         "  예: P의 거짓 → 소울라이크 → 핵심 메카닉: 패링/구르기, 보스전, 스태미나\n"
-        "  예: 팰월드 → 서바이벌 크래프팅 → 핵심 메카닉: 베이스 건설, 팰 포획, 멀티플레이\n\n"
+        "  예: 도시 건설 게임 → 시뮬레이션 → 핵심 메카닉: 자원 관리, 교통망, 주민 수요\n\n"
         "Step 2. 각 분야의 부정/긍정 패턴을 장르·메카닉 맥락에서 해석하여 기획 인사이트를 도출하세요.\n\n"
         "── 출력 규칙 (반드시 준수) ──\n"
         "1. 원문은 '패턴 파악용 참고 자료'이며 출력의 issue 필드에 그대로 인용·나열하지 말 것\n"
@@ -1294,7 +1269,7 @@ from typing import Optional
 class PipelineRunRequest(BaseModel):
     app_id: int
     lang: str = "koreana"
-    budget: float = 10.0
+    budget: float = 5.0
     target_error_pct: Optional[float] = None  # 슬라이더가 2.5 같은 소수 오차를 보낸다
     model: Optional[str] = None                # 화면에서 고른 분석 모델
     custom_sample_size: Optional[int] = None
@@ -1302,40 +1277,39 @@ class PipelineRunRequest(BaseModel):
 
 @app.post("/pipeline/run", summary="파이프라인 실행", include_in_schema=False)
 def trigger_pipeline(request: PipelineRunRequest, background_tasks: BackgroundTasks):
-    # dynamic registration of the game to games.json
-    games = _load_games()
-    exists = any(g["app_id"] == request.app_id for g in games)
-    if not exists:
+    if request.app_id <= 0 or request.lang not in REVIEW_LANGUAGES:
+        raise HTTPException(status_code=422, detail="게임 번호 또는 리뷰 언어를 확인하세요")
+    if not 0 < request.budget <= 100:
+        raise HTTPException(status_code=422, detail="분석 예산은 0달러보다 크고 100달러 이하여야 합니다")
+    from model_catalog import get_model
+    try:
+        model = get_model(request.model or cfg.MODEL)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"모델 가격을 확인할 수 없습니다: {exc}") from exc
+    if model is None:
+        raise HTTPException(status_code=422, detail="현재 OpenRouter 목록에 없는 모델입니다")
+
+    def run_and_publish():
+        result = run_pipeline(
+            app_id=request.app_id, lang=request.lang, budget=request.budget,
+            target_error_pct=request.target_error_pct, model=model["id"],
+            custom_sample_size=request.custom_sample_size, incremental=request.incremental,
+        )
+        if result.get("status") != "done" or (result.get("steps", {}).get("insights") or {}).get("status") != "done":
+            return
+        games = _load_games()
+        if any(str(g.get("app_id")) == str(request.app_id) for g in games):
+            return
         try:
             info = search_steam_game(request.app_id)
-            games.append({
-                "app_id": request.app_id,
-                "name": info["name"],
-                "header_image": info["header_image"],
-                "type": info["type"],
-                "short_description": info["short_description"]
-            })
-            _save_games(games)
         except Exception:
-            games.append({
-                "app_id": request.app_id,
-                "name": f"App {request.app_id}",
-                "header_image": "",
-                "type": "game",
-                "short_description": ""
-            })
-            _save_games(games)
+            info = {"app_id": request.app_id, "name": f"App {request.app_id}",
+                    "header_image": "", "type": "game", "short_description": ""}
+        games.append(info)
+        _save_games(games)
 
-    # Trigger background pipeline with incremental option
     background_tasks.add_task(
-        run_pipeline,
-        app_id=request.app_id,
-        lang=request.lang,
-        budget=request.budget,
-        target_error_pct=request.target_error_pct,
-        model=request.model,
-        custom_sample_size=request.custom_sample_size,
-        incremental=request.incremental
+        run_and_publish
     )
     return {"status": "started", "message": "파이프라인이 백그라운드에서 실행되었습니다."}
 

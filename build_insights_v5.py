@@ -23,6 +23,7 @@ from collections import Counter, defaultdict
 from datetime import datetime
 
 import httpx
+from budget_control import current as current_budget
 from dotenv import load_dotenv
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -308,14 +309,24 @@ def ask_summary(game, result, parts_by_theme, prompt=None):
         "messages": [{"role": "system", "content": SYSTEM_D},
                      {"role": "user", "content": prompt if prompt is not None else summary_prompt(game, result, parts_by_theme)}],
     }
-    r = httpx.post(cfg.OPENROUTER_URL, json=body, timeout=120,
-                   headers={"Authorization": f"Bearer {cfg.OPENROUTER_API_KEY}", "Content-Type": "application/json"})
-    r.raise_for_status()
-    data = r.json()
-    usage = data.get("usage") or {}
-    text = data["choices"][0]["message"]["content"].strip()
-    m = text[text.find("{"): text.rfind("}") + 1]
-    return json.loads(m or clean_json(text)), usage
+    guard = current_budget()
+    reservation = guard.reserve(body["messages"], body["max_tokens"]) if guard else None
+    usage_recorded = False
+    try:
+        r = httpx.post(cfg.OPENROUTER_URL, json=body, timeout=120,
+                       headers={"Authorization": f"Bearer {cfg.OPENROUTER_API_KEY}", "Content-Type": "application/json"})
+        r.raise_for_status()
+        data = r.json()
+        usage = data.get("usage") or {}
+        if guard:
+            guard.finish(reservation, usage)
+            usage_recorded = True
+        text = data["choices"][0]["message"]["content"].strip()
+        m = text[text.find("{"): text.rfind("}") + 1]
+        return json.loads(m or clean_json(text)), usage
+    finally:
+        if guard and not usage_recorded:
+            guard.finish(reservation)
 
 
 def rule_summary(result):

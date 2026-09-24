@@ -32,6 +32,7 @@ import re
 import random
 import argparse
 import httpx
+from budget_control import BudgetExceeded, current as current_budget
 from collections import Counter, defaultdict
 from dotenv import load_dotenv
 
@@ -39,7 +40,6 @@ from config import cfg
 
 API_KEY = cfg.OPENROUTER_API_KEY
 URL = cfg.OPENROUTER_URL
-MODEL = cfg.MODEL
 
 def get_analysis_csv(): return cfg.ANALYSIS_CSV
 def get_verify_set_csv(): 
@@ -105,11 +105,11 @@ def select_samples(rows: list) -> list:
 # ============ 2. LLM 재분석 (confidence 포함) ============
 VERIFY_SYSTEM = (
     "당신은 게임 유저 데이터 분석 전문가입니다. "
-    "Steam 한국 유저 리뷰를 분석하여 감성과 함께 분석 신뢰도(confidence)를 정직하게 보고합니다. "
+    "Steam 유저 리뷰를 언어에 관계없이 분석하여 감성과 함께 분석 신뢰도(confidence)를 정직하게 보고합니다. "
     "확신할 수 없을 때 confidence를 낮추는 것이 매우 중요합니다."
 )
 
-VERIFY_USER = """다음 한국 스팀 유저 리뷰의 감성을 분석하세요.
+VERIFY_USER = """다음 스팀 유저 리뷰의 감성을 분석하세요. 리뷰의 언어와 관계없이 사유는 한국어로 답하세요.
 
 리뷰: "{content}"
 
@@ -145,7 +145,7 @@ def call_llm(content: str, retries: int = 2) -> dict:
     user = VERIFY_USER.format(content=content[:1500])
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
     body = {
-        "model": MODEL,
+        "model": cfg.MODEL,
         "messages": [
             {"role": "system", "content": VERIFY_SYSTEM},
             {"role": "user", "content": user},
@@ -155,14 +155,50 @@ def call_llm(content: str, retries: int = 2) -> dict:
     }
     last_err = None
     for attempt in range(retries + 1):
+        guard = current_budget()
+        reservation = guard.reserve(body["messages"], body["max_tokens"]) if guard else None
+        usage_recorded = False
         try:
             r = httpx.post(URL, headers=headers, json=body, timeout=60.0)
             r.raise_for_status()
-            txt = r.json()["choices"][0]["message"]["content"]
-            return json.loads(clean_json(txt))
+            data = r.json()
+            usage = data.get("usage") or {}
+            if guard:
+                guard.finish(reservation, usage)
+                usage_recorded = True
+            usage_path = cfg.project_file("usage_v3.json")
+            try:
+                with open(usage_path, "r", encoding="utf-8") as stream:
+                    usage_data = json.load(stream)
+            except (FileNotFoundError, json.JSONDecodeError):
+                usage_data = {}
+            previous = usage_data.get("V") or {}
+            usage_data["V"] = {
+                "calls": int(previous.get("calls") or 0) + 1,
+                "input": int(previous.get("input") or 0) + int(usage.get("prompt_tokens") or 0),
+                "output": int(previous.get("output") or 0) + int(usage.get("completion_tokens") or 0),
+            }
+            usage_data["model"] = cfg.MODEL
+            with open(usage_path, "w", encoding="utf-8") as stream:
+                json.dump(usage_data, stream, ensure_ascii=False, indent=2)
+            txt = data["choices"][0]["message"]["content"]
+            parsed = json.loads(clean_json(txt))
+            if not isinstance(parsed, dict) or parsed.get("sentiment") not in (
+                    "POSITIVE", "NEGATIVE", "MIXED", "NEUTRAL"):
+                raise ValueError("검증 응답의 감정 분류 형식이 올바르지 않습니다")
+            confidence = float(parsed.get("confidence"))
+            if not 0 <= confidence <= 1:
+                raise ValueError("검증 응답의 확신도 범위가 올바르지 않습니다")
+            parsed["confidence"] = confidence
+            return parsed
+        except BudgetExceeded:
+            raise
         except Exception as e:
             last_err = e
             time.sleep(1.5 * (attempt + 1))  # exponential backoff
+        finally:
+            if guard and not usage_recorded:
+                guard.finish(reservation)
     raise last_err
 
 
@@ -207,6 +243,8 @@ def run_selection_and_reanalysis():
             n_ok += 1
             print(f"  [{i:2}/{len(samples)}] OK  cat={r['_category']:16s} "
                   f"pred={res.get('sentiment','?'):8s} conf={res.get('confidence',0):.2f}")
+        except BudgetExceeded:
+            raise
         except Exception as e:
             n_fail += 1
             print(f"  [{i:2}/{len(samples)}] FAIL rid={rid}: {str(e)[:80]}")

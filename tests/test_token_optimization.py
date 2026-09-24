@@ -71,6 +71,20 @@ class TokenOptimizationTests(unittest.TestCase):
         self.assertEqual(estimate["to_deep"], 0)
         self.assertEqual(estimate["to_analyze"], 1)
 
+    def test_switching_models_estimates_full_reanalysis(self):
+        rows = [{"recommendationid": "1", "content": "저장 오류가 여러 번 반복됩니다"}]
+        with (self.folder / "reviews.csv").open("w", encoding="utf-8-sig", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+        (self.folder / "analysis_v3.jsonl").write_text('{"id":"1","s":"N","t":[]}', encoding="utf-8")
+        (self.folder / "themes_v3.json").write_text("[]", encoding="utf-8")
+        (self.folder / "usage_v3.json").write_text('{"model":"other-model"}', encoding="utf-8")
+        estimate = estimate_remaining(FakeConfig(self.folder))
+        self.assertTrue(estimate["model_changed"])
+        self.assertEqual(estimate["to_analyze"], 1)
+        self.assertTrue(estimate["needs_verify"])
+
     def test_incomplete_deep_batch_is_not_silent(self):
         rows = [{"recommendationid": str(i), "content": "저장 오류가 여러 번 반복됩니다"} for i in (1, 2)]
         classified = {str(i): {"s": "N", "t": []} for i in (1, 2)}

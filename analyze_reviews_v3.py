@@ -27,6 +27,7 @@ import re
 import sys
 
 import httpx
+from budget_control import BudgetExceeded, current as current_budget
 from dotenv import load_dotenv
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -91,16 +92,24 @@ def clean_json(text):
 
 async def ask(client, stage, system, user, max_tokens):
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+    messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
     body = {
         "model": cfg.MODEL,
-        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+        "messages": messages,
         "temperature": 0.2,
         "max_tokens": max_tokens,
     }
+    if getattr(cfg, "MODEL_JSON_MODE", False):
+        body["response_format"] = {"type": "json_object"}
     last = None
     for _ in range(2):
+        guard = current_budget()
+        reservation = guard.reserve(messages, max_tokens) if guard else None
+        usage_recorded = False
         try:
             r = await client.post(URL, headers=headers, json=body, timeout=120.0)
+            if r.status_code in (400, 404) and body.pop("response_format", None):
+                raise ValueError("선택한 모델의 JSON 모드가 거부되어 일반 형식으로 재시도합니다")
             if r.status_code in (400, 401, 402, 403, 404):
                 raise FatalApiError(f"HTTP {r.status_code}: {r.text[:200]}")
             r.raise_for_status()
@@ -108,18 +117,29 @@ async def ask(client, stage, system, user, max_tokens):
             if "error" in data:
                 raise FatalApiError(str(data["error"])[:200])
             usage = data.get("usage") or {}
+            if guard:
+                guard.finish(reservation, usage)
+                usage_recorded = True
             USAGE[stage]["calls"] += 1
             USAGE[stage]["input"] += int(usage.get("prompt_tokens") or 0)
             USAGE[stage]["output"] += int(usage.get("completion_tokens") or 0)
-            parsed = json.loads(clean_json(data["choices"][0]["message"]["content"]))
+            content = data["choices"][0]["message"]["content"]
+            if isinstance(content, list):
+                content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
+            parsed = json.loads(clean_json(content or ""))
+            if isinstance(parsed, dict):
+                parsed = parsed.get("items")
             if not isinstance(parsed, list):
                 raise ValueError("응답이 배열이 아닙니다")
             return parsed
-        except FatalApiError:
+        except (FatalApiError, BudgetExceeded):
             raise
         except Exception as e:  # 일시적 오류만 한 번 더 시도한다
             last = e
             await asyncio.sleep(2.0)
+        finally:
+            if guard and not usage_recorded:
+                guard.finish(reservation)
     raise last
 
 
@@ -163,21 +183,21 @@ def read_jsonl(p):
 
 # ── A. 주제 찾기 ──────────────────────────────────────────────────────
 
-SYSTEM_A = "게임 기획자를 돕는 리뷰 분석가입니다. JSON 배열만 출력합니다."
+SYSTEM_A = "게임 기획자를 돕는 리뷰 분석가입니다. JSON 객체만 출력합니다."
 
-USER_A = """아래는 한 게임의 스팀 한국어 리뷰 {n}건입니다.
+USER_A = """아래는 한 게임의 스팀 리뷰 {n}건입니다. 여러 언어가 섞일 수 있습니다. 주제 이름과 설명은 한국어로 쓰세요.
 {reviews}
 
 유저들이 반복해서 말하는 게임의 구성 요소를 8~14개로 정리하세요.
 - name: 이 게임에 맞는 구체적인 대상 이름, 한국어 2~6자.
-  좋은 예: "팰 디자인", "건축", "서버 동기화", "최적화", "인벤토리", "튜토리얼"
-  나쁜 예: "게임플레이"(너무 넓음), "귀여운 팰"(평가가 들어감), "성취감"·"시간 순삭"(느낌이지 대상이 아님),
+  좋은 예: "저장", "조작", "서버 동기화", "최적화", "인벤토리", "튜토리얼"
+  나쁜 예: "게임플레이"(너무 넓음), "멋진 캐릭터"(평가가 들어감), "성취감"·"시간 순삭"(느낌이지 대상이 아님),
           "RPG"·"액션"(장르 이름), "최적화"와 "렉"을 따로(같은 것은 하나로)
 - 좋다·나쁘다는 넣지 마세요. 같은 주제로 칭찬과 불만을 모두 담을 수 있어야 합니다.
 - desc: 15자 이내 설명
 - area: graphics|gameplay|story|performance|value 중 하나
 - 비슷한 주제는 하나로 합치세요.
-[{{"name":"","desc":"","area":""}}]"""
+{{"items":[{{"name":"","desc":"","area":""}}]}}"""
 
 
 async def find_themes(client, long_rows):
@@ -193,11 +213,26 @@ async def find_themes(client, long_rows):
                        key=lambda r: -len(r["content"]))[:60]
     positives = [r for r in long_rows if r["voted_up"] not in ("0", "False", "false") and len(r["content"]) >= 20]
     rng.shuffle(positives)
-    sample = negatives + positives[: max(0, THEME_SAMPLE - len(negatives))]
-    payload = [{"up": 0 if r in negatives else 1, "t": r["content"][:300]} for r in sample]
+    # Keep both recommendation groups represented, and fit the chosen model's context.
+    interleaved = []
+    for index in range(max(len(negatives), len(positives))):
+        if index < len(negatives):
+            interleaved.append((0, negatives[index]))
+        if index < len(positives):
+            interleaved.append((1, positives[index]))
+    # Use the same evidence allowance across free and paid models for comparable results.
+    byte_limit = min(27000, max(12000, int(getattr(cfg, "MODEL_CONTEXT_LENGTH", 32768)) - 5000))
+    payload = []
+    for up, row in interleaved:
+        if len(payload) >= THEME_SAMPLE:
+            break
+        candidate = {"up": up, "t": row["content"][:300]}
+        if len(compact(payload + [candidate]).encode("utf-8")) > byte_limit:
+            break
+        payload.append(candidate)
 
-    print(f"[A] 리뷰 {len(sample)}건으로 주제를 찾습니다")
-    result = await ask(client, "A", SYSTEM_A, USER_A.format(n=len(sample), reviews=compact(payload)), 1500)
+    print(f"[A] 리뷰 {len(payload)}건으로 주제를 찾습니다")
+    result = await ask(client, "A", SYSTEM_A, USER_A.format(n=len(payload), reviews=compact(payload)), 1500)
     themes, seen = [], set()
     for t in result:
         name = str(t.get("name", "")).strip()
@@ -214,15 +249,16 @@ async def find_themes(client, long_rows):
 
 # ── B. 전체 분류 ──────────────────────────────────────────────────────
 
-SYSTEM_B = "게임 리뷰 분류기입니다. JSON 배열만 출력합니다. 설명하지 않습니다."
+SYSTEM_B = "게임 리뷰 분류기입니다. JSON 객체만 출력합니다. 설명하지 않습니다."
 
 USER_B = """주제: {themes}
 재미 종류: {fun}
+리뷰 원문은 여러 언어일 수 있습니다. k 요약은 한국어로 쓰세요.
 
 리뷰 (up=추천 여부, h=작성 시점 플레이 시간):
 {reviews}
 
-리뷰마다 한 항목씩 JSON 배열로 답하세요.
+리뷰마다 한 항목씩 {{"items":[...]}} 형식의 JSON 객체로 답하세요.
 - s: P 긍정, N 부정, M 섞임, U 판단 불가
 - s와 주제별 P/N은 리뷰 문장으로 판단하세요. 추천 여부(up)만으로 감정을 정하지 마세요.
 - f: 긍정·섞임 리뷰는 드러난 재미 종류를 1~2개 고르세요 (위 목록에서만). 근거가 전혀 없을 때만 []
@@ -351,7 +387,7 @@ async def classify(client, long_rows, themes):
                 if not missing:
                     return
                 batch = missing
-            except FatalApiError:
+            except (FatalApiError, BudgetExceeded):
                 raise
             except Exception as e:
                 print(f"  [B 묶음 실패 → 한 건씩] {str(e)[:80]}")
@@ -366,7 +402,7 @@ async def classify(client, long_rows, themes):
                         save(r, res[0])
                     else:
                         stats["fail"] += 1
-                except FatalApiError:
+                except (FatalApiError, BudgetExceeded):
                     raise
                 except Exception:
                     stats["fail"] += 1
@@ -380,7 +416,7 @@ async def classify(client, long_rows, themes):
             f_v3.flush(); f_v2.flush()
             if i % max(1, len(batches) // 10) == 0 or i == len(batches):
                 print(f"  [B] {i}/{len(batches)} 묶음 · 성공 {stats['ok']} · 실패 {stats['fail']}")
-    except FatalApiError:
+    except (FatalApiError, BudgetExceeded):
         for t in tasks:
             t.cancel()
         raise
@@ -397,15 +433,16 @@ async def classify(client, long_rows, themes):
 
 # ── C. 불만 심층 ──────────────────────────────────────────────────────
 
-SYSTEM_C = "게임 기획자를 돕는 리뷰 분석가입니다. 리뷰에 없는 내용은 지어내지 않습니다. JSON 배열만 출력합니다."
+SYSTEM_C = "게임 기획자를 돕는 리뷰 분석가입니다. 리뷰에 없는 내용은 지어내지 않습니다. JSON 객체만 출력합니다."
 
 USER_C = """주제: {themes}
+리뷰 원문은 여러 언어일 수 있습니다. prob, why, fix는 한국어로 쓰세요.
 
 불만이 있을 수 있는 리뷰입니다:
 {reviews}
 
-리뷰마다 불만만 주제별로 나눠 JSON 배열로 답하세요. 칭찬은 넣지 마세요.
-[{{"id":"","p":[{{"t":"주제","prob":"","why":"","fix":""}}]}}]
+리뷰마다 불만만 주제별로 나눠 {{"items":[...]}} 형식의 JSON 객체로 답하세요. 칭찬은 넣지 마세요.
+{{"items":[{{"id":"","p":[{{"t":"주제","prob":"","why":"","fix":""}}]}}]}}
 - prob: 무엇이 불편하거나 싫은가, 25자 이내
 - why: 리뷰가 직접 밝힌 원인. 추측하지 말고 없으면 빈 문자열
 - fix: 유저가 "~해줬으면", "~하면 좋겠다"처럼 직접 요청한 해결책만. 없으면 빈 문자열
@@ -458,7 +495,7 @@ async def dig_complaints(client, long_rows, classified, themes):
                 res = await ask(client, "C", SYSTEM_C,
                                 USER_C.format(themes=", ".join(theme_names), reviews=compact(payload)),
                                 240 * len(batch) + 100)
-            except FatalApiError:
+            except (FatalApiError, BudgetExceeded):
                 raise
             except Exception as e:
                 print(f"  [C 묶음 실패, 누락 건만 재시도] {str(e)[:80]}")
@@ -473,7 +510,7 @@ async def dig_complaints(client, long_rows, classified, themes):
                 res = await ask(client, "C", SYSTEM_C,
                                 USER_C.format(themes=", ".join(theme_names), reviews=compact(payload)), 900)
                 save_results(res, {rid})
-            except FatalApiError:
+            except (FatalApiError, BudgetExceeded):
                 raise
             except Exception as e:
                 print(f"  [C 단건 실패] {rid}: {str(e)[:80]}")
@@ -489,7 +526,7 @@ async def dig_complaints(client, long_rows, classified, themes):
         if retry_rows:
             print(f"  [C] 빠진 {len(retry_rows)}건만 단건 재시도")
             await asyncio.gather(*(retry_one(r) for r in retry_rows))
-    except FatalApiError:
+    except (FatalApiError, BudgetExceeded):
         for t in tasks:
             t.cancel()
         raise
@@ -514,6 +551,8 @@ def save_usage():
         old = prev.get(s, {})
         merged[s] = {k: int(old.get(k, 0)) + USAGE[s][k] for k in USAGE[s]}
     merged["model"] = cfg.MODEL
+    merged["pricing"] = {"input_per_1m": cfg.MODEL_COST_INPUT,
+                         "output_per_1m": cfg.MODEL_COST_OUTPUT}
     with open(p, "w", encoding="utf-8") as f:
         json.dump(merged, f, ensure_ascii=False, indent=2)
     tin = sum(merged[s]["input"] for s in ("A", "B", "C"))

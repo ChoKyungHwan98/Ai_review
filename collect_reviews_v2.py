@@ -15,6 +15,7 @@
 import csv
 import json
 import math
+import os
 import time
 import httpx
 
@@ -148,6 +149,7 @@ def collect_reviews(review_type, target, existing_ids):
             collected.append({
                 "recommendationid": rid,
                 "content": rv.get("review", "").replace("\r", " ").replace("\n", " ").strip(),
+                "language": rv.get("language", get_lang()),
                 "voted_up": 1 if rv.get("voted_up") else 0,
                 "votes_up": rv.get("votes_up", 0),
                 "votes_funny": rv.get("votes_funny", 0),
@@ -194,7 +196,11 @@ def main():
 
     # 3) 수집
     print("\n[3] 리뷰 수집 시작…")
-    seen_ids = set()
+    existing = []
+    if getattr(cfg, "INCREMENTAL", False) and os.path.exists(get_out_csv()):
+        with open(get_out_csv(), encoding="utf-8-sig", newline="") as stream:
+            existing = list(csv.DictReader(stream))
+    seen_ids = {str(row["recommendationid"]) for row in existing}
 
     print(f"\n  ── 긍정 리뷰 {design['n_pos']}건 수집 ──")
     pos_reviews = collect_reviews("positive", design["n_pos"], seen_ids)
@@ -202,22 +208,22 @@ def main():
     print(f"\n  ── 부정 리뷰 {design['n_neg']}건 수집 ──")
     neg_reviews = collect_reviews("negative", design["n_neg"], seen_ids)
 
-    all_reviews = pos_reviews + neg_reviews
+    all_reviews = existing + pos_reviews + neg_reviews
 
     # 4) CSV 저장
     if not all_reviews:
         print("❌ 수집된 리뷰가 없습니다.")
         return
 
-    fieldnames = list(all_reviews[0].keys())
+    fieldnames = list(dict.fromkeys(key for row in all_reviews for key in row.keys()))
     with open(get_out_csv(), "w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(all_reviews)
 
     # 5) 설계 기록 저장
-    actual_pos = sum(1 for r in all_reviews if r["voted_up"] == 1)
-    actual_neg = sum(1 for r in all_reviews if r["voted_up"] == 0)
+    actual_pos = sum(1 for r in all_reviews if str(r["voted_up"]).lower() in ("1", "true"))
+    actual_neg = len(all_reviews) - actual_pos
     actual_total = len(all_reviews)
     actual_error = margin_of_error(actual_total, pop["total"])
 
@@ -259,7 +265,7 @@ def main():
     else:
         print(f"  ⚠️ 모집단 비율과 {ratio_diff:.1f}%p 차이 — 표본 부족 가능")
 
-    avg_play = sum(r["playtime_forever_min"] for r in all_reviews) / max(actual_total, 1) / 60
+    avg_play = sum(int(r.get("playtime_forever_min") or 0) for r in all_reviews) / max(actual_total, 1) / 60
     print(f"  평균 플레이타임: {avg_play:.1f}시간")
     print(f"{'='*60}")
 

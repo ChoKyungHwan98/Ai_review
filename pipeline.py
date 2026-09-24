@@ -20,6 +20,7 @@ import json
 import time
 import argparse
 import threading
+import shutil
 from datetime import datetime
 
 # Windows 콘솔 UTF-8 출력 (cp949 인코딩 에러 방지)
@@ -28,6 +29,7 @@ if sys.platform == "win32":
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 from config import cfg
+from budget_control import activate as activate_budget, clear as clear_budget
 
 
 class PipelineResult:
@@ -122,6 +124,7 @@ def step_collect(result: PipelineResult):
 
     # 2) 기존 수집 파일 유효성 검사
     existing_count = 0
+    existing_language = None
     if os.path.exists(cfg.REVIEWS_CSV):
         import csv
         try:
@@ -129,28 +132,41 @@ def step_collect(result: PipelineResult):
                 existing_count = sum(1 for _ in csv.DictReader(f))
         except Exception:
             existing_count = 0
+    if os.path.exists(cfg.SAMPLE_JSON):
+        try:
+            with open(cfg.SAMPLE_JSON, "r", encoding="utf-8") as stream:
+                existing_language = (json.load(stream).get("params") or {}).get("language")
+        except (OSError, ValueError):
+            pass
+    incremental_mode = getattr(result, "incremental", False)
+    if incremental_mode and existing_count and existing_language != cfg.LANG:
+        raise ValueError("다른 언어의 기존 리뷰에는 이어서 수집할 수 없습니다. 새 분석으로 시작하세요")
 
     # 3) 기존 수집량이 목표량의 90% 이상인 경우 수집 단계를 건너뜀 (장애 재개 용도)
-    if existing_count >= target_size * 0.9:
+    if existing_count >= target_size * 0.9 and existing_language == cfg.LANG and not incremental_mode:
         print(f"  ✅ 유효한 기존 리뷰 파일 존재 ({existing_count}건, 목표 {target_size}건 충족) — 수집 스킵")
         result.record("collect", "skipped", {"existing_reviews": existing_count, "target_reviews": target_size})
         return
 
     # 4) 표본 설계가 달라졌거나 기존 데이터가 너무 적은 경우 새로 수집
-    incremental_mode = getattr(result, "incremental", False)
+    cfg.INCREMENTAL = incremental_mode
     if incremental_mode:
         print("  🔄 [증분 분석 모드] 기존 리뷰 데이터를 보존하고, 신규 리뷰를 추가 수집합니다.")
     elif existing_count > 0:
         print(f"  🔄 기존 리뷰 수({existing_count}건)가 목표({target_size}건)에 미치지 못하므로 새로 전체 수집을 속행합니다.")
     
-    # 신규 수집을 위해 기존 잔여 파일들 정리 (증분 분석 모드일 때는 보존!)
-    if not incremental_mode:
-        for path in [cfg.REVIEWS_CSV, cfg.ANALYSIS_CSV, cfg.INSIGHTS_JSON, cfg.QUALITY_JSON, cfg.VERIFY_JSON]:
-            if os.path.exists(path):
-                try:
-                    os.remove(path)
-                except Exception:
-                    pass
+    # 새 수집의 이전 산출물은 보관한다. 다른 언어의 주제/분류를 섞지 않는다.
+    if not incremental_mode and existing_count:
+        names = ("reviews.csv", "sample_design.json", "themes_v3.json", "analysis_v3.jsonl",
+                 "complaints_v3.jsonl", "analysis_v2.csv", "insights_v4.json", "insights_v5.json",
+                 "summary_v5_cache.json", "usage_v3.json", "quality_report.json", "verify_report.json",
+                 "verify_set.csv")
+        backup_dir = os.path.join(cfg.project_dir(), "previous-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+        os.makedirs(backup_dir, exist_ok=True)
+        for name in names:
+            source = os.path.join(cfg.project_dir(), name)
+            if os.path.isfile(source):
+                shutil.move(source, os.path.join(backup_dir, name))
 
     print(f"  App ID: {cfg.APP_ID}")
     print(f"  언어: {cfg.LANG}")
@@ -173,6 +189,26 @@ def step_analyze(result: PipelineResult):
 
     if not os.path.exists(cfg.REVIEWS_CSV):
         raise FileNotFoundError("reviews.csv가 없습니다. 먼저 수집을 실행하세요.")
+
+    # A different model must actually reclassify the game's reviews.
+    usage_path = cfg.project_file("usage_v3.json")
+    if os.path.exists(usage_path) and os.path.exists(cfg.project_file("analysis_v3.jsonl")):
+        try:
+            with open(usage_path, "r", encoding="utf-8") as stream:
+                previous_model = json.load(stream).get("model")
+        except (OSError, ValueError):
+            previous_model = None
+        if previous_model and previous_model != cfg.MODEL:
+            backup_dir = os.path.join(cfg.project_dir(), "previous-model-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+            os.makedirs(backup_dir, exist_ok=True)
+            for name in ("themes_v3.json", "analysis_v3.jsonl", "complaints_v3.jsonl",
+                         "analysis_v2.csv", "insights_v4.json", "insights_v5.json",
+                         "summary_v5_cache.json", "usage_v3.json", "quality_report.json", "verify_report.json",
+                         "verify_set.csv"):
+                source = os.path.join(cfg.project_dir(), name)
+                if os.path.isfile(source):
+                    shutil.move(source, os.path.join(backup_dir, name))
+            print(f"  분석 모델 변경: 이전 결과 보관 후 {cfg.MODEL}로 다시 분류합니다")
 
     try:
         # v3: 게임별 주제 + 재미 종류 + 불만 심층. analysis_v2.csv도 함께 써서 기존 화면을 유지한다.
@@ -216,6 +252,11 @@ def step_verify(result: PipelineResult):
     print("🎯 [Step 4] AI 신뢰도 검증")
     print("=" * 60)
 
+    verify_set = cfg.project_file("verify_set.csv")
+    if (os.path.exists(cfg.VERIFY_JSON) and os.path.exists(verify_set)
+            and os.path.getmtime(verify_set) >= os.path.getmtime(cfg.ANALYSIS_CSV)):
+        result.record("verify", "skipped", {"reason": "기존 분석 검증 재사용"})
+        return
     try:
         from verify_analysis import main as verify_main
         verify_main()
@@ -308,11 +349,22 @@ def _run_pipeline_unlocked(app_id: int = None, lang: str = None, budget: float =
     print("╚" + "═" * 58 + "╝")
 
     try:
+        from model_catalog import get_model
+        model_info = get_model(cfg.MODEL)
+        if model_info is None:
+            raise ValueError("현재 OpenRouter에서 선택한 모델을 찾을 수 없습니다")
+        cfg.MODEL_COST_INPUT = model_info["input_cost"]
+        cfg.MODEL_COST_OUTPUT = model_info["output_cost"]
+        cfg.MODEL_JSON_MODE = model_info["json_schema"]
+        cfg.MODEL_CONTEXT_LENGTH = model_info["context_length"]
+        activate_budget(model_info, cfg.BUDGET_USD)
         # Step 1: 리뷰 수집 (먼저 수행해야 견적 가능)
         step_collect(result)
 
         # Step 0(-> 1.5): 비용 견적 (예산 초과 시 중단)
         if not step_cost_estimate(result):
+            result.status = "failed"
+            result.error = "설정한 분석 예산보다 예상 비용이 큽니다. 수집량이나 모델을 조정하세요."
             result.finish()
             return result.to_dict()
 
@@ -323,8 +375,10 @@ def _run_pipeline_unlocked(app_id: int = None, lang: str = None, budget: float =
         step_insights(result)
 
     except Exception as e:
+        result.status = "failed"
         result.error = str(e)
     finally:
+        clear_budget()
         result.finish()
 
     # 결과 저장

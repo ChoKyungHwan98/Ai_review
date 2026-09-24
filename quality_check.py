@@ -34,10 +34,10 @@ def get_analysis_csv(): return cfg.ANALYSIS_CSV
 def get_pop_pos_rate():
     try:
         from main import review_population_stats
-        stats = review_population_stats(cfg.APP_ID)
-        return stats["korean"]["positive"] / stats["korean"]["total"] if stats["korean"]["total"] > 0 else 0.95
+        stats = review_population_stats(cfg.APP_ID, cfg.LANG)["selected"]
+        return stats["positive"] / stats["total"] if stats["total"] > 0 else None
     except Exception:
-        return 0.95
+        return None
 
 
 # ─── 가중치 (4축 100점) ────────────────────────────────────────────────
@@ -143,7 +143,7 @@ def score_consistency(analysis: list) -> dict:
 
 
 # ─── 3. 대표성 ─────────────────────────────────────────────────────────
-def score_representativeness(reviews: list, population_pos_rate: float = get_pop_pos_rate()) -> dict:
+def score_representativeness(reviews: list, population_pos_rate: float = None) -> dict:
     """표본의 추천/비추천 비율이 모집단과 얼마나 가까운가"""
     issues = []
     if not reviews:
@@ -156,6 +156,13 @@ def score_representativeness(reviews: list, population_pos_rate: float = get_pop
         return {"score": 0, "issues": ["voted_up 데이터 없음"]}
 
     sample_pos_rate = pos_count / total
+    if population_pos_rate is None:
+        population_pos_rate = get_pop_pos_rate()
+    if population_pos_rate is None:
+        return {"score": 0, "sample_pos_rate": round(sample_pos_rate * 100, 2),
+                "population_pos_rate": None, "diff_pct_points": None,
+                "issues": ["선택한 언어의 스팀 전체 리뷰 통계를 확인하지 못했습니다"],
+                "note": "모집단과의 차이를 계산하지 않았습니다"}
     diff_pct = abs(sample_pos_rate - population_pos_rate) * 100  # %p
 
     # 의도적 over-sampling이라도 차이가 크면 점수 차감

@@ -9,6 +9,9 @@
 .rd-toolbar { display:flex; justify-content:flex-end; gap:16px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
 .rd-toolbar p { margin:0; font-size:13px; color:var(--rd-muted); }
 .rd-toolbar strong { color:#333D4B; }
+.rd-hero { display:grid; grid-template-columns:minmax(250px, 380px) minmax(0,1fr); gap:14px; margin-bottom:14px; align-items:stretch; }
+.rd-game-image { background:#e8edf3; border:1px solid #E5E8EB; border-radius:16px; min-height:165px; overflow:hidden; display:grid; place-items:center; color:#6B7684; font-size:13px; }
+.rd-game-image img { width:100%; height:100%; min-height:165px; object-fit:cover; display:block; }
 .rd-tools { display:flex; gap:6px; flex-wrap:wrap; }
 .rd-btn { border:1px solid #dce2e9; border-radius:12px; padding:9px 14px; background:#fff; color:#39475a; font-size:13px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
 .rd-btn:hover { background:#f4f7fa; }
@@ -27,12 +30,12 @@
 .rd-signal-concern .rd-eyebrow { color:#bd3c49; }
 .rd-signal small { grid-column:1/-1; font-size:13px; color:#8B95A1; line-height:1.6; }
 .rd-signal .rd-big small { font-size:14px; margin-left:3px; }
-.rd-mood { display:grid; grid-template-columns:190px minmax(0,1fr); gap:24px; align-items:center; padding:16px 24px; margin-bottom:24px; }
+.rd-mood { display:grid; grid-template-columns:1fr; gap:8px; align-content:center; padding:18px 24px; margin:0; }
 .rd-mood h2 { font-size:16px; }
 .rd-mood-intro p { margin:4px 0 0; color:#6c7889; font-size:12px; line-height:1.5; }
 .rd-mood-visual { display:flex; align-items:center; gap:25px; min-width:0; }
-.rd-mood-donut { width:104px; height:104px; border-radius:50%; flex:none; display:grid; place-items:center; }
-.rd-mood-donut > div { width:68px; height:68px; border-radius:50%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.rd-mood-donut { width:94px; height:94px; border-radius:50%; flex:none; display:grid; place-items:center; }
+.rd-mood-donut > div { width:62px; height:62px; border-radius:50%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .rd-mood-donut strong { font-size:20px; color:#191F28; line-height:1.2; }
 .rd-mood-donut small { color:#7a8798; font-size:10px; }
 .rd-mood .positive { background:#3182F6; }
@@ -138,13 +141,15 @@
   .rd-card-head { flex-wrap:wrap; }
 }
 @media (max-width:1080px) {
+  .rd-hero { grid-template-columns:1fr; }
+  .rd-game-image { max-height:220px; }
   .rd-main,.rd-lower,.rd-secondary { grid-template-columns:1fr; }
   .rd-main > .rd-detail { border-left:0; border-top:1px solid #E5E8EB; }
   .rd-detail-metrics { margin:8px 0; }
   .rd-signals { gap:8px; }
   .rd-signal { grid-template-columns:1fr; }
   .rd-signal small { font-size:13px; }
-  .rd-mood { grid-template-columns:150px minmax(0,1fr); gap:12px; }
+  .rd-mood { grid-template-columns:1fr; }
 }
 @media (max-width:900px) {
   :root { --studio-sidebar-width:174px; }
