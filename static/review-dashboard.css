@@ -299,7 +299,7 @@ body.no-analysis .rd-page-art { display:none; }
 .page[data-page="overview"] { --rd-surface:#FFFFFF; --rd-line:#E5EAF0; --rd-ink:#14213A; --rd-sub:#66758A; }
 .page[data-page="overview"] .rd-page-header {
   display:grid;
-  grid-template-columns:minmax(390px,.78fr) minmax(640px,1.22fr);
+  grid-template-columns:minmax(460px,.86fr) minmax(640px,1.14fr);
   align-items:stretch;
   gap:12px;
   margin:0 0 12px;
@@ -307,7 +307,7 @@ body.no-analysis .rd-page-art { display:none; }
   background:transparent;
 }
 .rd-game-summary { display:flex; align-items:center; gap:18px; min-width:0; padding:14px 18px 14px 4px; }
-.rd-page-art { width:202px; height:94px; border-radius:12px; box-shadow:0 5px 16px rgba(20,33,58,.11); }
+.rd-page-art { width:240px; height:112px; border-radius:14px; box-shadow:0 5px 16px rgba(20,33,58,.11); }
 .rd-page-copy { min-width:0; }
 .page[data-page="overview"] .rd-page-copy .title { margin:0 0 8px; color:var(--rd-ink); font-size:27px; line-height:1.15; letter-spacing:-.04em; }
 .page[data-page="overview"] .rd-page-copy .subtitle { margin:0; color:var(--rd-sub); font-size:13px; line-height:1.7; }
@@ -359,8 +359,8 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 .rd-findings .rd-signal:hover { border-color:transparent; background:#F8FAFC; }
 .rd-findings .rd-signal:active { transform:scale(.985); }
 .rd-signal-icon { display:grid; place-items:center; width:44px; height:44px; border-radius:50%; background:#EAF4FF; color:#2679E8; font-size:25px; font-weight:700; }
-.rd-signal-concern .rd-signal-icon { background:#FFF0F2; color:#E13B4C; }
-.rd-signal-caution .rd-signal-icon { background:#FFF4E8; color:#CE7215; }
+.rd-signal-concern .rd-signal-icon { background:#FFDDE3; color:#D92D43; }
+.rd-signal-caution .rd-signal-icon { background:#FFE6C9; color:#BC5F08; }
 .rd-findings .rd-signal-concern { background:#FFF1F3; }
 .rd-findings .rd-signal-caution { background:#FFF6EC; }
 .rd-findings .rd-signal-strength:hover { background:#EAF3FF; }
@@ -442,9 +442,8 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 .rd-findings .rd-signals { gap:10px; }
 .rd-findings .rd-signal { border:0; border-radius:14px; }
 .rd-findings .rd-signal:focus-visible { outline-offset:3px; }
-.rd-signal-icon { align-self:start; margin-top:2px; }
-.rd-signal-icon svg { display:block; width:21px; height:21px; fill:currentColor; }
-.rd-signal-caution .rd-signal-icon svg { fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.rd-signal-icon { align-self:center; margin:0; place-self:center; }
+.rd-signal-icon svg { display:block; width:23px; height:23px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .rd-signal-heading { display:flex; align-items:baseline; gap:8px; min-width:0; flex-wrap:wrap; }
 .rd-signal-label { padding:3px 7px; border-radius:6px; background:#DFECFF; color:#235A9F; font-size:12px; font-weight:700; line-height:1.25; white-space:nowrap; }
 .rd-signal-concern .rd-signal-label { background:#FFDDE3; color:#BB3442; }
