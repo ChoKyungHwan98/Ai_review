@@ -4114,6 +4114,12 @@ function pollPipelineProgress(appId) {
         clearInterval(pipelinePollInterval);
         
         setTimeout(async () => {
+          // 결과 파일이 기록된 직후 게임 정보가 목록에 등록될 때까지 기다린다.
+          for (let attempt = 0; attempt < 20; attempt++) {
+            const listing = await fetch('/api/games').then(r => r.json()).catch(() => ({ games: [] }));
+            if ((listing.games || []).some(game => Number(game.app_id) === appId)) break;
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
           closePipelineModal();
           const doneUrl = new URL(location.href);
           doneUrl.searchParams.delete('pending');
