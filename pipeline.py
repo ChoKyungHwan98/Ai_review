@@ -19,6 +19,7 @@ import sys
 import json
 import time
 import argparse
+import threading
 from datetime import datetime
 
 # Windows 콘솔 UTF-8 출력 (cp949 인코딩 에러 방지)
@@ -73,38 +74,20 @@ class PipelineResult:
 
 
 def step_cost_estimate(result: PipelineResult) -> bool:
-    """Step 0: 비용 사전 견적 — 예산 초과 시 중단"""
-    import csv
+    """Remaining classification, complaint detail, and summary budget."""
+    from token_budget import estimate_remaining
 
     print("\n" + "=" * 60)
     print("💰 [Step 0] 비용 사전 견적")
     print("=" * 60)
 
-    # 분석 대상 건수 파악
-    n_reviews = 0
-    if os.path.exists(cfg.REVIEWS_CSV):
-        with open(cfg.REVIEWS_CSV, "r", encoding="utf-8-sig", newline="") as f:
-            for row in csv.DictReader(f):
-                content = (row.get("content") or "").strip()
-                if len(content) >= cfg.MIN_REVIEW_LEN:
-                    n_reviews += 1
-
-    # 이미 분석된 건수 확인
-    n_done = 0
-    if os.path.exists(cfg.ANALYSIS_CSV):
-        with open(cfg.ANALYSIS_CSV, "r", encoding="utf-8-sig", newline="") as f:
-            n_done = sum(1 for _ in csv.DictReader(f))
-
-    n_todo = max(0, n_reviews - n_done)
-
-    if n_todo == 0:
-        print(f"  ✅ 분석할 새 리뷰 없음 (전체 {n_reviews}건, 완료 {n_done}건)")
-        est = {"n_reviews": 0, "estimated_usd": 0, "within_budget": True}
+    est = estimate_remaining(cfg)
+    if not est["to_analyze"] and not est["to_deep"] and not est["estimated_input_tokens"]:
+        print(f"  ✅ 남은 AI 분석 없음 (전체 {est['n_reviews']}건, 분류 완료 {est['already_done']}건)")
         result.record("cost_estimate", "skipped", est)
         return True
 
-    est = cfg.estimate_cost(n_todo)
-    print(f"  분석 대상: {n_todo}건 (전체 {n_reviews} - 완료 {n_done})")
+    print(f"  새 분류 {est['to_analyze']}건 · 남은 불만 심층 {est['to_deep']}건 · 새 불만 심층 예상 {est['expected_new_deep']}건")
     print(f"  모델: {est['model']}")
     print(f"  예상 비용: ${est['estimated_usd']:.4f}")
     print(f"  예산 한도: ${est['budget_usd']:.2f}")
@@ -274,7 +257,17 @@ def step_insights(result: PipelineResult):
         result.record("insights", "done", {"warning": f"v4: {str(e)[:120]}"})
 
 
+_PIPELINE_LOCK = threading.Lock()
+
+
 def run_pipeline(app_id: int = None, lang: str = None, budget: float = None, target_error_pct: float = None, custom_sample_size: int = None, incremental: bool = False, model: str = None) -> dict:
+    # The analyzer and usage counters share process-wide configuration.
+    with _PIPELINE_LOCK:
+        return _run_pipeline_unlocked(app_id, lang, budget, target_error_pct,
+                                      custom_sample_size, incremental, model)
+
+
+def _run_pipeline_unlocked(app_id: int = None, lang: str = None, budget: float = None, target_error_pct: float = None, custom_sample_size: int = None, incremental: bool = False, model: str = None) -> dict:
     """전체 파이프라인 실행
 
     Args:

@@ -14,6 +14,7 @@ v5는 스팀이 알려주지 않는 것을 만든다.
 """
 
 import csv
+import hashlib
 import json
 import math
 import os
@@ -283,24 +284,29 @@ JSON 객체 하나로 답하세요.
   "버그 고쳐주세요"처럼 막연한 말은 빼고, 조각에 없는 해결책은 절대 만들지 마세요."""
 
 
-def ask_summary(game, result, parts_by_theme):
+def summary_prompt(game, result, parts_by_theme):
     facts = {
         "칭찬 많은 주제": [f"{t['name']} 칭찬 {t['pos']}건" for t in result["lifts"]],
-        "아쉬운 주제(영향도)": [f"{t['name']} {t['impact']}%p, 언급 {t['mentions']}건" for t in result["drags"]],
+        "비추천과 연관된 주제": [f"{t['name']} 추천률 차이 {t['impact']}%p, 언급 {t['mentions']}건" for t in result["drags"]],
         "추천 유저가 느낀 재미": [f"{f['name']}({f['desc']}) {f['share']}%" for f in result["fun"][:3]],
         "플레이 시간별 추천률": [f"{p['label']} {p['rate']}%" + (" (표본 적음)" if p["small"] else "") for p in result["playtime"]],
         "스팀 추천률": result["rates"]["steam"],
     }
     parts = {t["name"]: {k: v[:20] for k, v in parts_by_theme.get(t["name"], {}).items()} for t in result["drags"]}
+    return USER_D.format(
+        game=game,
+        facts=json.dumps(facts, ensure_ascii=False),
+        parts=json.dumps(parts, ensure_ascii=False, separators=(",", ":")),
+    )
+
+
+def ask_summary(game, result, parts_by_theme, prompt=None):
     body = {
         "model": cfg.MODEL,
         "temperature": 0.2,
         "max_tokens": 900,
         "messages": [{"role": "system", "content": SYSTEM_D},
-                     {"role": "user", "content": USER_D.format(
-                         game=game,
-                         facts=json.dumps(facts, ensure_ascii=False),
-                         parts=json.dumps(parts, ensure_ascii=False, separators=(",", ":")))}],
+                     {"role": "user", "content": prompt if prompt is not None else summary_prompt(game, result, parts_by_theme)}],
     }
     r = httpx.post(cfg.OPENROUTER_URL, json=body, timeout=120,
                    headers={"Authorization": f"Bearer {cfg.OPENROUTER_API_KEY}", "Content-Type": "application/json"})
@@ -317,7 +323,7 @@ def rule_summary(result):
     if result["lifts"]:
         parts.append(f"{', '.join(t['name'] for t in result['lifts'][:2])}이(가) 가장 많이 칭찬받습니다.")
     if result["drags"]:
-        parts.append(f"{', '.join(t['name'] for t in result['drags'][:2])}이(가) 추천률을 가장 많이 깎습니다.")
+        parts.append(f"{', '.join(t['name'] for t in result['drags'][:2])}은(는) 비추천 리뷰와 연관됩니다.")
     early = next((p for p in result["playtime"] if p["label"] == "2시간 미만"), None)
     if early and not early["small"] and result["rates"]["steam"] and early["rate"] < result["rates"]["steam"] - 10:
         parts.append(f"2시간 미만 유저의 추천률은 {early['rate']}%로 크게 낮습니다.")
@@ -345,14 +351,32 @@ def main():
     game = cfg.get_game_name() if hasattr(cfg, "get_game_name") else str(cfg.APP_ID)
 
     actions_ai = {}
+    prompt = summary_prompt(game, result, parts_by_theme)
+    cache_key = hashlib.sha256(json.dumps({"model": cfg.MODEL, "system": SYSTEM_D, "prompt": prompt},
+                                          ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+    cache_path = path("summary_v5_cache.json")
     try:
-        answer, usage = ask_summary(game, result, parts_by_theme)
+        cached = {}
+        if os.path.exists(cache_path):
+            with open(cache_path, "r", encoding="utf-8") as f:
+                cached = json.load(f)
+        if cached.get("key") == cache_key and isinstance(cached.get("answer"), dict):
+            answer = cached["answer"]
+            result["summary_cached"] = True
+        elif result["lifts"] or result["drags"]:
+            answer, usage = ask_summary(game, result, parts_by_theme, prompt)
+            record_usage(usage)
+            with open(cache_path, "w", encoding="utf-8") as f:
+                json.dump({"key": cache_key, "answer": answer}, f, ensure_ascii=False)
+            result["summary_cached"] = False
+        else:
+            answer = {"summary": rule_summary(result), "actions": []}
+            result["summary_source"] = "rule"
         result["summary"] = str(answer.get("summary", "")).strip() or rule_summary(result)
-        result["summary_source"] = "ai"
+        result.setdefault("summary_source", "ai")
         for a in answer.get("actions") or []:
             if isinstance(a, dict) and a.get("t"):
                 actions_ai[a["t"]] = a
-        record_usage(usage)
     except Exception as e:
         print(f"  요약 생성 실패, 규칙으로 대체: {str(e)[:120]}")
         result["summary"] = rule_summary(result)

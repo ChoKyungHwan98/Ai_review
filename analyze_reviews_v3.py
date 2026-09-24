@@ -8,7 +8,7 @@ v3는 이렇게 나눈다.
   B. 전체 분류   모든 리뷰를 짧게 분류한다. 언급한 주제만 답하게 해 출력 토큰을 줄인다.
   C. 불만 심층   불만·섞임 리뷰만 문제 / 원인 / 유저 제안으로 나눈다.
 
-짧은 리뷰(MIN_REVIEW_LEN 미만)는 AI에 보내지 않는다. 추천 여부만 집계에 쓴다.
+내용이 없는 짧은 리뷰는 AI에 보내지 않고, 짧은 불만은 선별해 분류한다.
 
 결과 파일
   themes_v3.json       A의 주제 목록
@@ -54,11 +54,13 @@ FUN_TYPES = {
 
 THEME_SAMPLE = 150       # A에서 읽을 리뷰 수
 BATCH_B = 10             # B 한 번에 담을 리뷰 수
-BATCH_C = 8              # C 한 번에 담을 리뷰 수
+BATCH_C = 4              # 심층 답변이 길어 JSON이 잘리지 않도록 작은 묶음 사용
 CONCURRENCY = 3
 CLIP_B = 600             # B에 보낼 본문 최대 글자
 CLIP_C = 1000            # C에 보낼 본문 최대 글자
 MIN_LEN_C = 15           # 이보다 짧은 불만은 심층 분석할 내용이 없다
+SHORT_COMPLAINT_CUES = ("렉", "버그", "오류", "튕", "끊", "불편", "환불", "노잼",
+                        "lag", "bug", "crash", "error", "refund")
 
 SENT_MAP = {"P": "POSITIVE", "N": "NEGATIVE", "M": "MIXED", "U": "NEUTRAL"}
 
@@ -128,8 +130,19 @@ def compact(items):
 def load_reviews():
     with open(cfg.REVIEWS_CSV, "r", encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
-    long_rows = [r for r in rows if len((r.get("content") or "").strip()) >= cfg.MIN_REVIEW_LEN]
-    return rows, long_rows
+    candidates = [r for r in rows if should_classify(r)]
+    return rows, candidates
+
+
+def should_classify(row):
+    """Keep meaningful short complaints without paying to classify one-character votes."""
+    text = (row.get("content") or "").strip()
+    if len(text) >= cfg.MIN_REVIEW_LEN:
+        return True
+    if len(text) < 2:
+        return False
+    negative_vote = str(row.get("voted_up", "")).lower() in ("0", "false")
+    return negative_vote or any(cue in text.casefold() for cue in SHORT_COMPLAINT_CUES)
 
 
 def hours(row):
@@ -211,6 +224,7 @@ USER_B = """주제: {themes}
 
 리뷰마다 한 항목씩 JSON 배열로 답하세요.
 - s: P 긍정, N 부정, M 섞임, U 판단 불가
+- s와 주제별 P/N은 리뷰 문장으로 판단하세요. 추천 여부(up)만으로 감정을 정하지 마세요.
 - f: 긍정·섞임 리뷰는 드러난 재미 종류를 1~2개 고르세요 (위 목록에서만). 근거가 전혀 없을 때만 []
 - t: 리뷰가 구체적인 대상을 말했을 때만 넣고, 주제별 P 또는 N.
   "재밌다", "갓겜" 같은 막연한 말은 주제가 아닙니다 → []
@@ -312,7 +326,7 @@ async def classify(client, long_rows, themes):
             "len": len(src["content"]),
             "votes": int(src.get("votes_up") or 0),
             "ts": int(src.get("timestamp_created") or 0),
-            "s": res.get("s", "U"),
+            "s": res.get("s") if res.get("s") in ("P", "N", "M", "U") else "U",
             "f": [x for x in (res.get("f") or []) if isinstance(x, str) and x in FUN_TYPES][:2],
             "t": tags,
             "k": str(res.get("k", ""))[:40],
@@ -348,7 +362,7 @@ async def classify(client, long_rows, themes):
                     res = await ask(client, "B", SYSTEM_B,
                                     USER_B.format(themes=", ".join(theme_names), fun=", ".join(fun_names),
                                                   reviews=compact(one)), 150)
-                    if res and isinstance(res[0], dict):
+                    if res and isinstance(res[0], dict) and str(res[0].get("id")) == r["recommendationid"]:
                         save(r, res[0])
                     else:
                         stats["fail"] += 1
@@ -387,7 +401,7 @@ SYSTEM_C = "게임 기획자를 돕는 리뷰 분석가입니다. 리뷰에 없�
 
 USER_C = """주제: {themes}
 
-불만이 담긴 리뷰입니다:
+불만이 있을 수 있는 리뷰입니다:
 {reviews}
 
 리뷰마다 불만만 주제별로 나눠 JSON 배열로 답하세요. 칭찬은 넣지 마세요.
@@ -402,7 +416,8 @@ USER_C = """주제: {themes}
 def needs_deep(item, src):
     if len(src["content"]) < MIN_LEN_C:
         return False
-    return item.get("s") in ("N", "M") or any(p[1] == "N" for p in item.get("t") or [])
+    negative_vote = str(src.get("voted_up", "")).lower() in ("0", "false")
+    return item.get("s") in ("N", "M") or negative_vote or any(p[1] == "N" for p in item.get("t") or [])
 
 
 async def dig_complaints(client, long_rows, classified, themes):
@@ -419,31 +434,49 @@ async def dig_complaints(client, long_rows, classified, themes):
     f_out = open(out_path, "a", encoding="utf-8")
     sem = asyncio.Semaphore(CONCURRENCY)
 
+    def save_results(res, allowed_ids):
+        for x in res:
+            if not isinstance(x, dict):
+                continue
+            rid = str(x.get("id"))
+            if rid not in allowed_ids or rid in done:
+                continue
+            parts = []
+            for p in x.get("p") or []:
+                if isinstance(p, dict) and p.get("t") in theme_names:
+                    parts.append({k: str(p.get(k, ""))[:60] for k in ("t", "prob", "why", "fix")})
+            item = {"id": rid, "p": parts}
+            f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
+            done[rid] = item
+        f_out.flush()
+
     async def run(batch):
         async with sem:
+            batch_ids = {r["recommendationid"] for r in batch}
             payload = [{"id": r["recommendationid"], "t": r["content"][:CLIP_C]} for r in batch]
             try:
                 res = await ask(client, "C", SYSTEM_C,
                                 USER_C.format(themes=", ".join(theme_names), reviews=compact(payload)),
-                                140 * len(batch) + 60)
+                                240 * len(batch) + 100)
             except FatalApiError:
                 raise
             except Exception as e:
-                print(f"  [C 묶음 실패, 건너뜀] {str(e)[:80]}")
+                print(f"  [C 묶음 실패, 누락 건만 재시도] {str(e)[:80]}")
                 return
-            for x in res:
-                if not isinstance(x, dict):
-                    continue
-                parts = []
-                for p in x.get("p") or []:
-                    if isinstance(p, dict) and p.get("t") in theme_names:
-                        parts.append({k: str(p.get(k, ""))[:60] for k in ("t", "prob", "why", "fix")})
-                rid = str(x.get("id"))
-                if rid in by_id:
-                    item = {"id": rid, "p": parts}
-                    f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
-                    done[rid] = item
-            f_out.flush()
+            save_results(res, batch_ids)
+
+    async def retry_one(row):
+        async with sem:
+            rid = row["recommendationid"]
+            payload = [{"id": rid, "t": row["content"][:CLIP_C]}]
+            try:
+                res = await ask(client, "C", SYSTEM_C,
+                                USER_C.format(themes=", ".join(theme_names), reviews=compact(payload)), 900)
+                save_results(res, {rid})
+            except FatalApiError:
+                raise
+            except Exception as e:
+                print(f"  [C 단건 실패] {rid}: {str(e)[:80]}")
 
     batches = [pending[i:i + BATCH_C] for i in range(0, len(pending), BATCH_C)]
     tasks = [asyncio.create_task(run(b)) for b in batches]
@@ -452,12 +485,19 @@ async def dig_complaints(client, long_rows, classified, themes):
             await t
             if i % max(1, len(batches) // 5) == 0 or i == len(batches):
                 print(f"  [C] {i}/{len(batches)} 묶음")
+        retry_rows = [r for r in targets if r["recommendationid"] not in done]
+        if retry_rows:
+            print(f"  [C] 빠진 {len(retry_rows)}건만 단건 재시도")
+            await asyncio.gather(*(retry_one(r) for r in retry_rows))
     except FatalApiError:
         for t in tasks:
             t.cancel()
         raise
     finally:
         f_out.close()
+    missing = [r["recommendationid"] for r in targets if r["recommendationid"] not in done]
+    if missing:
+        raise RuntimeError(f"불만 심층 분석 {len(missing)}건이 누락됐습니다. 재실행하면 누락 건만 다시 분석합니다.")
     return done
 
 
@@ -482,10 +522,15 @@ def save_usage():
 
 
 async def run_all():
+    for stage in USAGE:
+        USAGE[stage] = {"calls": 0, "input": 0, "output": 0}
+    rows, long_rows = load_reviews()
+    print(f"수집 {len(rows)}건 · AI 분석 대상 {len(long_rows)}건 · 짧거나 내용이 없는 리뷰 {len(rows) - len(long_rows)}건(집계만)")
+    if not long_rows:
+        print("분석할 본문이 없어 AI를 호출하지 않습니다")
+        return
     if not API_KEY:
         raise SystemExit(".env의 OPENROUTER_API_KEY를 확인하세요.")
-    rows, long_rows = load_reviews()
-    print(f"수집 {len(rows)}건 · AI 분석 대상 {len(long_rows)}건 · 짧은 리뷰 {len(rows) - len(long_rows)}건(집계만)")
     print(f"모델: {cfg.MODEL}")
     async with httpx.AsyncClient(limits=httpx.Limits(max_connections=10)) as client:
         try:

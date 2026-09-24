@@ -1605,75 +1605,12 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
     }
     .run-analyze-text { margin-top: 4px; font-size: 12px; color: var(--color-text-sub); font-variant-numeric: tabular-nums; }
 
-/* ============ 요약 화면 (v5) ============ */
+/* Summary assets are scoped to the review diagnosis. */
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
-.ov-coverage { font-variant-numeric: tabular-nums; }
-.ov-summary { display: flex; gap: 24px; align-items: center; background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 20px 22px; margin-bottom: 12px; }
-.ov-summary p { margin: 0; font-size: 15px; line-height: 1.7; color: var(--color-text-body); }
-.ov-rate { display: flex; flex-direction: column; align-items: flex-start; flex-shrink: 0; padding-right: 24px; border-right: 1px solid var(--color-border); }
-.ov-rate b { font-size: 32px; line-height: 1.1; color: var(--color-success-green); font-variant-numeric: tabular-nums; }
-.ov-rate span { font-size: 12px; color: var(--color-text-sub); margin-top: 4px; }
-.ov-tools { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 16px; flex-wrap: wrap; }
-.ov-btn { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-bg-surface); color: var(--color-text-title); font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; font-family: inherit; }
-.ov-btn:hover { background: var(--color-nav-hover); }
-.ov-btn.primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
-.ov-btn.primary:hover { background: var(--color-primary-hover); }
-.ov-card { background: var(--color-bg-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 20px 22px; margin-bottom: 12px; }
-.ov-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-.ov-card-head h2 { margin: 0; font-size: 16px; font-weight: 700; color: var(--color-text-title); }
-.ov-card-head span { font-size: 12px; color: var(--color-text-sub); }
-.ov-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.ov-grid2 > .ov-card { margin-bottom: 12px; }
-.ov-impact { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-.ov-impact h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; }
-.ov-impact h3.up { color: var(--color-success-green); }
-.ov-impact h3.down { color: var(--color-error-red); }
-.ov-impact h3 small { font-weight: 400; font-size: 12px; color: var(--color-text-sub); margin-left: 4px; }
-.ov-imp-list, .ov-bars, .ov-actions { list-style: none; margin: 0; padding: 0; }
-.ov-imp-list > li { padding: 10px 0; border-top: 1px solid var(--color-border); }
-.ov-imp-list > li:first-child { border-top: 0; padding-top: 0; }
-.ov-imp-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; color: var(--color-text-title); }
-.ov-imp-row span, .ov-act-head .neg { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.ov-card .pos { color: var(--color-success-green); }
-.ov-card .neg { color: var(--color-error-red); }
-.ov-imp-sub { font-size: 12px; color: var(--color-text-sub); margin-top: 4px; }
-.ov-meter { height: 6px; background: var(--color-nav-active); border-radius: 3px; overflow: hidden; margin-top: 6px; }
-.ov-meter i { display: block; height: 100%; border-radius: 3px; }
-.ov-meter i.pos { background: var(--color-success-green); }
-.ov-meter i.neg { background: var(--color-error-red); }
-.ov-meter i.acc { background: var(--color-primary); }
-.ov-quote { margin: 8px 0 0; padding: 6px 10px; border-left: 2px solid var(--color-border); font-size: 12.5px; line-height: 1.6; color: var(--color-text-body); background: var(--color-ghost-fill); border-radius: 0 6px 6px 0; }
-.ov-bars > li { display: grid; grid-template-columns: 1fr 48px; column-gap: 10px; align-items: center; padding: 8px 0; }
-.ov-bars .ov-bar-label { grid-column: 1 / -1; display: flex; gap: 8px; align-items: baseline; font-size: 14px; color: var(--color-text-title); }
-.ov-bars .ov-bar-label span { font-size: 12px; color: var(--color-text-sub); }
-.ov-bars .ov-bar-label em { font-style: normal; color: var(--color-warn-amber); }
-.ov-bars .ov-meter { margin-top: 4px; }
-.ov-bars .ov-bar-val { font-size: 13px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; color: var(--color-text-title); }
-.ov-bars .ov-imp-sub { grid-column: 1 / -1; }
-.ov-bars > li.small .ov-meter i { opacity: .45; }
-.ov-actions > li { padding: 14px 0; border-top: 1px solid var(--color-border); }
-.ov-actions > li:first-child { border-top: 0; padding-top: 0; }
-.ov-act-head { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--color-text-title); }
-.ov-act-head .neg { margin-left: auto; }
-.ov-rank { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: rgba(240,68,82,.08); color: var(--color-error-red); }
-.ov-actions dl { display: grid; grid-template-columns: 88px 1fr; gap: 4px 10px; margin: 10px 0 0; font-size: 13.5px; line-height: 1.6; }
-.ov-actions dt { color: var(--color-text-sub); }
-.ov-actions dd { margin: 0; color: var(--color-text-body); }
-.ov-actions small, .ov-trust small { color: var(--color-text-sub); font-size: 11.5px; }
-.ov-none { font-size: 13px; color: var(--color-text-sub); padding: 4px 0; }
-.ov-timeline { font-size: 13px; color: var(--color-text-sub); margin: 4px 2px 12px; }
-.ov-trust { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--color-text-sub); padding: 12px 2px; border-top: 1px solid var(--color-border); }
-.ov-trust b { color: var(--color-text-body); font-weight: 600; }
-@media (max-width: 760px) {
-  .ov-summary { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .ov-rate { border-right: 0; padding-right: 0; }
-  .ov-grid2, .ov-impact { grid-template-columns: 1fr; }
-  .ov-impact { gap: 20px; }
-  .ov-tools { justify-content: stretch; }
-  .ov-tools > * { flex: 1; justify-content: center; }
-}
 </style>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260924e">
+<script src="/static/review-dashboard.js?v=20260924e"></script>
 </head>
 <body>
 <div class="app">
@@ -1750,7 +1687,7 @@ body.no-analysis #ovBody { display: none; }
     <!-- 1) OVERVIEW                                                       -->
     <!-- ================================================================ -->
     <section class="page active" data-page="overview">
-      <h1 class="title">분석 요약</h1>
+      <h1 class="title" id="overviewTitle">리뷰 진단</h1>
       <p class="subtitle ov-coverage" id="ovCoverage"></p>
 
       <!-- 분석 전·옛 방식일 때만 보이는 안내 -->
@@ -1761,53 +1698,7 @@ body.no-analysis #ovBody { display: none; }
         </div>
       </div>
 
-      <div id="ovBody">
-        <!-- ① 한 문단 요약 -->
-        <div class="ov-summary" id="ovSummary"></div>
-
-        <div class="ov-tools">
-          <button type="button" class="ov-btn" onclick="startNewAnalysis(currentAppId, null, null, true)">추가 수집</button>
-          <a id="btnQuickReviews" href="" download class="ov-btn">리뷰 원문</a>
-          <a id="btnQuickAnalysis" href="" download class="ov-btn primary">분석 결과 내려받기</a>
-        </div>
-
-        <!-- ② 추천률을 움직인 것 -->
-        <div class="ov-card">
-          <div class="ov-card-head">
-            <h2>유저가 좋아한 것 · 추천률을 깎은 것</h2>
-          </div>
-          <div class="ov-impact">
-            <div><h3 class="up">좋아한 것 <small>칭찬 많은 순</small></h3><ul class="ov-imp-list" id="ovLifts"></ul></div>
-            <div><h3 class="down">깎은 것 <small>이 불만이 없었다면 추천률이 이만큼 높았음</small></h3><ul class="ov-imp-list" id="ovDrags"></ul></div>
-          </div>
-        </div>
-
-        <!-- ③ 무엇이 재밌었나 · 누가 불만인가 -->
-        <div class="ov-grid2">
-          <div class="ov-card">
-            <div class="ov-card-head"><h2>추천한 유저가 느낀 재미</h2></div>
-            <ul class="ov-bars" id="ovFun"></ul>
-          </div>
-          <div class="ov-card">
-            <div class="ov-card-head"><h2>플레이 시간별 추천률</h2></div>
-            <ul class="ov-bars" id="ovPlaytime"></ul>
-          </div>
-        </div>
-
-        <!-- ④ 할 일 -->
-        <div class="ov-card">
-          <div class="ov-card-head">
-            <h2>할 일</h2>
-            <span>추천률을 많이 깎는 순서</span>
-          </div>
-          <ol class="ov-actions" id="ovActions"></ol>
-        </div>
-
-        <p class="ov-timeline" id="ovTimeline"></p>
-
-        <!-- ⑤ 믿을 수 있는 범위 -->
-        <div class="ov-trust" id="ovTrust"></div>
-      </div>
+      <div id="ovBody" class="rd"></div>
     </section>
 
     <!-- ================================================================ -->
@@ -2276,14 +2167,14 @@ body.no-analysis #ovBody { display: none; }
           <div class="kpi-icon">💰</div>
           <div class="kpi-label">누적 비용</div>
           <div class="kpi-value pos" id="usageCost">—</div>
-          <div class="kpi-sub" id="usageRemain">잔액: —</div>
+          <div class="kpi-sub" id="usageRemain">설정 단가 기준 추정</div>
           <div class="kpi-progress"><div id="usageCostBar" style="width: 0%"></div></div>
         </div>
         <div class="card kpi api-kpi-card warn">
           <div class="kpi-icon">📞</div>
           <div class="kpi-label">분석 호출 수</div>
           <div class="kpi-value" id="usageCalls" style="color:var(--color-warn-amber)">—</div>
-          <div class="kpi-sub">0 실패 (재시도로 모두 성공)</div>
+          <div class="kpi-sub">응답 사용량이 기록된 호출</div>
           <div class="kpi-progress"><div id="usageCallsBar" style="width: 100%"></div></div>
         </div>
       </div>
@@ -3134,84 +3025,7 @@ async function load(appId) {
 /* ============ Overview ============ */
 // 요약 화면은 insights_v5.json 하나로 그린다. 숫자 설명은 짧게, 원문 인용으로 근거를 보인다.
 function renderOverviewV5(V) {
-  const n = x => (x ?? 0).toLocaleString();
-  const pp = x => (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x).toFixed(2) + '%p';
-  const quote = q => q ? `<blockquote class="ov-quote">${escapeHtml(q.length > 110 ? q.slice(0, 110) + '…' : q)}</blockquote>` : '';
-  const cov = V.coverage || {};
-
-  set('ovCoverage', `한국어 리뷰 ${n(cov.population)}건 중 ${n(cov.collected)}건 수집 · ${n(cov.analyzed)}건 분석`);
-
-  // ① 요약
-  document.getElementById('ovSummary').innerHTML = `
-    <div class="ov-rate"><b>${V.rates?.steam ?? '—'}%</b><span>스팀 추천률</span></div>
-    <p>${escapeHtml(V.summary || '')}</p>`;
-
-  // 내려받기
-  document.getElementById('btnQuickReviews').href = `/api/reviews/download?app_id=${currentAppId}`;
-  document.getElementById('btnQuickAnalysis').href = `/api/analysis/download?app_id=${currentAppId}`;
-
-  // ② 좋아한 것 / 깎은 것
-  const lifts = V.lifts || [], drags = V.drags || [];
-  const maxPos = Math.max(1, ...lifts.map(t => t.pos));
-  const maxDrag = Math.max(0.01, ...drags.map(t => Math.abs(t.impact)));
-  const empty = '<li class="ov-none">뚜렷한 주제가 없습니다</li>';
-  document.getElementById('ovLifts').innerHTML = lifts.map(t => `
-    <li>
-      <div class="ov-imp-row"><b>${escapeHtml(t.name)}</b><span class="pos">칭찬 ${t.pos}건</span></div>
-      <div class="ov-meter"><i class="pos" style="width:${(t.pos / maxPos * 100).toFixed(0)}%"></i></div>
-      ${quote(t.quote_pos)}
-    </li>`).join('') || empty;
-  document.getElementById('ovDrags').innerHTML = drags.map(t => `
-    <li>
-      <div class="ov-imp-row"><b>${escapeHtml(t.name)}</b><span class="neg">${pp(t.impact)}</span></div>
-      <div class="ov-meter"><i class="neg" style="width:${(Math.abs(t.impact) / maxDrag * 100).toFixed(0)}%"></i></div>
-      <div class="ov-imp-sub">불만 ${t.neg}건</div>
-    </li>`).join('') || empty;
-
-  // ③ 재미 · 플레이 시간
-  document.getElementById('ovFun').innerHTML = (V.fun || []).map(f => `
-    <li>
-      <div class="ov-bar-label"><b>${f.name}</b><span>${escapeHtml(f.desc)}</span></div>
-      <div class="ov-meter"><i class="acc" style="width:${f.share}%"></i></div>
-      <span class="ov-bar-val">${f.share}%</span>
-    </li>`).join('') || empty;
-  document.getElementById('ovPlaytime').innerHTML = (V.playtime || []).map(p => `
-    <li class="${p.small ? 'small' : ''}">
-      <div class="ov-bar-label"><b>${p.label}</b><span>${n(p.n)}건${p.small ? ' · <em>표본 적음</em>' : ''}</span></div>
-      <div class="ov-meter"><i class="${p.rate < (V.rates?.steam ?? 0) - 10 ? 'neg' : 'pos'}" style="width:${p.rate}%"></i></div>
-      <span class="ov-bar-val">${p.rate}%</span>
-      ${p.top_neg?.length ? `<div class="ov-imp-sub">불만: ${p.top_neg.map(x => escapeHtml(x.name)).join(' · ')}</div>` : ''}
-    </li>`).join('') || empty;
-
-  // ④ 할 일
-  document.getElementById('ovActions').innerHTML = (V.actions || []).map(a => `
-    <li>
-      <div class="ov-act-head">
-        <span class="ov-rank">${a.rank}순위</span><b>${escapeHtml(a.theme)}</b>
-        <span class="neg">${pp(a.impact)}</span>
-      </div>
-      <dl>
-        ${a.prob ? `<dt>문제</dt><dd>${escapeHtml(a.prob)}</dd>` : ''}
-        ${a.why ? `<dt>유저가 본 원인</dt><dd>${escapeHtml(a.why)}</dd>` : ''}
-        ${a.fix?.length ? `<dt>유저 제안</dt><dd>${a.fix.map(escapeHtml).join(' · ')} <small>(참고)</small></dd>` : ''}
-      </dl>
-      ${quote(a.quote)}
-    </li>`).join('') || '<li class="ov-none">큰 불만이 없습니다</li>';
-
-  // 시간 흐름: 바뀐 달이 있을 때만 월별 수치를 보인다
-  const tl = V.timeline || {};
-  document.getElementById('ovTimeline').innerHTML = escapeHtml(tl.note || '') + (tl.changed
-    ? ' — ' + (tl.months || []).map(m => `${m.month} ${m.rate}%`).join(' · ')
-    : '');
-
-  // ⑤ 믿을 수 있는 범위
-  const pr = V.precision || {};
-  document.getElementById('ovTrust').innerHTML = `
-    <b>믿을 수 있는 범위</b>
-    <span>추천률 ±${pr.rate}%p</span>
-    <span>주제 비율 ±${pr.themes}%p</span>
-    <span>불만 내용 ±${pr.complaints}%p <small>(불만 리뷰 ${n(cov.complaints)}건)</small></span>
-    <span>짧은 리뷰 ${n(cov.short)}건은 추천 여부만 셈</span>`;
+  ReviewDashboard.render(V, currentAppId);
 }
 
 function destroy(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
@@ -3568,20 +3382,20 @@ function renderSample() {
 /* ============ API Lab → AI 분석 ============ */
 function renderApiLab() {
   /* ── 사용 현황 KPI ── */
-  fetch('/api/usage').then(r => r.json()).then(u => {
+  fetch('/api/usage' + (currentAppId ? `?app_id=${currentAppId}` : '')).then(r => r.json()).then(u => {
     set('usageTokens', (u.total_tokens || 0).toLocaleString());
     set('usageBreak', `입력 ${(u.input_tokens||0).toLocaleString()} + 출력 ${(u.output_tokens||0).toLocaleString()}`);
     set('usageCost', '$' + (u.cost_usd || 0).toFixed(4));
-    set('usageRemain', `잔액 ≈ $${(u.balance_left || 0).toFixed(2)}`);
+    set('usageRemain', '설정 단가 기준 추정 · 실제 청구액과 다를 수 있음');
     set('usageCalls', (u.calls || 0).toLocaleString());
     const tokenPct = Math.min(100, ((u.total_tokens || 0) / 1_000_000) * 100);
-    const costPct = Math.min(100, ((u.cost_usd || 0) / 10) * 100);
+    const costPct = u.budget_usd > 0 ? Math.min(100, ((u.cost_usd || 0) / u.budget_usd) * 100) : 0;
     const tb = document.getElementById('usageTokensBar'); if (tb) tb.style.width = tokenPct.toFixed(1) + '%';
     const cb = document.getElementById('usageCostBar'); if (cb) cb.style.width = costPct.toFixed(1) + '%';
   }).catch(() => {});
 
   /* ── 파이프라인 마지막 결과 로드 ── */
-  fetch('/pipeline/result').then(r => r.json()).then(pr => {
+  fetch('/pipeline/result' + (currentAppId ? `?app_id=${currentAppId}` : '')).then(r => r.json()).then(pr => {
     const el = document.getElementById('pipelineResult');
     if (pr.status === 'done') {
       const dur = pr.started_at && pr.finished_at

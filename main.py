@@ -17,12 +17,13 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from config import cfg
+from dashboard_evidence import build_evidence, evidence_page
 
 from models import (
     ReviewCreate, ReviewResponse,
@@ -430,7 +431,19 @@ def dashboard_data_v5(app_id: int = None):
         "name": (game_info.get("name_kr") or game_info.get("name")) if game_info else f"App {app_id}",
         "header_image": (game_info or {}).get("header_image", ""),
     }
+    data["evidence"] = build_evidence(os.path.dirname(path), app_id)
     return data
+
+
+@app.get("/dashboard/evidence", include_in_schema=False)
+def dashboard_topic_evidence(app_id: int = Query(..., gt=0), theme: str = Query(..., min_length=1, max_length=200),
+                             sentiment: str = Query("N", pattern="^(P|N|all)$"),
+                             page: int = Query(1, ge=1)):
+    path = _game_file(app_id, "analysis_v3.jsonl")
+    result = evidence_page(os.path.dirname(path), app_id, theme, sentiment, page) if path else None
+    if result is None:
+        raise HTTPException(status_code=404, detail="이 주제의 분석 원문이 없습니다")
+    return result
 
 
 @app.get("/dashboard/data/v4", summary="가중치 보정 대시보드 데이터", include_in_schema=False)
@@ -873,29 +886,28 @@ def download(kind: str):
 
 
 @app.get("/api/usage", summary="토큰 사용량/비용 추정", include_in_schema=False)
-def api_usage():
-    """analysis_v2.csv 행 수 기반으로 누적 토큰·비용 추정. (Gemini 2.0 Flash 기준)"""
-    calls = 0
-    if os.path.exists(cfg.ANALYSIS_CSV):
-        with open(cfg.ANALYSIS_CSV, "r", encoding="utf-8-sig", newline="") as f:
-            calls = sum(1 for _ in csv.DictReader(f))
-    # 평균 토큰 추정값
-    AVG_INPUT, AVG_OUTPUT = 700, 400
-    in_tok = calls * AVG_INPUT
-    out_tok = calls * AVG_OUTPUT
-    # Gemini 2.0 Flash 가격: $0.10/$0.40 per 1M
-    cost = (in_tok * 0.10 + out_tok * 0.40) / 1_000_000
-    # 잔액 (가정 — 사용자가 $10 충전, 어림)
-    BUDGET = 10.0
+def api_usage(app_id: int = None):
+    """Return recorded response usage; cost uses configured rates, not provider billing."""
+    usage_path = cfg.project_file("usage_v3.json", app_id)
+    usage = {}
+    if os.path.exists(usage_path):
+        with open(usage_path, "r", encoding="utf-8") as f:
+            usage = json.load(f)
+    stages = [usage.get(stage) or {} for stage in ("A", "B", "C", "D")]
+    calls = sum(int(stage.get("calls") or 0) for stage in stages)
+    in_tok = sum(int(stage.get("input") or 0) for stage in stages)
+    out_tok = sum(int(stage.get("output") or 0) for stage in stages)
+    cost = (in_tok * cfg.MODEL_COST_INPUT + out_tok * cfg.MODEL_COST_OUTPUT) / 1_000_000
     return {
         "calls": calls,
         "input_tokens": in_tok,
         "output_tokens": out_tok,
         "total_tokens": in_tok + out_tok,
         "cost_usd": round(cost, 4),
-        "balance_left": round(BUDGET - cost, 4),
-        "model": "google/gemini-2.5-flash-lite",
-        "pricing": {"input_per_1m": 0.10, "output_per_1m": 0.40},
+        "model": usage.get("model") or cfg.MODEL,
+        "pricing": {"input_per_1m": cfg.MODEL_COST_INPUT, "output_per_1m": cfg.MODEL_COST_OUTPUT},
+        "budget_usd": cfg.BUDGET_USD,
+        "cost_basis": "configured_rates",
     }
 
 
@@ -1333,27 +1345,9 @@ def trigger_pipeline(request: PipelineRunRequest, background_tasks: BackgroundTa
     summary="비용 사전 견적",
     description="현재 리뷰 데이터 기준 LLM 분석 비용을 미리 계산합니다.",
 )
-def pipeline_estimate():
-    import csv as _csv
-
-    n_reviews = 0
-    if os.path.exists(cfg.REVIEWS_CSV):
-        with open(cfg.REVIEWS_CSV, "r", encoding="utf-8-sig", newline="") as f:
-            for row in _csv.DictReader(f):
-                if len((row.get("content") or "").strip()) >= cfg.MIN_REVIEW_LEN:
-                    n_reviews += 1
-
-    n_done = 0
-    if os.path.exists(cfg.ANALYSIS_CSV):
-        with open(cfg.ANALYSIS_CSV, "r", encoding="utf-8-sig", newline="") as f:
-            n_done = sum(1 for _ in _csv.DictReader(f))
-
-    n_todo = max(0, n_reviews - n_done)
-    estimate = cfg.estimate_cost(n_todo)
-    estimate["total_reviews"] = n_reviews
-    estimate["already_done"] = n_done
-    estimate["to_analyze"] = n_todo
-    return estimate
+def pipeline_estimate(app_id: int = None):
+    from token_budget import estimate_remaining
+    return estimate_remaining(cfg, app_id)
 
 
 @app.get(
@@ -1438,4 +1432,3 @@ def pipeline_last_result(app_id: Optional[int] = None):
         "elapsed_sec": elapsed,
     }
     return data
-
