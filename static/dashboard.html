@@ -1609,8 +1609,8 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260924g">
-<script src="/static/review-dashboard.js?v=20260924g"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260924h">
+<script src="/static/review-dashboard.js?v=20260924h"></script>
 </head>
 <body>
 <div class="app">
@@ -1688,12 +1688,16 @@ body.no-analysis #ovBody { display: none; }
     <!-- ================================================================ -->
     <section class="page active" data-page="overview">
       <div class="rd-page-header">
-        <div class="rd-page-art" id="rdPageArt" aria-hidden="true"></div>
-        <div class="rd-page-copy">
-          <h1 class="title" id="overviewTitle">리뷰 진단</h1>
-          <p class="subtitle ov-coverage" id="ovCoverage"></p>
+        <div class="rd-game-summary">
+          <div class="rd-page-art" id="rdPageArt" aria-hidden="true"></div>
+          <div class="rd-page-copy">
+            <h1 class="title" id="overviewTitle">리뷰 진단</h1>
+            <p class="subtitle ov-coverage" id="ovCoverage"></p>
+            <div class="rd-page-actions" id="rdPageActions"></div>
+          </div>
         </div>
-        <div class="rd-page-actions" id="rdPageActions"></div>
+        <div class="rd-header-mood" id="rdMoodChart"></div>
+        <div class="rd-header-verdict" id="rdHeaderVerdict"></div>
       </div>
 
       <!-- 분석 전·옛 방식일 때만 보이는 안내 -->
@@ -2992,6 +2996,8 @@ function setNoAnalysisState(on, title, body, cta) {
   if (!on) return;
   document.getElementById('rdPageArt')?.replaceChildren();
   document.getElementById('rdPageActions')?.replaceChildren();
+  document.getElementById('rdMoodChart')?.replaceChildren();
+  document.getElementById('rdHeaderVerdict')?.replaceChildren();
   const titleEl = document.getElementById('execTitle');
   const bodyEl = document.getElementById('execSummary');
   if (titleEl) titleEl.textContent = title;
