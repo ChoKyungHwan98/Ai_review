@@ -5,13 +5,13 @@
   CLI:   python pipeline.py --app-id 730 --lang english
   API:   POST /pipeline/run  {"app_id": 1623730}
 
-6단계 수동 실행 → 1클릭 자동 실행:
+5단계 분석을 한 번에 실행:
   ① 모집단 조회 + 표본 설계
   ② 리뷰 수집 (Steam API)
   ③ LLM 다차원 분석 (비용 사전 견적)
   ④ 품질 점검
   ⑤ 신뢰도 검증
-  ⑥ 인사이트 + 차트 생성
+  ⑥ 인사이트 요약 생성
 """
 
 import os
@@ -114,9 +114,9 @@ def step_collect(result: PipelineResult):
     # 1) 실시간 모집단 및 Cochran 표본 설계 사이즈 계산
     target_size = 379  # 기본값 fallback
     try:
-        import collect_reviews_v2
-        pop = collect_reviews_v2.fetch_population()
-        design = collect_reviews_v2.decide_sample_size(pop)
+        import collect_reviews
+        pop = collect_reviews.fetch_population()
+        design = collect_reviews.decide_sample_size(pop)
         target_size = design["n_total"]
         print(f"  목표 표본 크기: {target_size}건 (Cochran 공식 산출)")
     except Exception as e:
@@ -158,7 +158,7 @@ def step_collect(result: PipelineResult):
     # 새 수집의 이전 산출물은 보관한다. 다른 언어의 주제/분류를 섞지 않는다.
     if not incremental_mode and existing_count:
         names = ("reviews.csv", "sample_design.json", "themes_v3.json", "analysis_v3.jsonl",
-                 "complaints_v3.jsonl", "analysis_v2.csv", "insights_v4.json", "insights_v5.json",
+                 "complaints_v3.jsonl", "analysis_v3.csv", "insights_v5.json",
                  "summary_v5_cache.json", "usage_v3.json", "quality_report.json", "verify_report.json",
                  "verify_set.csv")
         backup_dir = os.path.join(cfg.project_dir(), "previous-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
@@ -172,7 +172,7 @@ def step_collect(result: PipelineResult):
     print(f"  언어: {cfg.LANG}")
 
     try:
-        from collect_reviews_v2 import main as collect_main
+        from collect_reviews import main as collect_main
         collect_main()
         result.record("collect", "done", {"app_id": cfg.APP_ID, "target_reviews": target_size})
     except Exception as e:
@@ -202,7 +202,7 @@ def step_analyze(result: PipelineResult):
             backup_dir = os.path.join(cfg.project_dir(), "previous-model-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
             os.makedirs(backup_dir, exist_ok=True)
             for name in ("themes_v3.json", "analysis_v3.jsonl", "complaints_v3.jsonl",
-                         "analysis_v2.csv", "insights_v4.json", "insights_v5.json",
+                         "analysis_v3.csv", "insights_v5.json",
                          "summary_v5_cache.json", "usage_v3.json", "quality_report.json", "verify_report.json",
                          "verify_set.csv"):
                 source = os.path.join(cfg.project_dir(), name)
@@ -211,7 +211,7 @@ def step_analyze(result: PipelineResult):
             print(f"  분석 모델 변경: 이전 결과 보관 후 {cfg.MODEL}로 다시 분류합니다")
 
     try:
-        # v3: 게임별 주제 + 재미 종류 + 불만 심층. analysis_v2.csv도 함께 써서 기존 화면을 유지한다.
+        # v3: 게임별 주제 + 재미 종류 + 불만 심층을 한 번의 분류 흐름으로 만든다.
         from analyze_reviews_v3 import main as analyze_main
         analyze_main()
         result.record("analyze", "done")
@@ -275,9 +275,9 @@ def step_verify(result: PipelineResult):
 
 
 def step_insights(result: PipelineResult):
-    """Step 5: 인사이트 생성 + 차트"""
+    """Step 5: 인사이트 요약 생성"""
     print("\n" + "=" * 60)
-    print("📊 [Step 5] 인사이트 생성 + 차트")
+    print("📊 [Step 5] 인사이트 요약 생성")
     print("=" * 60)
 
     try:
@@ -288,14 +288,7 @@ def step_insights(result: PipelineResult):
         result.record("insights", "failed", {"error": str(e)})
         raise
 
-    # v4는 리뷰 탐색·표본 설계 같은 다른 화면이 쓴다. 실패해도 대시보드는 v5로 뜬다.
-    try:
-        from build_insights_v4 import main as insights_v4
-        insights_v4()
-        result.record("insights", "done")
-    except Exception as e:
-        print(f"  ⚠️ 보조 인사이트(v4) 생성 실패: {e}")
-        result.record("insights", "done", {"warning": f"v4: {str(e)[:120]}"})
+    result.record("insights", "done")
 
 
 _PIPELINE_LOCK = threading.Lock()

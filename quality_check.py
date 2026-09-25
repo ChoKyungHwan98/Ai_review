@@ -73,7 +73,7 @@ def score_completeness(reviews: list, analysis: list) -> dict:
     miss_review_pct = missing_review / len(reviews) * 100
 
     # 분석 필수 필드
-    required_analysis = ["overall_sentiment", "emotion"]
+    required_analysis = ["overall_sentiment", "key_phrase"]
     missing_analysis = sum(1 for r in analysis if any(not r.get(k) for k in required_analysis))
     miss_analysis_pct = missing_analysis / len(analysis) * 100 if analysis else 100
 
@@ -107,7 +107,7 @@ def score_consistency(analysis: list) -> dict:
     """
     issues = []
     if not analysis:
-        return {"score": 0, "issues": ["analysis_v2.csv 없음"], "inconsistent_pct": 100}
+        return {"score": 0, "issues": ["analysis_v3.csv 없음"], "inconsistent_pct": 100}
 
     inconsistent = 0
     checked = 0

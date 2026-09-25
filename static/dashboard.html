@@ -28,13 +28,13 @@
   --color-ghost-fill:      #F9FAFB;     /* ghost surfaces */
   --color-white-canvas:    #191F28;     /* primary text */
   --color-silver-whisper:  #333D4B;     /* secondary text */
-  --color-mute-whisper:    #8B95A1;     /* muted text */
-  --color-electric-blue:   #3182F6;     /* accent */
+  --color-mute-whisper:    #667180;     /* muted text */
+  --color-electric-blue:   #1B64DA;     /* accent */
   --color-electric-blue-2: #1B64DA;
-  --color-success-green:   #05C072;     /* positive */
-  --color-error-red:       #F04452;     /* negative */
-  --color-warn-amber:      #FF8C00;
-  --color-burgundy:        #F04452;
+  --color-success-green:   #008A52;     /* positive */
+  --color-error-red:       #D92D3D;     /* negative */
+  --color-warn-amber:      #B85C00;
+  --color-burgundy:        #D92D3D;
 
   /* ── Typography — OpenSea Scale (Inter = gtAmerica substitute) ── */
   --font-sans: 'Pretendard Variable', 'Pretendard', 'Inter', -apple-system,
@@ -82,8 +82,8 @@
   --color-bg-card-img:   #1A1C23;
   --color-text-title:    #191F28;
   --color-text-body:     #333D4B;
-  --color-text-sub:      #8B95A1;
-  --color-primary:       #3182F6;
+  --color-text-sub:      #667180;
+  --color-primary:       #1B64DA;
   --color-primary-hover: #1B64DA;
   --color-border:        #E5E8EB;
   --color-nav-active:    #F2F4F6;
@@ -483,7 +483,6 @@ h1.title {
   border-radius: var(--radius-cards);
   box-shadow: var(--shadow-hero);
   border: 1px solid rgba(131,195,255,0.2);
-  border-top: 3px solid var(--color-electric-blue);
   padding: var(--spacing-24) var(--spacing-24) var(--spacing-20);
   display: flex; gap: var(--spacing-16); align-items: flex-start;
   margin-bottom: var(--spacing-16);
@@ -860,7 +859,7 @@ tbody tr:hover { background: rgba(131, 195, 255, 0.05); }
 }
 .method {
   font-family: var(--font-mono);
-  font-size: 10px; font-weight: var(--font-weight-medium);
+  font-size: 11px; font-weight: var(--font-weight-medium);
   padding: 2px 6px;
   border-radius: var(--radius-default);
   flex-shrink: 0;
@@ -919,7 +918,7 @@ tbody tr:hover { background: rgba(131, 195, 255, 0.05); }
   text-transform: uppercase; letter-spacing: 0.04em;
 }
 .response-status {
-  font-family: var(--font-mono); font-size: 10px; font-weight: var(--font-weight-medium);
+  font-family: var(--font-mono); font-size: 11px; font-weight: var(--font-weight-medium);
   padding: 2px var(--spacing-8); border-radius: var(--radius-default);
   background: rgba(24,24,27,0.06);
   color: var(--color-mute-whisper);
@@ -977,7 +976,7 @@ tbody tr:hover { background: rgba(131, 195, 255, 0.05); }
   height: 100%;
   background: linear-gradient(90deg, var(--color-electric-blue), #5b87dd);
   border-radius: var(--radius-default);
-  transition: width .8s ease;
+  transition: none;
 }
 .api-kpi-card.success .kpi-progress > div {
   background: linear-gradient(90deg, var(--color-success-green), #4a9c6f);
@@ -1398,7 +1397,7 @@ body { background: var(--studio-canvas); }
 main { padding:28px 40px 52px; }
 h1.title { font-size:28px; letter-spacing:-.035em; }
 .subtitle { margin-bottom:20px; }
-.hero { border:1px solid #d9e3ff; border-top:3px solid var(--studio-accent); box-shadow:none; padding:20px 22px 18px; margin-bottom:12px; }
+.hero { border:1px solid #d9e3ff; box-shadow:none; padding:20px 22px 18px; margin-bottom:12px; }
 .hero-title { font-size:19px; line-height:1.4; }
 .hero-body { font-size:14px; line-height:1.65; }
 .result-strip { gap:8px; margin-bottom:14px; }
@@ -1413,7 +1412,7 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
 .chart-pair-label .label-text { font-size:14px; }
 .studio-modal-backdrop { position:fixed; inset:0; z-index:10001; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(20,27,38,.34); }
 .studio-modal-backdrop.open { display:flex; }
-.studio-modal { width:min(440px,100%); background:#fff; border:1px solid var(--studio-line); border-radius:16px; box-shadow:0 20px 60px rgba(20,27,38,.22); padding:22px; color:var(--studio-ink); }
+.studio-modal { width:min(440px,100%); background:#fff; border:1px solid var(--studio-line); border-radius:16px; box-shadow:0 16px 32px rgba(20,27,38,.18); padding:22px; color:var(--studio-ink); }
 .studio-modal h2 { margin:0 0 8px; font-size:18px; letter-spacing:-.02em; }
 .studio-modal p { margin:0 0 18px; color:#667085; font-size:13px; line-height:1.55; }
 .studio-field { display:grid; gap:7px; margin:16px 0; font-size:13px; font-weight:600; }
@@ -1601,16 +1600,21 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
     }
     .run-analyze-bar i {
       display: block; width: 0; height: 100%; border-radius: 999px;
-      background: var(--color-primary); transition: width .4s ease-out;
+      background: var(--color-primary); transition: none;
     }
     .run-analyze-text { margin-top: 4px; font-size: 12px; color: var(--color-text-sub); font-variant-numeric: tabular-nums; }
 
 /* Summary assets are scoped to the review diagnosis. */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+::selection { background: #BFD7FF; color: #0F172A; }
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260925d">
-<script src="/static/review-dashboard.js?v=20260925d"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260925f">
+<script src="/static/review-dashboard.js?v=20260925e"></script>
 </head>
 <body>
 <div class="app">
@@ -1630,16 +1634,10 @@ body.no-analysis #ovBody { display: none; }
       <div class="nav-label">리뷰 분석 파이프라인</div>
       <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)">대시보드</a>
       <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)">리뷰 탐색</a>
-      <a href="#" class="nav-item" data-page="insights" onclick="navTo(this)">AI 인사이트</a>
       <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)">표본 설계</a>
     </div>
 
-    <div class="nav-group">
-      <div class="nav-label">포트폴리오</div>
-      <a href="#" class="nav-item" data-page="hypothesis" onclick="navTo(this)" style="color: #3182F6; font-weight: 700;">인사이트 도출</a>
-    </div>
-
-    <div class="sidebar-bottom">
+    <div class="sidebar-bottom">    <div class="sidebar-bottom">
       <button type="button" class="bottom-item" onclick="openApiKeyModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
         API Key 관리
@@ -1746,12 +1744,11 @@ body.no-analysis #ovBody { display: none; }
                 <th style="width:50px">투표</th>
                 <th style="width:90px">감성</th>
                 <th style="width:120px">AI 신뢰도</th>
-                <th style="width:100px">감정</th>
                 <th style="width:60px">보정값</th>
                 <th>핵심 문구</th>
                 <th style="width:70px; text-align:right">플레이</th>
               </tr></thead>
-              <tbody id="reviewTable"><tr><td colspan="8" style="text-align:center; padding:32px">로딩 중…</td></tr></tbody>
+              <tbody id="reviewTable"><tr><td colspan="7" style="text-align:center; padding:32px">로딩 중…</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -1759,239 +1756,7 @@ body.no-analysis #ovBody { display: none; }
     </section>
 
     <!-- ================================================================ -->
-    <!-- 3) ASPECTS                                                        -->
-    <!-- ================================================================ -->
-    <section class="page" data-page="insights">
-      <h1 class="title">유저 평가 상세</h1>
-      <p class="subtitle">그래픽·게임플레이·스토리 등 5개 영역별 유저 반응과 실제 인용</p>
-
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title">개선 우선순위 — 보정 후 부정 비율 높은 순</div>
-        <div class="table-wrap" style="border:none">
-          <table>
-            <thead><tr>
-              <th>순위</th>
-              <th>영역</th>
-              <th>언급 (보정)</th>
-              <th style="color:var(--color-success-green)">긍정 (보정)</th>
-              <th style="color:var(--color-error-red)">부정 (보정)</th>
-              <th>부정률 (보정)</th>
-              <th class="tiny muted">분석 결과 부정률</th>
-            </tr></thead>
-            <tbody id="priorityTable"><tr><td colspan="7" style="text-align:center; padding:24px">로딩 중…</td></tr></tbody>
-          </table>
-        </div>
-        <div class="tiny" style="margin-top:8px">(보정) = 보정 후 추정값 (실제 시장에 더 가까움)</div>
-      </div>
-
-      <div id="evidencePanel"><div class="muted tiny">로딩 중…</div></div>
-    <div style="margin-top: 64px; border-top: 1px solid var(--color-steel-border); padding-top: 32px">
-      <h1 class="title">데이터 보정</h1>
-      <p class="subtitle">수집한 데이터의 치우침을 점검하고 보정한 과정</p>
-
-      <!-- 편향 보정 근거 Hero -->
-      <div class="hero">
-        <div style="flex:1">
-          <span class="hero-badge">왜 보정이 필요한가</span>
-          <h2 class="hero-title">수집 데이터의 치우침을 바로잡은 이유</h2>
-          <p class="hero-body">
-            비추천 리뷰를 깊이 분석하려고 <b>일부러 비추천을 더 많이 수집</b>했습니다.
-            스팀 전체에서 비추천 비율은 <b id="biasBriefPop">—</b>인데,
-            우리가 수집한 데이터에서는 <b id="biasBriefSmp">—</b>입니다.
-            이 차이를 <b>보정 계수</b>로 바로잡아 실제 시장 추천률을 추정합니다.
-            추천 리뷰에 <b>×<span id="bWpos">—</span></b>,
-            비추천에 <b>×<span id="bWneg">—</span></b>를 곱해줍니다.
-          </p>
-        </div>
-      </div>
-
-      <!-- 3-Way 비교 (Bias 탭에서도) -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title">추천률 비교 — 보정이 필요한 이유</div>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; align-items:end">
-          <div>
-            <div class="tiny" style="margin-bottom:6px">① 전체 추천률 (Steam 공식)</div>
-            <div style="background:var(--color-success-green); border-radius:4px 4px 0 0; display:flex; align-items:flex-end; justify-content:center; padding:8px 0; font-weight:600; font-size:18px; color:#ffffff" id="biasBarPop">—</div>
-          </div>
-          <div>
-            <div class="tiny" style="margin-bottom:6px">② AI 분석 추천률 (치우침 있음)</div>
-            <div style="background:var(--color-warn-amber); border-radius:4px 4px 0 0; display:flex; align-items:flex-end; justify-content:center; padding:8px 0; font-weight:600; font-size:18px; color:#ffffff" id="biasBarSmp">—</div>
-          </div>
-          <div>
-            <div class="tiny" style="margin-bottom:6px">③ 보정 후 추정값 ★</div>
-            <div style="background:var(--color-electric-blue); border-radius:4px 4px 0 0; display:flex; align-items:flex-end; justify-content:center; padding:8px 0; font-weight:600; font-size:18px; color:#ffffff" id="biasBarW">—</div>
-          </div>
-        </div>
-        <div style="height:1px; background:var(--color-steel-border); margin:0"></div>
-        <div class="tiny" style="margin-top:8px">세 값이 다른 이유: 비추천을 일부러 더 수집했기 때문 → 보정으로 실제 비율 복원</div>
-      </div>
-
-      <!-- 편향 점검 결과 요약 -->
-      <div class="grid grid-3" style="margin-bottom:16px">
-        <div class="card kpi">
-          <div class="kpi-label">통과</div>
-          <div class="kpi-value pos mono" id="biasPassCount">—</div>
-          <div class="kpi-sub">기준 충족</div>
-        </div>
-        <div class="card kpi">
-          <div class="kpi-label">주의</div>
-          <div class="kpi-value mono" style="color:var(--color-warn-amber)" id="biasWarnCount">—</div>
-          <div class="kpi-sub">주의 필요</div>
-        </div>
-        <div class="card kpi">
-          <div class="kpi-label">실패</div>
-          <div class="kpi-value neg mono" id="biasFailCount">—</div>
-          <div class="kpi-sub">→ 보정 계수로 해결</div>
-        </div>
-      </div>
-
-      <!-- 체크리스트 -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title">데이터 점검 체크리스트</div>
-        <div id="biasChecklist"><div class="muted tiny">로딩 중…</div></div>
-      </div>
-
-      <!-- 데이터 품질 점수 (강의 session-16) -->
-      <div class="card" id="qualityCard">
-        <div class="card-title">데이터 품질 점수</div>
-        <div class="grid grid-4" style="margin-bottom:12px">
-          <div class="card kpi"><div class="kpi-label">종합 점수</div><div class="kpi-value mono" id="qOverall">—</div><div class="kpi-sub" id="qGrade">—</div></div>
-          <div class="card kpi"><div class="kpi-label">완전성</div><div class="kpi-value pos mono" id="qComp">—</div><div class="kpi-sub">빠진 데이터 없는지</div></div>
-          <div class="card kpi"><div class="kpi-label">일관성</div><div class="kpi-value mono" style="color:var(--color-warn-amber)" id="qCons">—</div><div class="kpi-sub">추천/비추천과 분석 결과 일치</div></div>
-          <div class="card kpi"><div class="kpi-label">대표성</div><div class="kpi-value mono" id="qRep">—</div><div class="kpi-sub">실제 시장 비율과 비슷한지</div></div>
-        </div>
-        <div class="tiny muted" id="qDetail" style="margin-top:6px">—</div>
-      </div>
-    </div>
-
-    <!-- ================================================================ -->
-    <!-- 4.5) VERIFY — 신뢰도 검증 (강의 session-44 핵심 인사이트)        -->
-    <!-- ================================================================ -->
-    <div style="margin-top: 64px; border-top: 1px solid var(--color-steel-border); padding-top: 32px">
-      <h1 class="title">AI 정확도</h1>
-      <p class="subtitle">30건으로 검증한 AI 분석의 정확도 — "AI가 자신하는 것"과 "실제 맞히는 것"은 다릅니다</p>
-
-      <!-- 인사이트 Hero -->
-      <div class="hero">
-        <div style="flex:1">
-          <span class="hero-badge">핵심 발견</span>
-          <h2 class="hero-title" id="verifyHeroTitle">—</h2>
-          <p class="hero-body" id="verifyHeroBody">—</p>
-        </div>
-      </div>
-
-      <!-- KPI 4개 -->
-      <div class="grid grid-4" style="margin-bottom:20px">
-        <div class="card kpi">
-          <div class="kpi-label">엄격 정확도</div>
-          <div class="kpi-value mono" id="verifyAccStrict">—</div>
-          <div class="kpi-sub">추천/비추천과 정확히 일치</div>
-        </div>
-        <div class="card kpi">
-          <div class="kpi-label">관대 정확도</div>
-          <div class="kpi-value pos mono" id="verifyAccLenient">—</div>
-          <div class="kpi-sub">애매한 경우도 맞은 것으로 침</div>
-        </div>
-        <div class="card kpi">
-          <div class="kpi-label">평균 AI 신뢰도</div>
-          <div class="kpi-value acc mono" id="verifyAvgConf">—</div>
-          <div class="kpi-sub" id="verifyGap">—</div>
-        </div>
-        <div class="card kpi">
-          <div class="kpi-label">위험 케이스</div>
-          <div class="kpi-value neg mono" id="verifyDanger">—</div>
-          <div class="kpi-sub">AI가 확신했는데 틀린 건수</div>
-        </div>
-      </div>
-
-      <!-- 4사분면 매트릭스 -->
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-title">AI 자신감 vs 실제 정답 4분류</div>
-        <p class="tiny" style="margin: -10px 0 16px;">AI가 "확신한다"고 한 것과 실제로 맞힌 것을 교차해서 위험도 식별</p>
-        <div class="verify-matrix">
-          <div class="verify-cell best" id="vmHC">
-            <div class="vm-label">고신뢰 + 정답</div>
-            <div class="vm-count">—</div>
-            <div class="vm-tip">이상적 — AI 확신 + 맞음</div>
-          </div>
-          <div class="verify-cell danger" id="vmHI">
-            <div class="vm-label">고신뢰 + 오답</div>
-            <div class="vm-count">—</div>
-            <div class="vm-tip">★ 가장 위험 — AI가 확신했는데 틀림</div>
-          </div>
-          <div class="verify-cell warn" id="vmLC">
-            <div class="vm-label">저신뢰 + 정답</div>
-            <div class="vm-count">—</div>
-            <div class="vm-tip">운 좋게 맞음 — 재검토 권장</div>
-          </div>
-          <div class="verify-cell info" id="vmLI">
-            <div class="vm-label">저신뢰 + 오답</div>
-            <div class="vm-count">—</div>
-            <div class="vm-tip">예상 가능한 실패</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 차트 row: 신뢰도 히스토그램 + 카테고리별 정확도 -->
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-title">신뢰도 분포 + 카테고리별 정확도</div>
-        <div class="chart-pair">
-          <div class="chart-pair-half">
-            <div class="chart-pair-label">
-              <span class="label-text">신뢰도 히스토그램</span>
-              <span class="label-sub">30건 분포 · 0~100% 10구간</span>
-            </div>
-            <div class="chart-wrap chart-md"><canvas id="chartVerifyHist"></canvas></div>
-          </div>
-          <div class="chart-pair-divider"></div>
-          <div class="chart-pair-half">
-            <div class="chart-pair-label">
-              <span class="label-text">카테고리별 정확도</span>
-              <span class="label-sub">5종 분류 × 6건씩</span>
-            </div>
-            <div class="chart-wrap chart-md"><canvas id="chartVerifyCat"></canvas></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 위험 케이스 + 권고 -->
-      <div class="grid grid-2" style="margin-bottom:18px">
-        <div class="card">
-          <div class="card-title">위험 케이스 — AI가 확신했는데 틀린 것</div>
-          <p class="tiny" style="margin: -10px 0 12px;">AI가 75% 이상 확신하면서도 실제 추천/비추천과 반대로 판단한 건. 가장 주의가 필요합니다.</p>
-          <div id="verifyDangerList"><div class="muted tiny">로딩 중…</div></div>
-        </div>
-        <div class="card">
-          <div class="card-title">AI 결과 활용 가이드</div>
-          <p class="tiny" style="margin: -10px 0 12px;">검증 결과를 바탕으로 AI 분석을 어떻게 활용하면 좋은지 안내합니다.</p>
-          <div id="verifyRecsList"><div class="muted tiny">로딩 중…</div></div>
-        </div>
-      </div>
-
-      <!-- 30건 전체 샘플 표 -->
-      <div class="card">
-        <div class="card-title">30건 검증 데이터 전체</div>
-        <div class="table-wrap" style="border:none">
-          <div class="table-scroll">
-            <table>
-              <thead><tr>
-                <th style="width:90px">유형</th>
-                <th style="width:48px">실제</th>
-                <th style="width:80px">AI 판단</th>
-                <th style="width:70px">AI 자신감</th>
-                <th style="width:60px">결과</th>
-                <th>내용 (요약)</th>
-              </tr></thead>
-              <tbody id="verifySamples"><tr><td colspan="6" style="text-align:center; padding:24px">로딩 중…</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    </section>
-
-    <!-- ================================================================ -->
-    <!-- 5) SAMPLE DESIGN                                                  -->
+    <!-- 3) SAMPLE DESIGN    <!-- 5) SAMPLE DESIGN                                                  -->
     <!-- ================================================================ -->
     <section class="page" data-page="sample">
       <h1 class="title">분석 규모</h1>
@@ -2043,7 +1808,7 @@ body.no-analysis #ovBody { display: none; }
           <span>실시간 리뷰 분석</span>
         </div>
         <p class="tiny" style="margin: var(--spacing-4) 0 var(--spacing-12); color: var(--color-silver-whisper)">
-          게임 리뷰를 입력하면 AI가 <b style="color:var(--color-white-canvas)">감성 · 감정 · 쳨키워드 · 6대 측면</b>을 분석합니다.
+          게임 리뷰를 입력하면 AI가 <b style="color:var(--color-white-canvas)">반응 · 주제 · 핵심어</b>를 짧게 분류합니다.
         </p>
         <textarea id="testReviewInput" class="input" rows="3" style="width:100%; resize:vertical; font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; font-size: var(--text-body-sm); margin-bottom: var(--spacing-12);" placeholder="분석할 리뷰 텍스트를 입력하세요…">정말 재밌는 게임이지만 버그가 많아서 모바일에서도 안정성이 우려됨</textarea>
         <div style="display: flex; align-items: center; gap: var(--spacing-8); flex-wrap: wrap;">
@@ -2053,7 +1818,7 @@ body.no-analysis #ovBody { display: none; }
             <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
             <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5</option>
           </select>
-          <button class="btn primary" id="testAnalyzeBtn" style="white-space:nowrap; padding: var(--spacing-8) var(--spacing-24);">🤖 분석하기</button>
+          <button class="btn primary" id="testAnalyzeBtn" style="white-space:nowrap; padding: var(--spacing-8) var(--spacing-24);">분석하기</button>
         </div>
 
         <!-- 분석 결과: 구조화된 카드 -->
@@ -2069,18 +1834,18 @@ body.no-analysis #ovBody { display: none; }
             <div class="card kpi" id="resultSentiment">
               <div class="kpi-label">감성</div>
               <div class="kpi-value" style="font-size: var(--text-heading-sm);">—</div>
-              <div class="kpi-sub">sentiment</div>
+              <div class="kpi-sub">리뷰 전체 반응</div>
             </div>
-            <div class="card kpi" id="resultEmotion">
-              <div class="kpi-label">감정</div>
+            <div class="card kpi" id="resultTopics">
+              <div class="kpi-label">핵심 주제</div>
               <div class="kpi-value" style="font-size: var(--text-heading-sm);">—</div>
-              <div class="kpi-sub">emotion</div>
+              <div class="kpi-sub">최대 3개</div>
             </div>
 
             <div class="card kpi" id="resultKeywords">
               <div class="kpi-label">키워드</div>
               <div class="kpi-value" style="font-size: var(--text-body-sm); line-height: normal;">—</div>
-              <div class="kpi-sub">keywords</div>
+              <div class="kpi-sub">원문 핵심어</div>
             </div>
           </div>
 
@@ -2354,7 +2119,7 @@ body.no-analysis #ovBody { display: none; }
 
         <!-- 프로그레스 바 -->
         <div style="background:var(--color-ghost-fill); height:12px; border-radius:6px; overflow:hidden; margin-bottom:var(--spacing-24); border:1px solid var(--color-steel-border)">
-          <div id="modalProgressBar" style="width:5%; height:100%; background:linear-gradient(90deg, var(--color-blue-electric), var(--color-success-green)); transition:width 0.4s ease-out"></div>
+          <div id="modalProgressBar" style="width:5%; height:100%; background:linear-gradient(90deg, var(--color-blue-electric), var(--color-success-green))"></div>
         </div>
 
         <!-- 단계별 상태 목록 -->
@@ -2398,70 +2163,6 @@ body.no-analysis #ovBody { display: none; }
 
 
 
-    <!-- 리뷰 기반 인사이트 탭 -->
-    <section id="hypothesis" class="page" data-page="hypothesis">
-      <!-- 상단 헤더 -->
-      <div style="padding:40px 60px 0; max-width:var(--page-max); margin:0 auto; width:100%;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-          <div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-              <span style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#EBF3FF; border-radius:8px; font-size:16px;">💡</span>
-              <span style="font-size:22px; font-weight:800; color:var(--color-text-title);">리뷰 기반 기획 인사이트</span>
-            </div>
-            <p style="margin:0; font-size:14px; color:var(--color-text-sub); line-height:1.6;">실제 수집된 리뷰 데이터에서 <strong>신뢰 가능한 분야별 인사이트만</strong> 추출합니다. 데이터가 없는 분야는 출력하지 않습니다.</p>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-          <button id="btnPublishInsight" onclick="publishInsightToStudio()"
-            style="display:none; align-items:center; gap:8px; padding:14px 18px; background:#FFFFFF; color:var(--color-primary); border:1px solid #BFD7FF; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; transition:all 0.2s; white-space:nowrap; font-family:inherit;"
-            title="현재 리뷰 인사이트를 게임기획 스튜디오의 산출물 보관함에 게시합니다.">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
-            스튜디오에 게시
-          </button>
-          <button id="btnHypo" onclick="generateHypothesis()"
-            style="display:flex; align-items:center; gap:8px; padding:14px 24px; background:var(--color-primary); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; transition:all 0.2s; white-space:nowrap; font-family:inherit; box-shadow:0 4px 12px rgba(49,130,246,0.3);"
-            onmouseover="this.style.background='var(--color-primary-hover)'; this.style.transform='translateY(-1px)'"
-            onmouseout="this.style.background='var(--color-primary)'; this.style.transform='none'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            인사이트 도출하기
-          </button>
-          </div>
-        </div>
-
-        <!-- 구분선 -->
-        <div style="height:1px; background:var(--color-border); margin-top:28px;"></div>
-      </div>
-
-      <!-- 결과 영역 (PPT 캡처용 흰색 배경) -->
-      <div id="hypoContent" style="display:none; flex-direction:column; padding:40px; background:#FFFFFF; border-radius:24px; box-shadow:0 8px 30px rgba(0,0,0,0.04); max-width:var(--page-max); margin:0 auto 60px; width:100%; gap:24px; border:1px solid var(--color-border);">
-
-        <!-- 요약 헤더 카드 -->
-        <div style="background:#FFFFFF; border-radius:20px; border:1px solid var(--color-border); padding:28px 32px; box-shadow:var(--shadow-sm); position:relative; overflow:hidden;">
-          <div style="position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg, #3182F6, #5BA4FF);"></div>
-          <div style="font-size:11px; font-weight:700; color:var(--color-primary); letter-spacing:1px; margin-bottom:10px;">REVIEW-BASED INSIGHT SUMMARY</div>
-          <h2 id="hypoTitle" style="font-size:22px; font-weight:800; color:var(--color-text-title); margin:0 0 16px; line-height:1.4;"></h2>
-          <!-- 데이터 출처 레이어 뱃지 -->
-          <div id="hypoDataSource" style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
-            <span style="font-size:12px; color:var(--color-text-sub);">실제 수집 리뷰 통계·원문 기반 — 데이터 없는 분야 미포함</span>
-          </div>
-        </div>
-
-
-        <!-- 장르 컨텍스트 밴드 -->
-        <div id="hypoContextBand"></div>
-
-        <!-- 인사이트 카드 목록 -->
-        <div id="hypoCards" style="display:flex; flex-direction:column; gap:16px;"></div>
-      </div>
-
-      <!-- 빈 상태(미생성) -->
-      <div id="hypoEmpty" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:80px 60px; gap:20px;">
-        <div style="width:72px; height:72px; background:#EBF3FF; border-radius:24px; display:flex; align-items:center; justify-content:center; font-size:32px;">📊</div>
-        <div style="text-align:center;">
-          <div style="font-size:18px; font-weight:700; color:var(--color-text-title); margin-bottom:8px;">아직 분석 결과가 없습니다</div>
-          <div style="font-size:14px; color:var(--color-text-sub); line-height:1.6;">위의 <strong>인사이트 도출하기</strong> 버튼을 눌러<br>현재 게임의 리뷰 데이터를 AI로 분석하세요.</div>
-        </div>
-      </div>
-    </section>
 
 
 <script>
@@ -2469,248 +2170,6 @@ let DATA = {};
 let currentAppId = null;
 let ALL_GAMES = [];
 
-// ── 인사이트 도출 ──
-async function generateHypothesis() {
-  const btn = document.getElementById('btnHypo');
-  const empty = document.getElementById('hypoEmpty');
-  const content = document.getElementById('hypoContent');
-
-  // 로딩 상태
-  btn.disabled = true;
-  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-4.22-7.66"/></svg> 분석 중...`;
-  btn.style.opacity = '0.7';
-  if (empty) empty.style.display = 'none';
-  content.style.display = 'none';
-
-  try {
-    const r = await fetch('/api/generate-hypothesis', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ app_id: currentAppId, game_name: ALL_GAMES.find(g => g.app_id === currentAppId)?.name || 'Game', force: true })
-    });
-    if (!r.ok) {
-      const err = await r.json();
-      throw new Error(err.detail || '인사이트 도출 실패');
-    }
-    const data = await r.json();
-    DATA.llm_hypothesis = data.hypothesis;
-    renderHypothesis(data.hypothesis);
-  } catch(e) {
-    if (empty) empty.style.display = 'flex';
-    alert('오류: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> 인사이트 도출하기`;
-    btn.style.opacity = '1';
-  }
-}
-
-function studioMessage(type, payload) {
-  if (window.parent === window) return false;
-  window.parent.postMessage({
-    channel: 'gds:tool',
-    type,
-    requestId: 'review-' + Date.now() + '-' + Math.random().toString(16).slice(2),
-    ...payload,
-  }, 'https://studio.local');
-  return true;
-}
-
-function publishInsightToStudio() {
-  const hypothesis = DATA && DATA.llm_hypothesis;
-  if (!hypothesis || !Array.isArray(hypothesis.hypotheses)) {
-    alert('먼저 리뷰 기반 인사이트를 도출하세요.');
-    return;
-  }
-  if (!studioMessage('artifact:publish', {
-    record: {
-      artifactId: 'review-insights-' + currentAppId,
-      kind: 'review-insights',
-      title: (ALL_GAMES.find(g => g.app_id === currentAppId)?.name || '게임') + ' 리뷰 인사이트',
-      summary: hypothesis.title || '리뷰 기반 기획 인사이트',
-      data: {
-        schemaVersion: 1,
-        appId: currentAppId,
-        gameName: ALL_GAMES.find(g => g.app_id === currentAppId)?.name || '',
-        hypothesis,
-      },
-    },
-  })) {
-    alert('스튜디오에서 단독 실행 중에는 게시할 수 없습니다. 작업공간에서 열어 주세요.');
-    return;
-  }
-  showToast('리뷰 인사이트를 스튜디오 산출물 보관함에 게시했습니다.');
-}
-
-window.addEventListener('message', function(event) {
-  if (!event.data || event.data.channel !== 'gds:tool') return;
-  if (event.data.type === 'artifact:catalog' && event.data.requestId) {
-    showToast('스튜디오 산출물 보관함이 업데이트되었습니다.');
-  }
-  if (event.data.type === 'app:error') {
-    showToast(event.data.message || '스튜디오 연결에 실패했습니다.');
-  }
-});
-
-// 스핀 애니메이션
-if (!document.querySelector('#hypoSpinStyle')) {
-  const s = document.createElement('style');
-  s.id = 'hypoSpinStyle';
-  s.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
-  document.head.appendChild(s);
-}
-
-const CATEGORY_COLORS = {
-  '게임플레이': '#3182F6', '전투': '#3182F6',
-  '성능': '#FF6B35', '최적화': '#FF6B35', '버그': '#FF6B35',
-  '스토리': '#8B5CF6', '세계관': '#8B5CF6',
-  '그래픽': '#059669', '비주얼': '#059669',
-  '가격': '#D97706', '가성비': '#D97706',
-  '멀티플레이': '#0EA5E9', '소셜': '#0EA5E9',
-};
-
-function getCategoryColor(cat) {
-  if (!cat) return '#6B7280';
-  for (const [key, color] of Object.entries(CATEGORY_COLORS)) {
-    if (cat.includes(key)) return color;
-  }
-  return '#6B7280';
-}
-
-function renderHypothesis(h) {
-  if (!h || !h.hypotheses) return;
-
-  const empty = document.getElementById('hypoEmpty');
-  const content = document.getElementById('hypoContent');
-  if (empty) empty.style.display = 'none';
-  content.style.display = 'flex';
-
-  document.getElementById('hypoTitle').textContent = h.title || '리뷰 기반 기획 인사이트';
-  const publishButton = document.getElementById('btnPublishInsight');
-  if (publishButton && window.parent !== window) publishButton.style.display = 'inline-flex';
-
-  // 데이터 출처 레이어 표시 업데이트
-  const nTotal = h.n_total || 0;
-  const helpfulN = h.helpful_count || 0;
-  const sourceEl = document.getElementById('hypoDataSource');
-  if (sourceEl) {
-    let srcHtml = '';
-    if (nTotal > 0) {
-      srcHtml += `<span style="display:inline-flex; align-items:center; gap:5px; padding:4px 10px; background:#F0F6FF; border:1px solid #CDDEFF; border-radius:20px; font-size:12px; font-weight:600; color:#3182F6;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        랜덤 표본 ${nTotal.toLocaleString()}건
-      </span>`;
-    }
-    if (helpfulN > 0) {
-      srcHtml += `<span style="display:inline-flex; align-items:center; gap:5px; padding:4px 10px; background:#F0FDF8; border:1px solid #BBEDDA; border-radius:20px; font-size:12px; font-weight:600; color:#05C072; margin-left:6px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14zm-7 11H4.72A1.72 1.72 0 013 18.29V11a1.72 1.72 0 011.72-1.72H7"/></svg>
-        + 유용한 리뷰 ${helpfulN}건 추가 수집
-      </span>`;
-    }
-    sourceEl.innerHTML = srcHtml || '<span style="font-size:12px; color:var(--color-text-sub);">실제 수집 리뷰 통계·원문 기반</span>';
-  }
-
-  // 장르 컨텍스트 밴드
-  let contextBand = '';
-  if (h.genre || (h.core_mechanics && h.core_mechanics.length)) {
-    const mechanics = (h.core_mechanics || []).map(m =>
-      `<span style="display:inline-flex; align-items:center; gap:4px; padding:5px 12px; background:#EBF3FF; color:#3182F6; font-size:12px; font-weight:600; border-radius:20px; margin:3px 4px 3px 0;">${m}</span>`
-    ).join('');
-    contextBand = `
-      <div style="background:#FFFFFF; border-radius:16px; border:1px solid var(--color-border); padding:20px 24px; box-shadow:var(--shadow-sm); display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
-        <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
-          <div style="width:36px; height:36px; background:#EBF3FF; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;">🎮</div>
-          <div>
-            <div style="font-size:11px; font-weight:700; color:var(--color-text-sub); letter-spacing:0.5px;">GENRE</div>
-            <div style="font-size:15px; font-weight:700; color:var(--color-primary);">${h.genre || '—'}</div>
-          </div>
-        </div>
-        <div style="width:1px; height:36px; background:var(--color-border); flex-shrink:0;"></div>
-        <div>
-          <div style="font-size:11px; font-weight:700; color:var(--color-text-sub); letter-spacing:0.5px; margin-bottom:6px;">CORE MECHANICS</div>
-          <div style="display:flex; flex-wrap:wrap;">${mechanics || '—'}</div>
-        </div>
-      </div>`;
-  }
-  document.getElementById('hypoContextBand').innerHTML = contextBand;
-
-  // 인사이트 카드
-  const STEP_ICONS = ['①', '②', '③', '④', '⑤'];
-  const cards = h.hypotheses.map((item, idx) => {
-    const color = getCategoryColor(item.category);
-    const lightBg = color + '15';
-    return `
-    <div style="background:#FFFFFF; border-radius:16px; border:1px solid var(--color-border); overflow:hidden; box-shadow:var(--shadow-sm); transition:box-shadow 0.2s;"
-         onmouseover="this.style.boxShadow='var(--shadow-md)'"
-         onmouseout="this.style.boxShadow='var(--shadow-sm)'">
-
-      <!-- 카드 상단 배지 바 -->
-      <div style="height:3px; background:${color};"></div>
-
-      <div style="padding:28px 32px;">
-        <!-- 헤더: 분야 + 번호 -->
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="display:inline-flex; align-items:center; padding:5px 14px; background:${lightBg}; color:${color}; font-size:12px; font-weight:700; border-radius:20px; border:1px solid ${color}33;">
-              ${item.category || '기획 일반'}
-            </span>
-          </div>
-          <span style="font-size:13px; font-weight:600; color:var(--color-text-sub);">INSIGHT ${STEP_ICONS[idx] || (idx+1)}</span>
-        </div>
-
-        <!-- 3단 레이아웃 -->
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px;">
-
-          <!-- OBSERVATION -->
-          <div style="padding:20px; background:#F9FAFB; border-radius:12px; border:1px solid #F0F1F3;">
-            <div style="font-size:10px; font-weight:700; color:var(--color-text-sub); letter-spacing:1px; margin-bottom:10px;">📌 OBSERVATION</div>
-            <div style="font-size:14px; font-weight:600; color:var(--color-text-title); line-height:1.65;">${item.issue}</div>
-          </div>
-
-          <!-- HYPOTHESIS -->
-          <div style="padding:20px; background:#F0F6FF; border-radius:12px; border:1px solid #CDDEFF;">
-            <div style="font-size:10px; font-weight:700; color:${color}; letter-spacing:1px; margin-bottom:10px;">🔍 HYPOTHESIS</div>
-            <div style="font-size:14px; font-weight:500; color:var(--color-text-title); line-height:1.65;">${item.hypothesis}</div>
-          </div>
-
-          <!-- DESIGN PROPOSAL -->
-          <div style="padding:20px; background:#F0FDF8; border-radius:12px; border:1px solid #BBEDDA;">
-            <div style="font-size:10px; font-weight:700; color:#05C072; letter-spacing:1px; margin-bottom:10px;">✨ DESIGN PROPOSAL</div>
-            <div style="font-size:14px; font-weight:500; color:var(--color-text-title); line-height:1.65;">${item.design_proposal}</div>
-          </div>
-
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('hypoCards').innerHTML = cards;
-}
-
-
-let charts = {};
-const COLORS = {
-  pos: "#47bb64",
-  neg: "#e24756",
-  mix: "#e5a93d",
-  neu: "#71717a",
-  acc: "#83c3ff"
-};
-
-
-/* ============ Toast UI ============ */
-let toastTimeout;
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.classList.add('show');
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3000);
-}
-
-/* ============ Navigation ============ */
 function navTo(btn) {
   const p = btn.dataset.page;
   document.querySelectorAll('.nav-item, .bottom-item').forEach(function(t) { t.classList.toggle('active', t === btn); });
@@ -2845,7 +2304,7 @@ async function searchGame() {
           // 필요 표본 ±5%
           var isMinNeg5 = sd.driver_5pct === 'MIN_NEG';
           sh += '<div style="background:var(--color-ghost-fill);padding:var(--spacing-8) var(--spacing-12);border-radius:var(--radius-default);grid-column:span 2">';
-          sh += '<div style="font-size:var(--text-caption);color:var(--color-mute-whisper);margin-bottom:4px">📐 표본 오차 및 수집 크기 선택 <span style="font-size:10px;color:var(--color-mute-whisper)">(Cochran 공식 · 유한모집단 보정)</span></div>';
+          sh += '<div style="font-size:var(--text-caption);color:var(--color-mute-whisper);margin-bottom:4px">📐 표본 오차 및 수집 크기 선택 <span style="font-size:11px;color:var(--color-mute-whisper)">(Cochran 공식 · 유한모집단 보정)</span></div>';
           sh += '<div style="display:flex;flex-direction:column;gap:6px">';
 
           // ±5% 옵션
@@ -2855,7 +2314,7 @@ async function searchGame() {
           sh += '<div style="display:flex;align-items:center;gap:6px">';
           sh += '<span style="font-family:var(--font-mono);font-size:14px;color:var(--color-white-canvas);font-weight:600">±5% 오차 표본 (' + sd.sample_5pct.toLocaleString() + '건 수집)</span>';
           if (isMinNeg5) {
-            sh += '<span style="font-size:10px;background:#f59e0b22;color:#f59e0b;padding:2px 6px;border-radius:4px;border:1px solid #f59e0b44">부정리뷰 확보 조건 적용</span>';
+            sh += '<span style="font-size:11px;background:#f59e0b22;color:#a34f00;padding:2px 6px;border-radius:4px;border:1px solid #f59e0b44">부정리뷰 확보 조건 적용</span>';
           }
           sh += '</div>';
           sh += '<div style="font-size:11px;color:var(--color-mute-whisper);margin-top:2px">';
@@ -2869,7 +2328,7 @@ async function searchGame() {
           var n5negPct = Math.round(n5neg / n5total * 100);
           sh += '<br>📱 수집 할당: 긴정 <b style="color:#47bb64">' + n5pos.toLocaleString() + '건</b> + 부정 <b style="color:#e24756">' + n5neg.toLocaleString() + '건</b> (모집단 비율 ' + kr.pos_rate + '% : ' + kr.neg_rate + '%)';
           if (n5negPct > kr.neg_rate + 2) {
-            sh += ' <span style="font-size:10px;color:#f59e0b">→ 부정 과대표집 가중보정 적용</span>';
+            sh += ' <span style="font-size:11px;color:#a34f00">→ 부정 과대표집 가중보정 적용</span>';
           }
           sh += '</div>';
           sh += '<div style="font-size:11px;color:var(--color-mute-whisper);margin-top:2px">비용은 분석 모델 선택 후 계산</div>';
@@ -2883,7 +2342,7 @@ async function searchGame() {
           sh += '<div style="display:flex;align-items:center;gap:6px">';
           sh += '<span style="font-family:var(--font-mono);font-size:14px;color:var(--color-white-canvas);font-weight:600">±3% 오차 표본 (' + sd.sample_3pct.toLocaleString() + '건 수집)</span>';
           if (isMinNeg3) {
-            sh += '<span style="font-size:10px;background:#f59e0b22;color:#f59e0b;padding:2px 6px;border-radius:4px;border:1px solid #f59e0b44">부정리뷰 확보 조건 적용</span>';
+            sh += '<span style="font-size:11px;background:#f59e0b22;color:#a34f00;padding:2px 6px;border-radius:4px;border:1px solid #f59e0b44">부정리뷰 확보 조건 적용</span>';
           }
           sh += '</div>';
           sh += '<div style="font-size:11px;color:var(--color-mute-whisper);margin-top:2px">';
@@ -2897,7 +2356,7 @@ async function searchGame() {
           var n3negPct = Math.round(n3neg / n3total * 100);
           sh += '<br>📱 수집 할당: 긴정 <b style="color:#47bb64">' + n3pos.toLocaleString() + '건</b> + 부정 <b style="color:#e24756">' + n3neg.toLocaleString() + '건</b> (모집단 비율 ' + kr.pos_rate + '% : ' + kr.neg_rate + '%)';
           if (n3negPct > kr.neg_rate + 2) {
-            sh += ' <span style="font-size:10px;color:#f59e0b">→ 부정 과대표집 가중보정 적용</span>';
+            sh += ' <span style="font-size:11px;color:#a34f00">→ 부정 과대표집 가중보정 적용</span>';
           }
           sh += '</div>';
           sh += '<div style="font-size:11px;color:var(--color-mute-whisper);margin-top:2px">비용은 분석 모델 선택 후 계산</div>';
@@ -3012,50 +2471,32 @@ function setNoAnalysisState(on, title, body, cta) {
 /* ============ Load data ============ */
 async function load(appId) {
   const q = appId ? `?app_id=${appId}` : '';
-  let r5, r4;
-  try {
-    [r5, r4] = await Promise.all([fetch('/dashboard/data/v5' + q), fetch('/dashboard/data/v4' + q)]);
-  } catch (e) {
-    setNoAnalysisState(true, '서버에 연결하지 못했습니다', '분석 서버가 꺼져 있습니다. 스튜디오를 다시 시작해보세요.');
-    return;
-  }
   currentAppId = appId || currentAppId;
-  if (!r5.ok) {
-    document.getElementById('overviewTitle').textContent = '리뷰 진단';
-    document.getElementById('ovCoverage').textContent = '';
-  }
-
-  if (r5.status === 404 && r4.status === 404) {
-    // 아직 분석하지 않은 게임이다. 실패가 아니라 시작 전 상태다.
-    setNoAnalysisState(true, '아직 분석하지 않은 게임입니다',
-      'Steam 리뷰를 수집하고 AI로 분석해야 결과가 나옵니다. 아래 버튼으로 시작하세요.');
+  let response;
+  try {
+    response = await fetch('/dashboard/data/v5' + q);
+  } catch (error) {
+    setNoAnalysisState(true, '서버에 연결하지 못했습니다', '분석 서버를 다시 시작한 뒤 새로고침하세요.');
     return;
   }
-  if (r5.ok) {
-    setNoAnalysisState(false);
-    V5 = await r5.json();
-    set('lastUpdate', V5.generated_at || '—');
-    try { renderOverviewV5(V5); } catch (e) { console.error('renderOverviewV5 error:', e); }
-  } else if (r5.status === 404) {
-    // 옛 방식(7감정)으로만 분석된 게임. 다른 화면은 v4로 계속 보여준다.
-    setNoAnalysisState(true, '예전 방식으로 분석한 게임입니다',
-      '새 요약을 보려면 다시 분석해야 합니다. 이미 모은 리뷰를 그대로 씁니다.', '다시 분석하기');
-  } else {
-    setNoAnalysisState(true, '결과를 불러오지 못했습니다', '분석 서버가 ' + r5.status + '를 돌려줬습니다.');
+  if (response.status === 404) {
+    setNoAnalysisState(true, '아직 분석 결과가 없습니다',
+      'Steam 리뷰를 수집하고 분석하면 이곳에 결과가 표시됩니다.');
+    return;
   }
-
-  if (!r4.ok) return;
-  DATA = await r4.json();
-  if (!r5.ok) set('lastUpdate', DATA.generated_at || '—');
-  if (DATA.llm_hypothesis) renderHypothesis(DATA.llm_hypothesis);
-  else { const h = document.getElementById('hypoContent'); if (h) h.style.display = 'none'; }
-  try { renderReviews(); } catch(e) { console.error('renderReviews error:', e); }
-  try { renderAspects(); } catch(e) { console.error('renderAspects error:', e); }
-  try { renderBiasAudit(); } catch(e) { console.error('renderBiasAudit error:', e); }
-  try { renderVerify(); } catch(e) { console.error('renderVerify error:', e); }
-  try { renderSample(); } catch(e) { console.error('renderSample error:', e); }
-  try { renderApiLab(); } catch(e) { console.error('renderApiLab error:', e); }
-  try { renderDownloads(); } catch(e) { console.error('renderDownloads error:', e); }
+  if (!response.ok) {
+    setNoAnalysisState(true, '결과를 불러오지 못했습니다', `서버 응답 ${response.status} · 잠시 후 다시 시도하세요.`);
+    return;
+  }
+  setNoAnalysisState(false);
+  V5 = await response.json();
+  DATA = V5;
+  set('lastUpdate', V5.generated_at || '—');
+  try { renderOverviewV5(V5); } catch (error) { console.error('요약 화면 오류:', error); }
+  try { renderReviews(); } catch (error) { console.error('리뷰 목록 오류:', error); }
+  try { renderSample(); } catch (error) { console.error('표본 화면 오류:', error); }
+  try { renderApiLab(); } catch (error) { console.error('분석 도구 오류:', error); }
+  try { renderDownloads(); } catch (error) { console.error('내려받기 오류:', error); }
 }
 
 /* ============ Overview ============ */
@@ -3107,16 +2548,15 @@ function renderReviewTable() {
   document.getElementById('reviewCount').textContent = filtered.length + ' / ' + all.length + '건';
   const tb = document.getElementById('reviewTable');
   if (!filtered.length) {
-    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px" class="muted">조건에 맞는 리뷰가 없습니다.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px" class="muted">조건에 맞는 리뷰가 없습니다.</td></tr>';
     return;
   }
   const senCls = { POSITIVE: 'pos', NEGATIVE: 'neg', MIXED: 'warn', NEUTRAL: 'mute' };
   const senKr = { POSITIVE: '긍정', NEGATIVE: '부정', MIXED: '혼합', NEUTRAL: '중립' };
-  const emoKr  = { JOY:'기쁨', SATISFACTION:'만족', SURPRISE:'놀람', ANGER:'분노', DISAPPOINTMENT:'실망', BOREDOM:'지루', NEUTRAL:'중립' };
   tb.innerHTML = filtered.slice(0, 300).map(r => {
     const conf = r.confidence ? Math.round(r.confidence * 100) : 85;
     const warningBadge = r.needs_verification
-      ? `<span class="tag neg" style="font-size:10px; margin-left:6px; border-radius:4px" title="신뢰도 75% 미만으로 분석되어 수동 검증 권장">⚠️ 주의 필요</span>`
+      ? `<span class="tag neg" style="font-size:11px; margin-left:6px; border-radius:4px" title="신뢰도 75% 미만으로 분석되어 수동 검증 권장">⚠️ 주의 필요</span>`
       : '';
     const confHtml = `<div style="display:flex; align-items:center; gap:4px">
       <span class="mono">${conf}%</span>
@@ -3129,262 +2569,11 @@ function renderReviewTable() {
       <td>${r.voted_up == 1 ? '👍' : '👎'}</td>
       <td><span class="tag ${senCls[r.sentiment] || 'mute'}">${senKr[r.sentiment] || r.sentiment}</span></td>
       <td>${confHtml}</td>
-      <td class="tiny">${emoKr[r.emotion] || r.emotion}</td>
       <td class="mono tiny">×${(r.weight || 1).toFixed(2)}</td>
       <td class="truncate" title="${escapeHtml(r.content)}">${r.key_phrase || r.content?.substring(0, 60) || '—'}</td>
       <td class="mono tiny" style="text-align:right">${r.playtime_h}h</td>
     </tr>`;
   }).join('');
-}
-
-/* ============ Aspects ============ */
-function renderAspects() {
-  const pri = DATA.priority || [];
-  const tb = document.getElementById('priorityTable');
-  if (!pri.length) {
-    tb.innerHTML = '<tr><td colspan="7" class="muted" style="padding:24px">데이터 없음</td></tr>';
-    return;
-  }
-  tb.innerHTML = pri.map((p, i) => `
-    <tr>
-      <td class="mono">${i + 1}</td>
-      <td><b>${p.aspect_kr}</b></td>
-      <td class="mono">${p.mentioned}</td>
-      <td class="mono" style="color:var(--color-success-green)">${p.pos}</td>
-      <td class="mono" style="color:var(--color-error-red)">${p.neg}</td>
-      <td><span class="tag ${p.neg_rate >= 50 ? 'neg' : (p.neg_rate >= 30 ? 'warn' : 'mute')}">${p.neg_rate.toFixed(0)}%</span></td>
-      <td class="tiny muted">${p.neg_rate_s.toFixed(0)}%</td>
-    </tr>`).join('');
-
-  const ev = DATA.aspect_evidence || {};
-  const aspKr = { graphics:'그래픽', gameplay:'게임플레이', story:'스토리', performance:'성능·버그', value:'가격·가성비' };
-  const orderedKeys = ['gameplay','performance','value','graphics','story'];
-  document.getElementById('evidencePanel').innerHTML = orderedKeys.map(a => {
-    const pos = (ev[a]?.positive || []).slice(0, 4);
-    const neg = (ev[a]?.negative || []).slice(0, 4);
-    if (pos.length + neg.length === 0) return '';
-    return `<div class="card" style="margin-bottom:16px">
-      <div class="card-title">${aspKr[a] || a} — 실제 유저 발언 인용</div>
-      <div class="evidence-grid">
-        <div class="evidence-block">
-          <div class="head"><span class="label" style="color:var(--color-success-green)">긍정</span><span class="tag pos">${pos.length}건</span></div>
-          ${pos.map(q => `<div class="quote">"${escapeHtml(q)}"</div>`).join('') || '<div class="muted tiny">없음</div>'}
-        </div>
-        <div class="evidence-block">
-          <div class="head"><span class="label" style="color:var(--color-error-red)">부정</span><span class="tag neg">${neg.length}건</span></div>
-          ${neg.map(q => `<div class="quote">"${escapeHtml(q)}"</div>`).join('') || '<div class="muted tiny">없음</div>'}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-/* ============ Bias Audit ============ */
-function renderBiasAudit() {
-  const D = DATA;
-  const ba = D.bias_audit || {};
-  const pop = D.population || {};
-  const w = D.weights || {};
-  const n = D.n_total;
-  const smpPosPct = D.n_pos / n * 100;
-  const popPosPct = (pop.pos_rate || 0) * 100;
-  const popNegPct = (pop.neg_rate || 0) * 100;
-
-  /* 편향 보정 후 추정 추천률 — voted_up 기준 (실제 시장에 가까운 값) */
-  const wDenomBA = (w.w_pos * D.n_pos) + (w.w_neg * D.n_neg);
-  const wPosPct = wDenomBA > 0 ? (w.w_pos * D.n_pos) / wDenomBA * 100 : 0;
-
-  /* hero 숫자 */
-  set('biasBriefPop', popNegPct.toFixed(1) + '%');
-  set('biasBriefSmp', (D.n_neg / n * 100).toFixed(1) + '%');
-  set('bWpos', w.w_pos ?? '—');
-  set('bWneg', w.w_neg ?? '—');
-
-  /* 시각적 비교 bar */
-  const biasBarPop = document.getElementById('biasBarPop');
-  const biasBarSmp = document.getElementById('biasBarSmp');
-  const biasBarW   = document.getElementById('biasBarW');
-  if (biasBarPop) {
-    biasBarPop.style.height = popPosPct.toFixed(0) + 'px';
-    biasBarPop.textContent = popPosPct.toFixed(1) + '%';
-  }
-  if (biasBarSmp) {
-    biasBarSmp.style.height = smpPosPct.toFixed(0) + 'px';
-    biasBarSmp.textContent = smpPosPct.toFixed(1) + '%';
-  }
-  if (biasBarW) {
-    biasBarW.style.height = wPosPct.toFixed(0) + 'px';
-    biasBarW.textContent = wPosPct.toFixed(1) + '%';
-  }
-
-  /* 카운트 KPI */
-  set('biasPassCount', ba.pass_count ?? '—');
-  set('biasWarnCount', ba.warn_count ?? '—');
-  set('biasFailCount', ba.fail_count ?? '—');
-
-  /* 체크리스트 (PASS/WARN/FAIL → 통과/주의/실패) */
-  const statusCls = { PASS: 'pos', WARN: 'warn', FAIL: 'neg' };
-  const statusKr = { PASS: '통과', WARN: '주의', FAIL: '실패' };
-  const checks = ba.checks || [];
-  document.getElementById('biasChecklist').innerHTML = checks.length
-    ? checks.map(c => `
-        <div class="bias-check-row">
-          <span class="tag ${statusCls[c.status] || ''}" style="flex-shrink:0; min-width:44px; justify-content:center">${statusKr[c.status] || c.status}</span>
-          <div style="flex:1">
-            <div class="bias-area">${c.area}</div>
-            <div class="bias-item">${c.item}</div>
-            <div class="bias-detail">${c.detail}</div>
-          </div>
-        </div>`).join('')
-    : '<div class="muted tiny">데이터 없음</div>';
-
-  /* 데이터 품질 점수 — session-16 */
-  const q = D.quality_report;
-  const qCard = document.getElementById('qualityCard');
-  if (q) {
-    qCard.style.display = '';
-    set('qOverall', q.overall_score.toFixed(1) + '점');
-    set('qGrade', q.grade_kr + ' (기준 ' + q.thresholds.pass + '점)');
-    set('qComp', q.dimensions.completeness.score.toFixed(1));
-    set('qCons', q.dimensions.consistency.score.toFixed(1));
-    set('qRep', q.dimensions.representativeness.score.toFixed(1));
-    const allIssues = [];
-    for (const dim of Object.values(q.dimensions)) {
-      for (const iss of (dim.issues || [])) allIssues.push(iss);
-    }
-    document.getElementById('qDetail').innerHTML = allIssues.length
-      ? '주의 사항: ' + allIssues.map(i => `<span class="tag warn">${i}</span>`).join(' ')
-      : '모든 기준 충족';
-  } else {
-    qCard.style.display = 'none';
-  }
-}
-
-/* ============ Verify — 신뢰도 검증 (강의 session-44) ============ */
-function renderVerify() {
-  const v = DATA.verify_report;
-  if (!v) {
-    document.querySelector('section[data-page="verify"]').innerHTML =
-      '<h1 class="title">신뢰도 검증</h1>' +
-      '<p class="subtitle">검증 데이터 없음 — <code>python verify_analysis.py</code> 실행 후 새로고침</p>';
-    return;
-  }
-
-  /* Hero */
-  document.getElementById('verifyHeroTitle').innerHTML =
-    `엄격 정확도 <b>${v.accuracy_pct}%</b> · 관대 정확도 <b>${v.accuracy_lenient_pct}%</b> · 평균 신뢰도 <b>${v.avg_confidence_pct}%</b>`;
-  document.getElementById('verifyHeroBody').innerHTML = v.insight.interpretation;
-
-  /* KPI */
-  set('verifyAccStrict',  v.accuracy_pct + '%');
-  set('verifyAccLenient', v.accuracy_lenient_pct + '%');
-  set('verifyAvgConf',    v.avg_confidence_pct + '%');
-  set('verifyGap',        `격차 ${v.insight.gap_pct > 0 ? '+' : ''}${v.insight.gap_pct}%p (${v.insight.gap_pct > 5 ? 'overconfident' : (Math.abs(v.insight.gap_pct) <= 5 ? 'well-calibrated' : 'underconfident')})`);
-  set('verifyDanger',     v.danger_count + '건');
-
-  /* 4사분면 매트릭스 */
-  const m = v.matrix;
-  document.querySelector('#vmHC .vm-count').textContent = m.high_conf_correct.count + '건';
-  document.querySelector('#vmHI .vm-count').textContent = m.high_conf_incorrect.count + '건';
-  document.querySelector('#vmLC .vm-count').textContent = m.low_conf_correct.count + '건';
-  document.querySelector('#vmLI .vm-count').textContent = m.low_conf_incorrect.count + '건';
-
-  /* 신뢰도 히스토그램 */
-  destroy('chartVerifyHist');
-  charts.chartVerifyHist = new Chart(document.getElementById('chartVerifyHist'), {
-    type: 'bar',
-    data: {
-      labels: v.histogram.map(h => h.range),
-      datasets: [{
-        label: '건수',
-        data: v.histogram.map(h => h.count),
-        backgroundColor: v.histogram.map(h =>
-          h.level === 'high' ? COLORS.pos : (h.level === 'mid' ? COLORS.mix : COLORS.neg)
-        ),
-        borderRadius: 4,
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-      maintainAspectRatio: false,
-    }
-  });
-
-  /* 카테고리별 정확도 */
-  const ca = v.category_accuracy || [];
-  destroy('chartVerifyCat');
-  charts.chartVerifyCat = new Chart(document.getElementById('chartVerifyCat'), {
-    type: 'bar',
-    data: {
-      labels: ca.map(c => c.category_kr),
-      datasets: [
-        { label: '정확도', data: ca.map(c => c.accuracy_pct),     backgroundColor: COLORS.acc, borderRadius: 4 },
-        { label: '평균 신뢰도', data: ca.map(c => c.avg_confidence_pct), backgroundColor: COLORS.mix, borderRadius: 4 },
-      ]
-    },
-    options: {
-      indexAxis: 'y',
-      plugins: { legend: { position: 'top' } },
-      scales: { x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } },
-      maintainAspectRatio: false,
-    }
-  });
-
-  /* 위험 케이스 */
-  const dcEl = document.getElementById('verifyDangerList');
-  const dcs = v.danger_cases || [];
-  dcEl.innerHTML = dcs.length
-    ? dcs.map(c => `
-      <div class="verify-danger-row">
-        <div class="vd-meta">
-          <span class="tag neg">${c.category}</span>
-          <span>유저: ${c.voted_up === 1 ? '👍 추천' : '👎 비추천'}</span>
-          <span>AI: <b>${c.predicted}</b></span>
-          <span class="conf-badge high">신뢰도 ${c.confidence}%</span>
-        </div>
-        <div class="vd-content">"${escapeHtml(c.content)}"</div>
-        ${c.reasoning ? `<div class="vd-reason">AI 사유: ${escapeHtml(c.reasoning)}</div>` : ''}
-      </div>`).join('')
-    : '<div class="muted tiny">위험 케이스 없음 ✓ — AI 신뢰도가 잘 보정됨</div>';
-
-  /* 권고 사항 */
-  const recsEl = document.getElementById('verifyRecsList');
-  const recs = v.insight.recommendations || [];
-  recsEl.innerHTML = recs.length
-    ? recs.map((rec, i) => `
-      <div class="verify-rec-item">
-        <div class="vri-num">${i + 1}</div>
-        <div class="vri-text">${escapeHtml(rec)}</div>
-      </div>`).join('')
-    : '<div class="muted tiny">권고 없음</div>';
-
-  /* 30건 전체 샘플 */
-  const tb = document.getElementById('verifySamples');
-  const samples = v.samples || [];
-  const catKr = {
-    'clear_positive':'명확한 긍정', 'clear_negative':'명확한 부정',
-    'ambiguous':'모호함', 'label_mismatch':'라벨 불일치', 'neutral':'중립'
-  };
-  const sentKr = { POSITIVE:'긍정', NEGATIVE:'부정', MIXED:'혼합', NEUTRAL:'중립' };
-  const outcomeBadge = {
-    'correct':  '<span class="outcome-icon correct">✓ 정답</span>',
-    'cautious': '<span class="outcome-icon cautious">~ 보수</span>',
-    'wrong':    '<span class="outcome-icon wrong">✗ 오답</span>',
-  };
-  tb.innerHTML = samples.length
-    ? samples.map(s => {
-        const cls = s.confidence >= 0.9 ? 'high' : (s.confidence >= 0.75 ? 'mid' : 'low');
-        return `<tr>
-          <td><span class="tag mute">${catKr[s.category] || s.category}</span></td>
-          <td>${s.voted_up == 1 ? '👍' : '👎'}</td>
-          <td><b>${sentKr[s.predicted_sentiment] || s.predicted_sentiment}</b></td>
-          <td><span class="conf-badge ${cls}">${(s.confidence*100).toFixed(0)}%</span></td>
-          <td>${outcomeBadge[s.outcome] || '—'}</td>
-          <td class="truncate" title="${escapeHtml(s.content)}">${escapeHtml(s.content)}</td>
-        </tr>`;
-      }).join('')
-    : '<tr><td colspan="6" style="text-align:center;padding:24px" class="muted">데이터 없음</td></tr>';
 }
 
 /* ============ Sample Design ============ */
@@ -3495,14 +2684,10 @@ function renderApiLab() {
         sentCard.innerHTML = `${sentInfo.emoji} ${sent}`;
         sentCard.style.color = sentInfo.color;
 
-        // 감정 카드
-        const emotionMap = { JOY:'기쁨 😄', ANGER:'분노 😡', SADNESS:'슬픔 😢', SURPRISE:'놀람 😲',
-          DISGUST:'역겨움 🤢', FEAR:'두려움 😰', TRUST:'신뢰 🤝', ANTICIPATION:'기대 🤩' };
-        const emo = parsed.emotion || '—';
-        document.querySelector('#resultEmotion .kpi-value').textContent = emotionMap[emo] || emo;
-
-        // 핵심 측면 카드 (부정 비율 가장 높은 aspect)
-        const aspKRmap = { graphics:'그래픽', gameplay:'게임플레이', story:'스토리', performance:'성능', value:'가성비' };
+        // 리뷰에 직접 언급된 주제
+        const topics = parsed.topics || [];
+        document.querySelector('#resultTopics .kpi-value').innerHTML =
+          topics.length ? topics.map(topic => `<span class="tag">${escapeHtml(String(topic))}</span>`).join(' ') : '—';
 
         // 키워드 카드
         const kws = parsed.keywords || [];

@@ -185,7 +185,7 @@ def call_llm(content: str, retries: int = 2) -> dict:
             parsed = json.loads(clean_json(txt))
             if not isinstance(parsed, dict) or parsed.get("sentiment") not in (
                     "POSITIVE", "NEGATIVE", "MIXED", "NEUTRAL"):
-                raise ValueError("검증 응답의 감정 분류 형식이 올바르지 않습니다")
+                raise ValueError("검증 응답의 반응 분류 형식이 올바르지 않습니다")
             confidence = float(parsed.get("confidence"))
             if not 0 <= confidence <= 1:
                 raise ValueError("검증 응답의 확신도 범위가 올바르지 않습니다")
@@ -207,7 +207,7 @@ def run_selection_and_reanalysis():
     if not API_KEY or "여기에" in API_KEY:
         raise SystemExit("[FAIL] .env의 OPENROUTER_API_KEY를 확인하세요.")
     if not os.path.exists(get_analysis_csv()):
-        raise SystemExit(f"[FAIL] {get_analysis_csv()} 없음 — analyze_reviews_v2.py 먼저 실행")
+        raise SystemExit(f"[FAIL] {get_analysis_csv()} 없음 — analyze_reviews_v3.py 먼저 실행")
 
     print("=" * 60)
     print(f"30건 검증 세트 선정 + LLM 재분석 (confidence 포함)")

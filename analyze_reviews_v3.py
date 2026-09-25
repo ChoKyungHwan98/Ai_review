@@ -1,8 +1,6 @@
-"""v3 분석 — 게임별 주제 · 재미 종류 · 불만 심층.
+"""현재 리뷰 분석 — 게임별 주제 · 재미 종류 · 불만 심층.
 
-v2는 모든 게임에 같은 5칸(그래픽·게임플레이·스토리·성능·가격)을 쓰고,
-칭찬 리뷰까지 불만 리뷰와 똑같이 길게 답하게 했다.
-v3는 이렇게 나눈다.
+모든 게임에 같은 주제를 강제하지 않고 다음 세 단계로 분석한다.
 
   A. 주제 찾기   리뷰 일부(최대 150건)로 이 게임에서 반복되는 주제 목록을 한 번 만든다.
   B. 전체 분류   모든 리뷰를 짧게 분류한다. 언급한 주제만 답하게 해 출력 토큰을 줄인다.
@@ -15,7 +13,7 @@ v3는 이렇게 나눈다.
   analysis_v3.jsonl    B의 리뷰별 분류 (한 줄에 한 리뷰)
   complaints_v3.jsonl  C의 불만 분해
   usage_v3.json        단계별 실제 토큰 사용량
-  analysis_v2.csv      기존 화면(품질 점검·검증·리뷰 탐색)이 읽는 호환 파일
+  analysis_v3.csv      품질 점검·검증·리뷰 탐색이 읽는 분석 표
 """
 
 import asyncio
@@ -288,8 +286,8 @@ def clean_tags(raw, area_of):
     return tags
 
 
-def v2_row(src, res, area_of):
-    """기존 화면이 읽는 analysis_v2.csv 한 줄을 만든다. 추가 AI 호출 없이 B의 결과로 채운다."""
+def analysis_row(src, res, area_of):
+    """대시보드와 검증 도구가 읽는 분석 표 한 줄을 추가 호출 없이 만든다."""
     per_area = {a: [] for a in ASPECTS}
     tags = clean_tags(res.get("t"), area_of)
     for pair in tags:
@@ -300,7 +298,6 @@ def v2_row(src, res, area_of):
         "playtime_h": f"{hours(src):.1f}",
         "content": src["content"][:500],
         "overall_sentiment": SENT_MAP.get(res.get("s"), "NEUTRAL"),
-        "emotion": "NEUTRAL",
         "key_phrase": res.get("k", ""),
         "confidence": "0.85",
         "needs_verification": "false",
@@ -319,8 +316,8 @@ def v2_row(src, res, area_of):
     return row
 
 
-V2_FIELDS = (["recommendationid", "voted_up", "playtime_h", "content",
-              "overall_sentiment", "emotion", "key_phrase", "confidence", "needs_verification"]
+ANALYSIS_FIELDS = (["recommendationid", "voted_up", "playtime_h", "content",
+              "overall_sentiment", "key_phrase", "confidence", "needs_verification"]
              + [f"aspect_{a}_sentiment" for a in ASPECTS]
              + [f"aspect_{a}_evidence" for a in ASPECTS]
              + ["keywords"])
@@ -332,7 +329,7 @@ async def classify(client, long_rows, themes):
     fun_names = list(FUN_TYPES)
     out_path = path("analysis_v3.jsonl")
     if not os.path.exists(out_path) and os.path.exists(cfg.ANALYSIS_CSV):
-        legacy = path("analysis_v2_legacy.csv")
+        legacy = path("analysis_legacy.csv")
         if os.path.exists(legacy):
             os.remove(legacy)
         os.rename(cfg.ANALYSIS_CSV, legacy)
@@ -345,8 +342,8 @@ async def classify(client, long_rows, themes):
 
     write_header = not os.path.exists(cfg.ANALYSIS_CSV)
     f_v3 = open(out_path, "a", encoding="utf-8")
-    f_v2 = open(cfg.ANALYSIS_CSV, "a", encoding="utf-8-sig", newline="")
-    writer = csv.DictWriter(f_v2, fieldnames=V2_FIELDS)
+    f_csv = open(cfg.ANALYSIS_CSV, "a", encoding="utf-8-sig", newline="")
+    writer = csv.DictWriter(f_csv, fieldnames=ANALYSIS_FIELDS)
     if write_header:
         writer.writeheader()
 
@@ -368,7 +365,7 @@ async def classify(client, long_rows, themes):
             "k": str(res.get("k", ""))[:40],
         }
         f_v3.write(json.dumps(item, ensure_ascii=False) + "\n")
-        writer.writerow(v2_row(src, res, area_of))
+        writer.writerow(analysis_row(src, res, area_of))
         done[item["id"]] = item
         stats["ok"] += 1
 
@@ -406,14 +403,14 @@ async def classify(client, long_rows, themes):
                     raise
                 except Exception:
                     stats["fail"] += 1
-            f_v3.flush(); f_v2.flush()
+            f_v3.flush(); f_csv.flush()
 
     batches = [pending[i:i + BATCH_B] for i in range(0, len(pending), BATCH_B)]
     tasks = [asyncio.create_task(run(b)) for b in batches]
     try:
         for i, t in enumerate(asyncio.as_completed(tasks), 1):
             await t
-            f_v3.flush(); f_v2.flush()
+            f_v3.flush(); f_csv.flush()
             if i % max(1, len(batches) // 10) == 0 or i == len(batches):
                 print(f"  [B] {i}/{len(batches)} 묶음 · 성공 {stats['ok']} · 실패 {stats['fail']}")
     except (FatalApiError, BudgetExceeded):
@@ -421,7 +418,7 @@ async def classify(client, long_rows, themes):
             t.cancel()
         raise
     finally:
-        f_v3.close(); f_v2.close()
+        f_v3.close(); f_csv.close()
 
     total = stats["ok"] + stats["fail"]
     if stats["ok"] == 0:

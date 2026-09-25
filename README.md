@@ -1,133 +1,149 @@
-# 🎮 Steam Review Analytics — AI 리뷰 분석 시스템
+# AI 리뷰데이터 분석기
 
-Steam 게임 리뷰를 자동 수집 → LLM 다차원 분석 → 편향 보정 → 대시보드 시각화까지
-**원클릭으로 실행**하는 리뷰 인텔리전스 시스템입니다.
+Steam 리뷰를 표본 수집하고 OpenRouter 모델로 분류해, 게임기획자가 **전체 반응 → 핵심 주제 → 플레이 구간 → 실제 원문** 순서로 확인하는 로컬 분석 도구입니다.
 
-## ✨ 핵심 기능
+## 현재 구조
 
-| 기능 | 설명 |
-|---|---|
-| **자동 수집** | Steam API에서 한국어 리뷰를 층화 추출 (Cochran 표본 설계) |
-| **LLM 분석** | 감성 + 감정 + ABSA 6축 + 모바일 이식 시사점 다차원 분석 |
-| **편향 보정** | 가중치 보정(post-stratification)으로 표본 편향 복원 |
-| **품질 점검** | 4축 품질 점수 (완전성·일관성·대표성·정확도) |
-| **신뢰도 검증** | 30건 표본 검증 + 4사분면 신뢰도 매트릭스 |
-| **대시보드** | 9개 탭 인터랙티브 대시보드 (FastAPI 기반) |
-| **비용 통제** | LLM 비용 사전 견적 + 예산 초과 시 자동 중단 |
+```text
+Steam 리뷰 API
+  → 표본 설계·수집
+  → v3 리뷰 분류
+     A. 게임별 주제 발견
+     B. 전체 리뷰 반응·주제·재미 분류
+     C. 불만 리뷰만 문제·원인·요청 심층 분석
+  → 품질 점검·표본 검증
+  → v5 인사이트 집계
+  → 대시보드와 근거 원문
+```
 
-## 🚀 빠른 시작
+분석 결과 화면은 특정 게임에 맞춘 고정 문구를 사용하지 않습니다. Steam 게임 정보와 분석 파일을 기준으로 같은 구조를 모든 게임에 적용합니다.
 
-### 1. 설치
-```bash
-git clone <repo>
-cd 프로그램
+## 주요 기능
+
+- Steam App ID와 언어를 지정한 리뷰 수집
+- 목표 오차와 최소 비추천 리뷰 수를 반영한 표본 설계
+- 게임마다 반복되는 주제를 먼저 찾는 동적 주제 분류
+- 긍정·부정·혼합·판단 어려움의 반응 분류
+- 8가지 재미 유형과 주제별 긍정·부정 언급 집계
+- 불만 리뷰에 한정한 문제·원인·사용자 요청 분리
+- 플레이 시간별 비추천 비율과 작은 표본 경고
+- 주제별 실제 리뷰 원문 확인
+- OpenRouter 모델 목록·가격 조회와 무료/유료 구분
+- 실행 전 예상 비용, 실행 중 예산 예약, 한도 초과 중단
+
+## 토큰 사용 최적화
+
+1. 짧고 정보가 적은 리뷰는 LLM 호출 전에 걸러냅니다.
+2. 주제는 최대 150건에서 한 번 발견하고 전체 리뷰에 재사용합니다.
+3. 전체 분류는 10건씩 묶고 짧은 키의 JSON으로 응답받습니다.
+4. 불만 심층 분석은 불만 가능성이 있는 리뷰에만 실행합니다.
+5. v5 요약은 원문 전체가 아닌 집계 결과를 한 번만 전달합니다.
+6. JSONL 결과를 이어 쓰므로 완료한 리뷰는 재실행하지 않습니다.
+7. 모델별 실제 단가로 남은 작업 비용을 계산하고 예산을 예약합니다.
+8. 요약 캐시는 입력 해시가 같으면 재사용합니다.
+
+무료 모델과 유료 모델은 같은 출력 계약을 사용합니다. 모델의 JSON 형식 지원 여부와 문맥 길이는 실행 전에 확인하며, 결과 누락 시 해당 묶음만 다시 시도합니다.
+
+## 설치
+
+```powershell
+git clone https://github.com/ChoKyungHwan98/Ai_review.git
+cd Ai_review
 python -m venv venv
-venv\Scripts\activate        # Windows
+.\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+Copy-Item .env.example .env
 ```
 
-### 2. 환경 설정
-```bash
-cp .env.example .env
-# .env 파일을 열어 OPENROUTER_API_KEY를 입력하세요
-# 다른 게임을 분석하려면 APP_ID를 변경하세요
-```
+`.env`에 `OPENROUTER_API_KEY`를 입력합니다.
 
-### 3. 실행 방법
+## 실행
 
-#### 방법 A: 원클릭 파이프라인 (권장)
-```bash
-# 기본 (팰월드, 한국어)
-python pipeline.py
-
-# 다른 게임
-python pipeline.py --app-id 730 --lang english    # CS2
-python pipeline.py --app-id 570 --lang koreana    # Dota 2
-
-# 예산 한도 지정
-python pipeline.py --budget 2.0
-```
-
-#### 방법 B: 대시보드 실행
-```bash
+```powershell
+# 대시보드
 python -m uvicorn main:app --host 127.0.0.1 --port 8765
-# → http://127.0.0.1:8765/dashboard
+
+# 전체 파이프라인
+python pipeline.py --app-id 1623730 --lang koreana --budget 5
+
+# 단계별 실행
+python collect_reviews.py
+python analyze_reviews_v3.py
+python quality_check.py
+python verify_analysis.py
+python build_insights_v5.py
 ```
 
-#### 방법 C: 개별 스크립트 실행
-```bash
-python collect_reviews_v2.py    # ① 리뷰 수집
-python analyze_reviews_v2.py    # ② LLM 분석
-python quality_check.py         # ③ 품질 점검
-python verify_analysis.py       # ④ 신뢰도 검증
-python build_insights_v4.py     # ⑤ 인사이트 생성
-```
+대시보드: `http://127.0.0.1:8765/dashboard`
 
-## 📊 API 엔드포인트
-
-| Method | Path | 설명 |
-|---|---|---|
-| GET | `/` | 헬스체크 |
-| GET | `/dashboard` | 대시보드 UI |
-| GET | `/dashboard/data/v4` | 대시보드 전체 데이터 (JSON) |
-| GET | `/reviews` | 리뷰 목록 |
-| GET | `/stats` | 통계 요약 |
-| POST | `/analyze` | 단건 리뷰 분석 |
-| GET | `/pipeline/estimate` | 비용 사전 견적 |
-| GET | `/pipeline/config` | 현재 설정 조회 |
-| GET | `/pipeline/result` | 마지막 실행 결과 |
-| GET | `/docs` | OpenAPI 문서 (Swagger) |
-
-## 🏗️ 프로젝트 구조
-
-```
-AI 리뷰데이터 분석/
-├── 프로그램/                # 실행 코드·정적 UI·의존성
-│   ├── config.py            # 중앙 설정 (APP_ID, MODEL, 예산 등)
-│   ├── pipeline.py          # 원클릭 자동화 파이프라인
-│   ├── main.py              # FastAPI 서버 + 대시보드
-│   ├── database.py          # SQLite DB 접근 계층
-│   ├── models.py             # Pydantic 스키마
-│   ├── analyzer.py           # 단건 LLM 분석 (API용)
-│   │
-│   ├── collect_reviews_v2.py
-│   ├── analyze_reviews_v2.py
-│   ├── quality_check.py
-│   ├── verify_analysis.py
-│   ├── build_insights_v4.py
-│   ├── sample_design.py
-│   ├── static/               # 대시보드 프론트엔드
-│   └── _archive/             # 이전 버전 파일 (참조용)
-└── 프로젝트/                # 단일 저장소: 게임별 폴더
-    ├── games.json
-    ├── review_analysis.db
-    └── <Steam App ID>/       # reviews.csv, analysis_v2.csv, JSON, charts_v4/
-```
-
-이 도구는 다른 게임기획 도구와 동일하게 `프로그램`과 `프로젝트`를 분리합니다. 모든 CSV·JSON·차트·파이프라인 결과는 상위 `프로젝트\<Steam App ID>` 아래의 단일 저장소에만 생성되며, 기존 `data` 폴더나 실행 위치 기준 fallback은 사용하지 않습니다.
-
-## ⚙️ 환경 변수
+## 환경 변수
 
 | 변수 | 기본값 | 설명 |
-|---|---|---|
-| `OPENROUTER_API_KEY` | (필수) | OpenRouter API 키 |
-| `APP_ID` | `1623730` | Steam 게임 App ID |
-| `LANG_CODE` | `koreana` | 리뷰 언어 |
-| `MODEL` | `google/gemini-2.0-flash-001` | LLM 모델 |
-| `BUDGET_USD` | `5.0` | LLM 분석 예산 한도 (USD) |
-| `TARGET_ERROR_PCT` | `5` | 목표 오차한계 (%) |
-| `MIN_NEG_REVIEWS` | `100` | 부정 리뷰 최소 수집 목표 |
+| --- | --- | --- |
+| `OPENROUTER_API_KEY` | 필수 | OpenRouter 키 |
+| `APP_ID` | `1623730` | 기본 Steam App ID |
+| `LANG_CODE` | `koreana` | Steam 리뷰 언어 |
+| `MODEL` | `google/gemini-2.5-flash-lite` | 분석 모델 |
+| `BUDGET_USD` | `5.0` | 실행당 최대 분석 예산 |
+| `TARGET_ERROR_PCT` | `5` | 목표 오차 범위 |
+| `MIN_NEG_REVIEWS` | `100` | 비추천 리뷰 최소 목표 |
+| `MIN_REVIEW_LEN` | `8` | AI 분석 최소 글자 수 |
 
-## 📈 분석 결과 예시 (팰월드)
+## 결과 파일
 
-- **수집**: 한국어 리뷰 750건 (모집단 21,727건 중)
-- **분석**: 487건 LLM 다차원 분석 완료 (비용 약 $0.06)
-- **품질**: 종합 84.9점 / PASS
-- **신뢰도**: 관대 기준 86.7% (엄격 40%, MIXED/NEUTRAL 보수적 판정 포함)
-- **보정**: Steam 추천률 95% → 표본 67% → **보정 후 95% 일치**
+게임별 파일은 소스 저장소 밖의 형제 폴더 `../프로젝트/<Steam App ID>/`에 저장됩니다.
 
-## 📜 라이선스 및 출처
+| 파일 | 내용 |
+| --- | --- |
+| `reviews.csv` | Steam 원본 리뷰 |
+| `sample_design.json` | 모집단과 표본 설계 |
+| `themes_v3.json` | 게임별 주제 목록 |
+| `analysis_v3.jsonl` | 리뷰별 반응·재미·주제 분류 |
+| `analysis_v3.csv` | 품질 점검과 리뷰 탐색용 표 |
+| `complaints_v3.jsonl` | 불만의 문제·원인·요청 |
+| `usage_v3.json` | 단계별 호출·토큰·모델 단가 |
+| `quality_report.json` | 데이터 품질 점검 |
+| `verify_report.json` | 표본 검증 결과 |
+| `insights_v5.json` | 대시보드 집계와 요약 |
+| `pipeline_result.json` | 실행 상태와 단계별 결과 |
 
-- **Steam 리뷰 데이터**: Valve Steam Web API (공개 API, 비상업적 분석)
-- **LLM 분석**: OpenRouter API (Google Gemini 2.0 Flash)
-- 본 프로젝트는 교육·포트폴리오 목적으로 제작되었습니다.
+## 주요 API
+
+| 방식 | 경로 | 설명 |
+| --- | --- | --- |
+| `GET` | `/dashboard` | 대시보드 |
+| `GET` | `/dashboard/data/v5` | 현재 분석 결과 |
+| `GET` | `/dashboard/evidence` | 선택 주제의 근거 리뷰 |
+| `GET` | `/api/games` | 분석이 완료된 게임 목록 |
+| `GET` | `/api/models` | 선택 가능한 OpenRouter 모델 |
+| `POST` | `/pipeline/run` | 분석 시작 |
+| `GET` | `/pipeline/estimate` | 남은 작업 비용 견적 |
+| `GET` | `/pipeline/result` | 최근 실행 상태 |
+| `GET` | `/api/usage` | 토큰과 비용 기록 |
+
+## 폴더 구성
+
+```text
+.
+├── main.py                    # FastAPI 서버
+├── config.py                  # 경로·모델·예산 설정
+├── pipeline.py                # 전체 실행 흐름
+├── collect_reviews.py         # Steam 수집과 표본 설계
+├── analyze_reviews_v3.py      # 주제·반응·재미·불만 분석
+├── build_insights_v5.py       # 화면용 집계와 요약
+├── dashboard_evidence.py      # 근거 원문 조회
+├── model_catalog.py           # OpenRouter 모델과 가격
+├── budget_control.py          # 실행 중 예산 통제
+├── token_budget.py            # 실행 전 비용 견적
+├── quality_check.py           # 품질 점검
+├── verify_analysis.py         # 표본 검증
+├── static/                    # 대시보드 화면
+├── tests/                     # 핵심 회귀 검사
+└── docs/                      # 구조·조사·화면 설계 문서
+```
+
+## 화면 설계와 Impeccable
+
+대시보드는 결론을 먼저 보여주고, 차트와 실제 리뷰로 근거를 확인하는 구조를 사용합니다. Impeccable 4.3.1은 개발자의 개인 Codex 스킬로 설치되어 UI 점검에 사용합니다. 실행 프로그램의 의존성이 아니므로 저장소에 복제하거나 `requirements.txt`에 추가하지 않습니다.
+
+자세한 구조와 운영 기준은 [파이프라인 구조](docs/파이프라인_구조.md)와 [리뷰 진단 시각화 설계](docs/리뷰진단_시각화_설계.md)를 참고하세요.

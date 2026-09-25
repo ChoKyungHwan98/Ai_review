@@ -54,7 +54,7 @@ def estimate_remaining(config, app_id=None):
     needs_a = pending_b > 0 and (model_changed or not (folder / "themes_v3.json").exists())
     needs_d = bool(eligible) and (model_changed or pending_b > 0 or pending_c > 0 or not (folder / "summary_v5_cache.json").exists())
     verify_set = folder / "verify_set.csv"
-    analysis_csv = folder / "analysis_v2.csv"
+    analysis_csv = folder / "analysis_v3.csv"
     needs_verify = bool(eligible) and (model_changed or not (folder / "verify_report.json").exists() or
         not verify_set.exists() or (analysis_csv.exists() and verify_set.stat().st_mtime < analysis_csv.stat().st_mtime))
 

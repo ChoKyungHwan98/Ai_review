@@ -55,7 +55,6 @@ class Config:
     PROGRAM_DIR: str = str(PROGRAM_DIR)
     PROJECTS_DIR: str = str(PROJECTS_DIR)
     GAMES_JSON: str = os.path.join(PROJECTS_DIR, "games.json")
-    DATABASE_PATH: str = os.path.join(PROJECTS_DIR, "review_analysis.db")
 
     def project_dir(self, app_id: int | None = None) -> str:
         """Return (and create) the single per-game project directory."""
@@ -80,11 +79,7 @@ class Config:
 
     @property
     def ANALYSIS_CSV(self) -> str:
-        return self.project_file("analysis_v2.csv")
-
-    @property
-    def INSIGHTS_JSON(self) -> str:
-        return self.project_file("insights_v4.json")
+        return self.project_file("analysis_v3.csv")
 
     @property
     def QUALITY_JSON(self) -> str:
@@ -99,17 +94,8 @@ class Config:
         return self.project_file("sample_design.json")
 
     @property
-    def CHARTS_DIR(self) -> str:
-        p = self.project_file("charts_v4")
-        os.makedirs(p, exist_ok=True)
-        return p
-
-    @property
     def PIPELINE_RESULT(self) -> str:
         return self.project_file("pipeline_result.json")
-
-    # ── 분석 프롬프트 ──────────────────────────────────────
-    ASPECTS: list = ["graphics", "gameplay", "story", "performance", "value"]
 
     def estimate_cost(self, n_reviews: int) -> dict:
         """LLM 분석 비용 사전 견적
