@@ -5,6 +5,7 @@ window.ReviewDashboard = (() => {
   const pct = x => x == null ? '—' : `${Number(x).toFixed(1)}%`;
   const signed = x => x == null ? '—' : `${x > 0 ? '+' : x < 0 ? '−' : ''}${Math.abs(x).toFixed(2)}%p`;
   const clamp = x => Math.max(0, Math.min(100, Number(x) || 0));
+  const preview = x => esc(String(x ?? '').replace(/씨발|시발|좆|병신|개새끼/gi, word => word.length === 1 ? '***' : `${word[0]}${'*'.repeat(word.length - 1)}`));
   const blue = '#3182F6', orange = '#F04452';
   let data, evidence, appId, root, selected, sort = 'negative', expanded = false;
   let dialogTheme, dialogSentiment, dialogPage, request, restoreFocus;
@@ -48,7 +49,7 @@ window.ReviewDashboard = (() => {
     const language = ({koreana:'한국어',english:'영어',all:'전체 언어',japanese:'일본어',schinese:'중국어 간체',unknown:'언어 정보 없음'})[evidence.language] || evidence.language;
     const coverage = counts.collected ? ` (${pct(counts.analyzed / counts.collected * 100)})` : '';
     document.getElementById('overviewTitle').textContent = `${V.game?.name || '게임'} 리뷰 진단`;
-    document.getElementById('ovCoverage').innerHTML = `<span>${esc(language)} · ${evidence.period ? `${esc(evidence.period.start.replaceAll('-','.'))} – ${esc(evidence.period.end.replaceAll('-','.'))}` : '기간 정보 없음'}</span><span>수집 ${num(counts.collected)}건 · AI 분석 ${num(counts.analyzed)}건${coverage}</span>`;
+    document.getElementById('ovCoverage').innerHTML = `<span>${esc(language)} · ${evidence.period ? `${esc(evidence.period.start.replaceAll('-','.'))} – ${esc(evidence.period.end.replaceAll('-','.'))}` : '기간 정보 없음'}</span><span>수집 ${num(counts.collected)}건 · 분석 ${num(counts.analyzed)}건${coverage}</span>`;
     document.getElementById('rdPageArt').innerHTML = V.game?.header_image
       ? `<img src="${esc(V.game.header_image)}" alt="" />` : '<span>게임 이미지 없음</span>';
     document.getElementById('rdPageActions').innerHTML = `<button class="rd-btn" type="button" onclick="startNewAnalysis(${Number(id)},null,null,true)">추가 수집</button><a class="rd-btn" href="/api/reviews/download?app_id=${Number(id)}" download>원문 내려받기</a><a class="rd-btn primary" href="/api/analysis/download?app_id=${Number(id)}" download>분석 결과 내려받기</a>`;
@@ -63,7 +64,7 @@ window.ReviewDashboard = (() => {
       </section>
       <div class="rd-main">
         <section class="rd-card" aria-labelledby="rdTopicsTitle">
-          <div class="rd-card-head"><div><h2 id="rdTopicsTitle">주제별 반응</h2><p>${concern ? `불만은 <b>${esc(concern.name)}</b>에 가장 많이 모였습니다. ` : ''}한 리뷰에 여러 주제가 담길 수 있습니다.</p></div>
+          <div class="rd-card-head"><div><h2 id="rdTopicsTitle">주제별 반응</h2><p>주제를 선택하면 세부 문제와 실제 리뷰를 확인할 수 있습니다.</p></div>
           <div class="rd-toggle" aria-label="주제 정렬"><button data-action="sort" data-sort="negative">불만순</button><button data-action="sort" data-sort="mentions">언급순</button></div></div>
           <div class="rd-chart-key"><span>← 불만</span><span>칭찬 →</span></div><div id="rdTopicChart"></div>
           <div class="rd-chart-footer"><p class="rd-caption">같은 축 · 한 리뷰에서 칭찬과 불만을 함께 셀 수 있음</p><button class="rd-text-btn" data-action="expand" id="rdExpand">전체 주제</button></div>
@@ -124,10 +125,10 @@ window.ReviewDashboard = (() => {
       <div class="rd-detail-metrics"><div><strong>${num(t.neg)}<small>건</small></strong><span>불만 리뷰</span></div><div><strong>${num(t.pos)}<small>건</small></strong><span>칭찬 리뷰</span></div><div><strong style="font-size:22px">${signed(t.exclusion_delta)}</strong><span>주제 제외 시 추천률 차이</span></div></div>
       <p class="rd-caption">관찰된 연관 차이입니다. 이 문제를 고쳤을 때의 상승 예상치는 아닙니다.</p>
       ${action?.prob ? `<div class="rd-problem-summary"><b>핵심 문제</b><p>${esc(action.prob)}</p></div>` : ''}
-      ${example ? `<blockquote class="rd-quote"><p>“${esc(example.content)}${example.truncated?'…':''}”</p><footer>${sentiment==='N'?'불만':'칭찬'}으로 분류 · ${example.recommended?'게임 추천':'게임 비추천'} · ${example.hours==null?'시간 미상':`${num(Math.round(example.hours))}시간`}</footer></blockquote>` : '<p class="rd-caption">연결된 원문이 없습니다.</p>'}
+      ${example ? `<blockquote class="rd-quote"><p>“${preview(example.content)}${example.truncated?'…':''}”</p><footer>${sentiment==='N'?'불만':'칭찬'}으로 분류 · ${example.recommended?'게임 추천':'게임 비추천'} · ${example.hours==null?'시간 미상':`${num(Math.round(example.hours))}시간`}</footer></blockquote>` : '<p class="rd-caption">연결된 원문이 없습니다.</p>'}
       ${t.neg ? `<span class="rd-inline-note">불만 ${num(t.neg)}건 중 <b>${num(t.negative_recommended)}건은 게임을 추천</b>했습니다.</span>` : '<span class="rd-inline-note">현재 분석에서 이 주제의 불만은 발견되지 않았습니다.</span>'}
       <div class="rd-detail-actions"><button class="rd-btn" data-action="evidence" data-sentiment="all">전체 근거 보기</button></div>
-      ${action ? `<details class="rd-ai-detail"><summary>원인과 개선 제안</summary>${action.why?`<p><b>원인 추정</b><br>${esc(action.why)}</p>`:''}${action.fix?.length?`<p><b>리뷰에서 추출한 제안</b><br>${action.fix.map(esc).join(' · ')}</p>`:''}<p class="rd-caption">AI 요약에는 추정이나 잘못된 연결이 포함될 수 있습니다. 원문 확인 후 기획에 반영하세요.</p></details>`:''}`;
+      ${action ? `<details class="rd-ai-detail"><summary>원인과 개선 제안</summary>${action.why?`<p><b>리뷰에서 언급된 원인</b><br>${esc(action.why)}</p>`:''}${action.fix?.length?`<p><b>리뷰에서 추출한 제안</b><br>${action.fix.map(esc).join(' · ')}</p>`:''}<p class="rd-caption">AI 요약에는 잘못된 연결이 포함될 수 있습니다. 원문 확인 후 기획에 반영하세요.</p></details>`:''}`;
   }
 
   function renderMood() {
