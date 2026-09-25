@@ -1609,8 +1609,8 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260925c">
-<script src="/static/review-dashboard.js?v=20260925c"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260925d">
+<script src="/static/review-dashboard.js?v=20260925d"></script>
 </head>
 <body>
 <div class="app">
@@ -1672,12 +1672,13 @@ body.no-analysis #ovBody { display: none; }
       </div>
 
       <!-- Row 2: Current Game Indicator -->
-      <div style="max-width:var(--page-max); margin:0 auto; padding:0 60px 10px; display:flex; align-items:center; gap:10px;">
+      <div class="current-game-row">
         <span style="font-size:12px; color:var(--color-text-sub); font-weight:500;">현재 분석 중</span>
         <div id="currentGameBadge" style="display:flex; align-items:center; gap:6px; padding:4px 12px; background:#FFFFFF; border:1px solid var(--color-border); border-radius:20px; font-size:13px; font-weight:600; color:var(--color-text-title); box-shadow:var(--shadow-sm);">
           <span>🎮</span><span id="currentGameName">—</span>
         </div>
-        <div style="height:1px; flex:1; background:var(--color-border);"></div>
+        <div class="current-game-line"></div>
+        <div class="rd-page-actions rd-top-actions" id="rdPageActions"></div>
       </div>
     </header>
 
@@ -1693,7 +1694,6 @@ body.no-analysis #ovBody { display: none; }
           <div class="rd-page-copy">
             <h1 class="title" id="overviewTitle">리뷰 진단</h1>
             <p class="subtitle ov-coverage" id="ovCoverage"></p>
-            <div class="rd-page-actions" id="rdPageActions"></div>
           </div>
         </div>
         <div class="rd-summary-panel">
