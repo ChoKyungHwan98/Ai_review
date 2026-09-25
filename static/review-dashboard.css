@@ -546,3 +546,15 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
   .rd-header-verdict strong { font-size:18px; }
   .rd-header-verdict p { margin-top:7px; font-size:13px; }
 }
+
+/* Requested cleanup: the game identity sits directly on the page canvas. */
+.page[data-page="overview"] .rd-page-header { margin-bottom:26px; }
+@media (min-width:1121px) {
+  .rd-game-summary {
+    padding:4px;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+  }
+}
