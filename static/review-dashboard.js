@@ -5,7 +5,6 @@ window.ReviewDashboard = (() => {
   const pct = x => x == null ? '—' : `${Number(x).toFixed(1)}%`;
   const signed = x => x == null ? '—' : `${x > 0 ? '+' : x < 0 ? '−' : ''}${Math.abs(x).toFixed(2)}%p`;
   const clamp = x => Math.max(0, Math.min(100, Number(x) || 0));
-  const preview = x => esc(String(x ?? '').replace(/씨발|시발|좆|병신|개새끼/gi, word => word.length === 1 ? '***' : `${word[0]}${'*'.repeat(word.length - 1)}`));
   const blue = '#3182F6', orange = '#F04452';
   let data, evidence, appId, root, selected, sort = 'negative', expanded = false;
   let dialogTheme, dialogSentiment, dialogPage, request, restoreFocus;
@@ -46,6 +45,8 @@ window.ReviewDashboard = (() => {
     sort = params.get('topic_sort') === 'mentions' ? 'mentions' : 'negative';
     expanded = false;
     const small = smallCohort();
+    const complaintRate = counts.complaint_reviews ? counts.recommended_complaints / counts.complaint_reviews * 100 : null;
+    const complaintNotRecommended = Math.max(0, counts.complaint_reviews - counts.recommended_complaints);
     const language = ({koreana:'한국어',english:'영어',all:'전체 언어',japanese:'일본어',schinese:'중국어 간체',unknown:'언어 정보 없음'})[evidence.language] || evidence.language;
     const coverage = counts.collected ? ` (${pct(counts.analyzed / counts.collected * 100)})` : '';
     document.getElementById('overviewTitle').textContent = `${V.game?.name || '게임'} 리뷰 진단`;
@@ -55,7 +56,7 @@ window.ReviewDashboard = (() => {
     document.getElementById('rdPageActions').innerHTML = `<button class="rd-btn" type="button" onclick="startNewAnalysis(${Number(id)},null,null,true)">추가 수집</button><a class="rd-btn" href="/api/reviews/download?app_id=${Number(id)}" download>원문 내려받기</a><a class="rd-btn primary" href="/api/analysis/download?app_id=${Number(id)}" download>분석 결과 내려받기</a>`;
     root.innerHTML = `
       <section class="rd-findings" aria-labelledby="rdFindingsTitle">
-        <div class="rd-findings-head"><h2 id="rdFindingsTitle">핵심 인사이트</h2></div>
+        <div class="rd-findings-head"><h2 id="rdFindingsTitle">핵심 인사이트</h2><button class="rd-text-btn rd-method-link" data-action="method">분석 기준</button></div>
         <div class="rd-signals">
           <button class="rd-signal rd-signal-strength" data-action="select" data-theme="${esc(strength?.name || '')}"><span class="rd-signal-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4 7 4.2 3.2L12 4l3.8 6.2L20 7l-1.5 10H5.5L4 7Z"/><path d="M6 20h12"/></svg></span><span class="rd-signal-copy"><span class="rd-signal-heading"><strong>${esc(strength?.name || '분석 대기')}</strong><span class="rd-signal-label">긍정 반응 최다</span></span><span class="rd-big">${num(strength?.pos)}<small>건</small></span><small>칭찬이 가장 많이 모인 주제</small></span></button>
           <button class="rd-signal rd-signal-concern rd-signal-primary" data-action="select" data-theme="${esc(concern?.name || '')}"><span class="rd-signal-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13.4 3.2c.5 3-1.5 4.5-3.1 6.3-1.4 1.5-2.3 3-2.3 5.1A5 5 0 0 0 18 15c0-2.7-1.4-5.2-4.6-7.6.2 2-1 3.3-2 4.5"/><path d="M12 20c-1.8 0-3-1.2-3-2.8 0-1.2.7-2.3 2.3-3.5-.1 1.3.8 1.8 1.5 2.4.6.5 1.2 1 1.2 1.9 0 1.1-.8 2-2 2Z"/></svg></span><span class="rd-signal-copy"><span class="rd-signal-heading"><strong>${esc(concern?.name || '뚜렷한 불만 없음')}</strong><span class="rd-signal-label">부정 반응 최다</span></span><span class="rd-big">${num(concern?.neg)}<small>건</small></span><small>불만이 가장 많이 모인 주제</small></span></button>
@@ -64,35 +65,37 @@ window.ReviewDashboard = (() => {
       </section>
       <div class="rd-main">
         <section class="rd-card" aria-labelledby="rdTopicsTitle">
-          <div class="rd-card-head"><div><h2 id="rdTopicsTitle">주제별 반응</h2><p>주제를 선택하면 세부 문제와 실제 리뷰를 확인할 수 있습니다.</p></div>
+          <div class="rd-card-head"><div><h2 id="rdTopicsTitle">주제별 반응</h2><p>불만과 칭찬을 같은 축에서 비교합니다.</p></div>
           <div class="rd-toggle" aria-label="주제 정렬"><button data-action="sort" data-sort="negative">불만순</button><button data-action="sort" data-sort="mentions">언급순</button></div></div>
           <div class="rd-chart-key"><span>← 불만</span><span>칭찬 →</span></div><div id="rdTopicChart"></div>
-          <div class="rd-chart-footer"><p class="rd-caption">같은 축 · 한 리뷰에서 칭찬과 불만을 함께 셀 수 있음</p><button class="rd-text-btn" data-action="expand" id="rdExpand">전체 주제</button></div>
+          <div class="rd-chart-footer"><span></span><button class="rd-text-btn" data-action="expand" id="rdExpand">전체 주제</button></div>
         </section>
         <section class="rd-card rd-detail" id="rdDetail" aria-live="polite" aria-label="선택한 주제의 근거"></section>
       </div>
       <div class="rd-lower" id="rdCohorts">
-        <section class="rd-card"><div class="rd-card-head"><div><h2>플레이 시간별 비추천 비율</h2><p>${small ? `${esc(small.label)} ${pct(small.negative_rate)} · 표본 ${num(small.n)}건으로 판단 보류` : `작성 당시 플레이 시간 기준 · 전체 ${pct(evidence.sample_negative_rate)}`}</p></div></div><div id="rdCohortChart"></div>
-          ${small ? `<div class="rd-small-note">${esc(small.label)}은 비추천 ${num(small.negative)} / ${num(small.n)}건. 표본이 적어 판단을 보류합니다.</div>` : ''}
-          <p class="rd-caption">각 구간은 서로 다른 리뷰 작성자입니다. 유저 이탈률이나 시간이 흐른 뒤의 만족도 변화가 아닙니다.${counts.unknown_playtime ? ` 작성 시 플레이 시간 미상 ${num(counts.unknown_playtime)}건 제외.` : ''}</p>
+        <section class="rd-card"><div class="rd-card-head"><div><h2>플레이 시간별 비추천 비율</h2><p>작성 당시 플레이 시간 · 전체 ${pct(evidence.sample_negative_rate)}</p></div></div><div id="rdCohortChart"></div>
+          ${small ? `<div class="rd-small-note"><b>${esc(small.label)}</b> · ${num(small.negative)} / ${num(small.n)}건 비추천 · 표본 적음</div>` : ''}
         </section>
-        <section class="rd-card"><div class="rd-card-head"><div><h2>플레이 구간마다 다른 불만</h2><p>셀 안 숫자 = 불만 리뷰 수 · 색 농도 = 해당 구간 AI 분석 대비 비율</p></div></div><div id="rdHeatmap"></div><div class="rd-heat-legend">구간 내 불만 비율 낮음 <i aria-hidden="true"></i> 높음</div><p class="rd-caption">추천 리뷰 속 불만도 포함 · 점선 열은 AI 분석 30건 미만으로 색상 비교에서 제외</p></section>
+        <section class="rd-card"><div class="rd-card-head"><div><h2>플레이 구간마다 다른 불만</h2><p>색이 진할수록 해당 구간에서 자주 언급</p></div></div><div id="rdHeatmap"></div><div class="rd-heat-legend">낮음 <i aria-hidden="true"></i> 높음</div></section>
       </div>
       <div class="rd-secondary" id="rdSecondary">
-        <section class="rd-card"><div class="rd-card-head"><div><h2>좋아한 경험의 결</h2><p>긍정·혼합으로 분류된 ${num(evidence.fun_denominator)}건의 재미 언급 · 복수 분류</p></div></div><div id="rdFun"></div><p class="rd-caption">한 리뷰에 여러 재미가 담길 수 있어 비율의 합은 100%를 넘을 수 있습니다.</p></section>
-        <section class="rd-card"><div class="rd-card-head"><div><h2>추천해도 불만은 남깁니다</h2><p>주제별 불만이 있는 ${num(counts.complaint_reviews)}건 중</p></div></div><div class="rd-detail-metrics"><div><strong>${num(counts.recommended_complaints)}<small>건</small></strong><span>게임은 추천, 일부 경험은 불만</span></div><div><strong>${counts.complaint_reviews ? pct(counts.recommended_complaints / counts.complaint_reviews * 100) : '—'}</strong><span>불만 리뷰 중 추천 비중</span></div></div><p class="rd-caption">비추천 리뷰만 읽으면 이 의견을 놓칩니다. 칭찬과 불만은 게임 전체의 추천 여부와 별도로 분석했습니다.</p><div class="rd-periods"><div class="rd-period"><span>스팀 조회 추천률</span><strong>${pct(V.rates?.steam)}</strong><span>조회 조건 기준</span></div><div class="rd-period"><span>수집 리뷰 추천률</span><strong>${evidence.sample_negative_rate == null ? '—' : pct(100 - evidence.sample_negative_rate)}</strong><span>${num(counts.collected)}건 기준</span></div></div></section>
+        <section class="rd-card"><div class="rd-card-head"><div><h2>좋아한 경험의 결</h2><p>${num(evidence.fun_denominator)}건 · 복수 선택</p></div></div><div id="rdFun"></div></section>
+        <section class="rd-card rd-recommended-card"><div class="rd-card-head"><div><h2>추천 속에도 불만이 있습니다</h2><p>불만 주제가 있는 리뷰 ${num(counts.complaint_reviews)}건</p></div></div><div class="rd-rec-kpi"><strong>${pct(complaintRate)}</strong><span>${num(counts.recommended_complaints)}건이 게임은 추천</span></div><div class="rd-rec-bar" role="img" aria-label="불만 리뷰 ${num(counts.complaint_reviews)}건 중 게임 추천 ${num(counts.recommended_complaints)}건"><i style="width:${clamp(complaintRate)}%"></i></div><div class="rd-rec-legend"><span><i></i>추천 ${num(counts.recommended_complaints)}건</span><span><i></i>비추천 ${num(complaintNotRecommended)}건</span></div></section>
       </div>
-      <details class="rd-method" id="rdMethod"><summary>분석 범위와 읽는 법 · ${num(counts.analyzed)}건의 AI 분류, 원문 검증 필요</summary><div class="rd-method-grid">
+      <dialog class="rd-dialog rd-method-dialog" id="rdMethodDialog" aria-labelledby="rdMethodTitle"><div class="rd-dialog-head"><div><h2 id="rdMethodTitle">분석 기준</h2><p>${num(counts.collected)}건 수집 · ${num(counts.analyzed)}건 AI 분석</p></div><button class="rd-btn" data-action="close-method" aria-label="분석 기준 닫기">닫기 ×</button></div><div class="rd-method-grid">
         <p><b>수집 범위</b><br>최신순으로 수집한 리뷰입니다. 추천·비추천 비율을 맞춰도 전체 유저나 전체 기간의 무작위 표본이 되지는 않습니다. 리뷰는 자발적으로 작성한 의견입니다.</p>
         <p><b>비추천 연관 차이</b><br>해당 주제를 언급한 리뷰를 제외했을 때의 추천률 − 전체 수집 추천률입니다. 수집 원자료로 계산하며, 문제 해결 효과나 인과관계를 뜻하지 않습니다. 주제끼리 중복되어 합산할 수 없습니다.</p>
         <p><b>표본과 AI 분류</b><br>주제 수치는 AI가 원문을 분류한 결과입니다. 짧은 리뷰 등 ${num(counts.collected - counts.analyzed)}건은 이 주제 분석에 포함되지 않습니다. 표본 수만으로 AI 분류 정확도나 모집단 오차를 보장하지 않습니다.${counts.skipped_analysis ? ` 읽을 수 없거나 원문이 없는 분석 ${num(counts.skipped_analysis)}건 제외.` : ''}</p>
         <p><b>읽는 순서</b><br>칭찬 많은 경험을 지킬 강점으로 검토하고, 불만의 빈도·비추천 연관·원문을 함께 봅니다. 플레이 구간별 차이는 추가 조사 대상을 찾는 신호입니다. 원문은 공감 수, 최신순으로 보여줍니다.</p>
-      </div></details>
+      </div></dialog>
       <dialog class="rd-dialog" id="rdEvidenceDialog" aria-labelledby="rdDialogTitle"><div class="rd-dialog-head"><div><h2 id="rdDialogTitle">리뷰 근거</h2><p id="rdDialogMeta"></p></div><button class="rd-btn" data-action="close-dialog" aria-label="리뷰 근거 닫기">닫기 ×</button></div><div class="rd-toggle" aria-label="주제 감성 선택"><button data-action="evidence-filter" data-sentiment="N">불만</button><button data-action="evidence-filter" data-sentiment="P">칭찬</button><button data-action="evidence-filter" data-sentiment="all">전체</button></div><div id="rdEvidenceBody" aria-live="polite"></div></dialog>`;
     root.onclick = onClick;
     const dialog = document.getElementById('rdEvidenceDialog');
     dialog.addEventListener('click', event => { if (event.target === dialog) closeDialog(); });
     dialog.addEventListener('close', () => { request?.abort(); restoreFocus?.focus(); });
+    const methodDialog = document.getElementById('rdMethodDialog');
+    methodDialog.addEventListener('click', event => { if (event.target === methodDialog) closeMethod(); });
+    methodDialog.addEventListener('close', () => restoreFocus?.focus());
     renderTopics(); renderDetail(); renderMood(); renderCohorts(); renderHeatmap(); renderFun();
   }
 
@@ -118,16 +121,12 @@ window.ReviewDashboard = (() => {
     if (!t) { target.innerHTML = '<div class="rd-empty">확인할 주제가 없습니다.</div>'; return; }
     const association = topAssociation(), isAssociation = t.name === association?.name;
     const sentiment = t.neg > t.pos || isAssociation ? 'N' : 'P';
-    const example = t.examples[sentiment][0];
     const definition = data.themes?.find(row => row.name === t.name)?.desc;
     const action = data.actions?.find(row => row.theme === t.name);
-    target.innerHTML = `<div class="rd-detail-head"><h2 class="rd-detail-heading">선택한 주제 상세 <strong>${esc(t.name)}</strong></h2><button class="rd-text-btn rd-evidence-link" data-action="evidence" data-sentiment="${sentiment}">원문으로 확인 →</button></div><p class="rd-desc">${esc(definition || '칭찬과 불만을 함께 살펴보세요.')}</p>
-      <div class="rd-detail-metrics"><div><strong>${num(t.neg)}<small>건</small></strong><span>불만 리뷰</span></div><div><strong>${num(t.pos)}<small>건</small></strong><span>칭찬 리뷰</span></div><div><strong style="font-size:22px">${signed(t.exclusion_delta)}</strong><span>주제 제외 시 추천률 차이</span></div></div>
-      <p class="rd-caption">관찰된 연관 차이입니다. 이 문제를 고쳤을 때의 상승 예상치는 아닙니다.</p>
+    target.innerHTML = `<div class="rd-detail-head"><div><span class="rd-detail-kicker">선택한 주제</span><h2>${esc(t.name)}</h2></div><button class="rd-text-btn rd-evidence-link" data-action="evidence" data-sentiment="${sentiment}">리뷰 근거 →</button></div><p class="rd-desc">${esc(definition || '칭찬과 불만을 함께 살펴보세요.')}</p>
+      <div class="rd-detail-metrics"><div><strong>${num(t.neg)}<small>건</small></strong><span>불만</span></div><div><strong>${num(t.pos)}<small>건</small></strong><span>칭찬</span></div><div><strong style="font-size:22px">${signed(t.exclusion_delta)}</strong><span>추천률 연관 차이</span></div></div>
       ${action?.prob ? `<div class="rd-problem-summary"><b>핵심 문제</b><p>${esc(action.prob)}</p></div>` : ''}
-      ${example ? `<blockquote class="rd-quote"><p>“${preview(example.content)}${example.truncated?'…':''}”</p><footer>${sentiment==='N'?'불만':'칭찬'}으로 분류 · ${example.recommended?'게임 추천':'게임 비추천'} · ${example.hours==null?'시간 미상':`${num(Math.round(example.hours))}시간`}</footer></blockquote>` : '<p class="rd-caption">연결된 원문이 없습니다.</p>'}
-      ${t.neg ? `<span class="rd-inline-note">불만 ${num(t.neg)}건 중 <b>${num(t.negative_recommended)}건은 게임을 추천</b>했습니다.</span>` : '<span class="rd-inline-note">현재 분석에서 이 주제의 불만은 발견되지 않았습니다.</span>'}
-      <div class="rd-detail-actions"><button class="rd-btn" data-action="evidence" data-sentiment="all">전체 근거 보기</button></div>
+      ${t.neg ? `<span class="rd-inline-note">불만 중 게임 추천 <b>${num(t.negative_recommended)} / ${num(t.neg)}건</b></span>` : '<span class="rd-inline-note">이 주제의 불만은 발견되지 않았습니다.</span>'}
       ${action ? `<details class="rd-ai-detail"><summary>원인과 개선 제안</summary>${action.why?`<p><b>리뷰에서 언급된 원인</b><br>${esc(action.why)}</p>`:''}${action.fix?.length?`<p><b>리뷰에서 추출한 제안</b><br>${action.fix.map(esc).join(' · ')}</p>`:''}<p class="rd-caption">AI 요약에는 잘못된 연결이 포함될 수 있습니다. 원문 확인 후 기획에 반영하세요.</p></details>`:''}`;
   }
 
@@ -220,15 +219,18 @@ window.ReviewDashboard = (() => {
     else if (action === 'cohort') scrollToPanel('rdCohorts');
     else if (action === 'recommended') scrollToPanel('rdSecondary');
     else if (action === 'collect') window.startNewAnalysis(appId,null,null,true);
+    else if (action === 'method') { restoreFocus=button; document.getElementById('rdMethodDialog').showModal(); }
     else if (action === 'evidence') {
       restoreFocus = button; dialogTheme=selected; dialogSentiment=button.dataset.sentiment; dialogPage=1;
       document.getElementById('rdEvidenceDialog').showModal(); loadEvidence();
     } else if (action === 'close-dialog') closeDialog();
+    else if (action === 'close-method') closeMethod();
     else if (action === 'evidence-filter') { dialogSentiment=button.dataset.sentiment; dialogPage=1; loadEvidence(); }
     else if (action === 'evidence-page') { dialogPage=Number(button.dataset.page); loadEvidence(); }
     else if (action === 'retry-evidence') loadEvidence();
   }
   function closeDialog() { document.getElementById('rdEvidenceDialog').close(); }
+  function closeMethod() { document.getElementById('rdMethodDialog').close(); }
   async function loadEvidence() {
     request?.abort(); request = new AbortController();
     const controller=request, body=document.getElementById('rdEvidenceBody');
