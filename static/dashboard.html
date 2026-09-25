@@ -1613,7 +1613,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260925h">
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260925g">
 <script src="/static/review-dashboard.js?v=20260925f"></script>
 </head>
 <body>
@@ -1622,23 +1622,22 @@ body.no-analysis #ovBody { display: none; }
   <!-- ============ LEFT SIDEBAR ============ -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <span class="sidebar-mark" aria-hidden="true">AI</span>
-      <span>AI 리뷰데이터 분석</span>
+      AI 리뷰데이터 분석
     </div>
 
     <div class="nav-group">
       <div class="nav-label">프로젝트 관리</div>
-      <a href="/" class="nav-item" onclick="return goToProjectHome(event)"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg><span>전체 프로젝트</span></a>
+      <a href="/" class="nav-item" onclick="return goToProjectHome(event)">전체 프로젝트</a>
     </div>
 
     <div class="nav-group">
       <div class="nav-label">리뷰 분석 파이프라인</div>
-      <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>대시보드</span></a>
-      <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4M8 11h6M11 8v6"/></svg><span>리뷰 탐색</span></a>
-      <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="m4 7 6-4 6 7 6-5"/></svg><span>표본 설계</span></a>
+      <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)">대시보드</a>
+      <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)">리뷰 탐색</a>
+      <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)">표본 설계</a>
     </div>
 
-    <div class="sidebar-bottom">
+    <div class="sidebar-bottom">    <div class="sidebar-bottom">
       <button type="button" class="bottom-item" onclick="openApiKeyModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
         API Key 관리
