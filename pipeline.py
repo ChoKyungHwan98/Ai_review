@@ -17,7 +17,6 @@
 import os
 import sys
 import json
-import time
 import argparse
 import threading
 import shutil

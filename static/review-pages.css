@@ -105,6 +105,13 @@
 .rp-q-val { font-size:15px; font-weight:700; text-align:right; }
 .rp-issues { margin:10px 0 0; padding-left:18px; font-size:12px; color:var(--rp-sub); line-height:1.6; }
 
+.rp-split .use-0 { background:#1B64DA; color:#fff; } .rp-split .use-1 { background:#3182F6; color:#fff; }
+.rp-split .use-2 { background:#86B6EF; color:#0F3F85; } .rp-split .use-3 { background:#C8DCF8; color:#0F3F85; }
+.rp-use-list { display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:10px; font-size:13px; color:var(--rp-sub); }
+.rp-use-list i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+.rp-use-list i.use-0 { background:#1B64DA; } .rp-use-list i.use-1 { background:#3182F6; } .rp-use-list i.use-2 { background:#86B6EF; } .rp-use-list i.use-3 { background:#C8DCF8; }
+.rp-use-list b { color:var(--rp-ink); }
+
 /* ---------- 심층 분석 ---------- */
 .page[data-page="deep"] > .title { margin:0 0 4px; font-size:28px; font-weight:750; letter-spacing:-.03em; color:#191F28; }
 .page[data-page="deep"] > .subtitle { margin:0 0 16px; font-size:13px; color:#6B7684; }

@@ -3,7 +3,6 @@
 추천률은 Steam 원자료를 사용하고, 리뷰에서만 알 수 있는 내용을 집계한다.
 
   범위     전체 중 몇 건을 모았고 몇 건을 AI가 읽었나
-  정확도   실제 표본 수로 계산한 오차 (약속한 값이 아니라 실제 값)
   영향도   이 주제를 언급한 리뷰를 빼면 추천률이 몇 %p 바뀌나 (Thematic의 impact 방식)
   재미     추천한 유저가 느낀 재미 종류 (MDA 8가지)
   누가     플레이 시간 구간별 추천률과 주요 불만
@@ -121,7 +120,6 @@ def build():
 
     text_of = {r["recommendationid"]: r["content"] for r in reviews}
     votes_of = {r["recommendationid"]: int(r.get("votes_up") or 0) for r in reviews}
-    review_of = {r["recommendationid"]: r for r in reviews}
 
     n_collected = len(reviews)
     n_short = sum(1 for r in reviews if len((r["content"] or "").strip()) < cfg.MIN_REVIEW_LEN)
@@ -203,27 +201,6 @@ def build():
             "top_neg": [{"name": k, "count": v} for k, v in neg_tags.most_common(2)],
         })
 
-    # ── 시간 흐름: 변화가 있을 때만 그래프 ─────────────────────────
-    months = defaultdict(lambda: [0.0, 0.0, 0])
-    for r in reviews:
-        ts = int(r.get("timestamp_created") or 0)
-        if not ts:
-            continue
-        m = datetime.fromtimestamp(ts).strftime("%Y-%m")
-        up = is_up(r["voted_up"])
-        months[m][0] += wt(up)
-        months[m][1] += wt(True) if up else 0
-        months[m][2] += 1
-    month_rows = [{"month": m, "n": v[2], "rate": round(v[1] / v[0] * 100, 1)}
-                  for m, v in sorted(months.items()) if v[0]]
-    moved = [m for m in month_rows if m["n"] >= SMALL and abs(m["rate"] - base_rate * 100) >= 10]
-    timeline = {
-        "changed": bool(moved),
-        "note": (f"{', '.join(m['month'] for m in moved)}에 추천률이 크게 달라졌습니다" if moved
-                 else "기간 중 추천률에 큰 변화가 없습니다"),
-        "months": month_rows,
-    }
-
     # ── 할 일 재료: 주제별 불만 원문 조각 ───────────────────────────
     parts_by_theme = defaultdict(lambda: {"prob": [], "why": [], "fix": []})
     for c in complaints:
@@ -246,18 +223,11 @@ def build():
             "steam": round(pop_rate * 100, 1) if pop_rate else None,
             "collected": round(sum(1 for r in reviews if is_up(r["voted_up"])) / n_collected * 100, 1) if n_collected else None,
         },
-        "precision": {
-            "promised": (design.get("design") or {}).get("error_pct"),
-            "rate": margin(n_collected, pop_rate or 0.5),
-            "themes": margin(n_analyzed),
-            "complaints": margin(len(complaint_ids)),
-        },
         "themes": theme_rows,
         "lifts": lifts,
         "drags": drags,
         "fun": fun[:4],
         "playtime": playtime,
-        "timeline": timeline,
     }
     return result, parts_by_theme
 

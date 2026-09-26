@@ -15,8 +15,6 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <style>
-/* ============ OpenSea Design System — Midnight Dark Console ============ */
-/* Tokens from: DESIGN (1).md / variables (1).css / tokens (1).json       */
 /* 레퍼런스 원본 색상 그대로 적용 (Dark Theme)                               */
 :root {
   /* ── Colors (Toss Light Theme) ── */
@@ -37,9 +35,9 @@
   --color-burgundy:        #D92D3D;
 
   /* ── Typography — OpenSea Scale (Inter = gtAmerica substitute) ── */
-  --font-sans: 'Pretendard Variable', 'Pretendard', 'Inter', -apple-system,
-               system-ui, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "Pretendard Variable", "Pretendard", "Inter", -apple-system,
+               system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
 
@@ -95,19 +93,10 @@
   --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
-
 * { box-sizing: border-box; }
 html {
   margin: 0; padding: 0;
   height: 100%;
-  overflow: hidden;
-}
-html.studio-embedded {
-  background: #F2F2F4;
-}
-html.studio-embedded body {
-  position: relative;
-  border-radius: 16px;
   overflow: hidden;
 }
 body {
@@ -116,7 +105,7 @@ body {
   overflow: hidden;
   background: linear-gradient(135deg, #F2F4F6 0%, #E8F3FF 100%);
   color: var(--color-white-canvas);
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
   font-size: 14px; line-height: 1.5;  /* index.html과 동일하게 고정 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -126,14 +115,12 @@ body {
   display: flex;
 }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-
 /* ============ Layout — 사이드바 고정 + 메인 영역만 스크롤 ============ */
 .app { display: flex; width: 100%; height: 100vh; overflow: hidden; }
 /* 사이드바는 flex-shrink:0으로 너비 고정, overflow hidden으로 튀어나오지 않게 */
 .sidebar { flex-shrink: 0; height: 100vh; overflow: hidden; }
-
 /* Sidebar */
-    .sidebar {
+.sidebar {
       width: 260px;
       background-color: var(--color-bg-surface);
       border-right: 1px solid var(--color-border);
@@ -142,8 +129,7 @@ body {
       padding: 24px 16px;
       z-index: 10;
     }
-    
-    .sidebar-brand {
+.sidebar-brand {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -155,11 +141,10 @@ body {
       padding: 0 8px;
       cursor: pointer;
     }
-    
-    .nav-group {
+.nav-group {
       margin-bottom: 24px;
     }
-    .nav-label {
+.nav-label {
       font-size: 13px;
       font-weight: 600;
       line-height: 1;
@@ -167,8 +152,7 @@ body {
       margin-bottom: 8px;
       padding: 0 8px;
     }
-    
-    .nav-item {
+.nav-item {
       display: flex;
       align-items: center;
       padding: 12px 16px;
@@ -183,15 +167,14 @@ body {
       margin-bottom: 4px;
       position: relative;
     }
-    
-    .nav-item:hover { background-color: var(--color-nav-hover); }
-    .nav-item.active {
+.nav-item:hover { background-color: var(--color-nav-hover); }
+.nav-item.active {
       background-color: var(--color-nav-active);
       color: var(--color-primary);
       /* font-weight 변경 없음 → 레이아웃 시프트 방지 */
     }
-    .nav-item.active::before {
-      content: '';
+.nav-item.active::before {
+      content: "";
       position: absolute;
       left: 4px;
       top: 50%;
@@ -201,14 +184,13 @@ body {
       background-color: var(--color-primary);
       border-radius: 2px;
     }
-
-    /* Home(index.html)과 동일한 사이드바 하단 */
-    .sidebar-bottom {
+/* Home(index.html)과 동일한 사이드바 하단 */
+.sidebar-bottom {
       margin-top: auto;
       border-top: 1px solid var(--color-border);
       padding-top: 16px;
     }
-    .bottom-item {
+.bottom-item {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -220,9 +202,8 @@ body {
       border-radius: var(--radius-md);
       transition: background-color 0.2s;
     }
-    .bottom-item:hover { background-color: var(--color-nav-hover); color: var(--color-text-title); }
-
-    /* ── Right Content Area ── */
+.bottom-item:hover { background-color: var(--color-nav-hover); color: var(--color-text-title); }
+/* ── Right Content Area ── */
 .main-wrap {
   flex: 1;
   display: flex; flex-direction: column;
@@ -232,7 +213,6 @@ body {
   scrollbar-gutter: stable;  /* 스크롤바 유무와 관계없이 공간 확보 */
   background: transparent;
 }
-
 /* ── Topbar (simplified: search + status) — Home 톤 일치: 투명 배경, 그라데이션이 그대로 비치도록 ── */
 .topbar {
   position: sticky; top: 0; z-index: 50;
@@ -246,29 +226,12 @@ body {
   padding: 24px 60px 12px;
   display: flex; align-items: center; gap: 16px;
 }
-
-.nav { display: flex; gap: 2px; }
-.nav-tab {
-  font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
-  color: var(--color-mute-whisper);
-  background: transparent;
-  border: none;
-  padding: var(--spacing-8) var(--spacing-12); cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color .15s, border-color .15s;
-}
-.nav-tab:hover { color: var(--color-white-canvas); }
-.nav-tab.active {
-  color: var(--color-white-canvas);
-  border-bottom-color: var(--color-electric-blue);
-}
 .topbar-right {
   margin-left: auto; display: flex; align-items: center; gap: 12px;
   font-size: 13px; color: var(--color-text-sub);
   white-space: nowrap;
 }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-success-green); display: inline-block; margin-right: 4px; }
-
 /* ── Search Bar — Home 톤(반투명 흰색 pill) ── */
 .search-bar {
   flex: 1; max-width: 480px;
@@ -287,7 +250,7 @@ body {
 .search-icon { font-size: 14px; color: var(--color-text-sub); flex-shrink: 0; }
 .search-input {
   flex: 1; border: none; outline: none; background: transparent;
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
   font-size: 15px;
   color: var(--color-text-title);
 }
@@ -304,48 +267,6 @@ body {
 .search-btn:hover { background: #000000; }
 .search-btn:active { transform: scale(0.96); }
 .search-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-/* ── Row 2: Game Tabs + Analysis Tabs — Home 톤(투명 배경, 둥근 pill) ── */
-.topbar-row2 {
-  max-width: var(--page-max); margin: 0 auto;
-  padding: 0 60px 8px;
-  display: flex; align-items: center; gap: 0;
-  border-top: none;
-}
-.game-tabs {
-  display: flex; align-items: center; gap: 6px;
-  padding: 4px 0; overflow-x: auto; flex-shrink: 0;
-}
-.game-tab {
-  display: flex; align-items: center; gap: 6px;
-  font-family: inherit;
-  font-size: 14px; font-weight: 500;
-  color: var(--color-text-sub);
-  background: rgba(255, 255, 255, 0.5); border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  padding: 8px 14px; cursor: pointer;
-  transition: all .15s; white-space: nowrap;
-}
-.game-tab:hover { color: var(--color-text-title); background: #FFFFFF; }
-.game-tab.active {
-  color: var(--color-text-title);
-  background: #FFFFFF;
-  border-color: var(--color-border);
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-}
-.game-tab-add {
-  font-size: 14px; color: var(--color-text-sub);
-  background: transparent; border: 1px dashed var(--color-border);
-  border-radius: var(--radius-md); padding: 8px 12px; cursor: pointer;
-  transition: all .15s;
-}
-.game-tab-add:hover { color: var(--color-primary); border-color: var(--color-primary); }
-.row2-divider {
-  width: 1px; height: 20px; background: var(--color-steel-border);
-  margin: 0 var(--spacing-12); flex-shrink: 0;
-}
-
 /* Search result dropdown */
 .search-dropdown {
   position: absolute; top: 100%; left: 0; right: 0;
@@ -356,15 +277,6 @@ body {
   display: none;
 }
 .search-dropdown.show { display: block; }
-.search-result {
-  display: flex; align-items: center; gap: var(--spacing-12);
-  padding: var(--spacing-12) var(--spacing-16); cursor: pointer; transition: background .15s;
-}
-.search-result:hover { background: var(--color-ghost-fill); }
-.search-result img { width: 56px; height: 26px; border-radius: var(--radius-default); object-fit: cover; }
-.search-result-info { flex: 1; }
-.search-result-name { font-weight: var(--font-weight-medium); font-size: var(--text-body-sm); color: var(--color-white-canvas); }
-.search-result-desc { font-size: var(--text-caption); color: var(--color-mute-whisper); margin-top: 2px; }
 .search-result-action {
   font-size: var(--text-caption); font-weight: var(--font-weight-medium);
   color: var(--color-electric-blue);
@@ -373,7 +285,6 @@ body {
   transition: all .15s;
 }
 .search-result-action:hover { background: var(--color-electric-blue); color: #fff; }
-
 main { max-width: var(--page-max); margin: 0 auto; padding: 16px 60px 48px; width: 100%; }
 section.page { display: none; }
 section.page.active {
@@ -384,7 +295,6 @@ section.page.active {
   from { opacity: 0; transform: translateY(2px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 /* ===== Type Scale — OpenSea Design System =====
    display  → 32px / 500 / 1.25
    heading  → 20px / 500 / 1.25
@@ -392,7 +302,6 @@ section.page.active {
    body-sm  → 14px / 400 / 1.5
    caption  → 12px / 400 / 1.5
 */
-
 h1.title {
   font-size: var(--text-display); font-weight: var(--font-weight-medium);
   margin: 0 0 var(--spacing-8);
@@ -406,7 +315,6 @@ h1.title {
   line-height: var(--leading-body-sm);
   max-width: 780px;
 }
-
 /* ============ Cards — Inset Border Card (OpenSea) ============ */
 .card {
   background: var(--color-slate-card);
@@ -416,66 +324,8 @@ h1.title {
   transition: box-shadow .15s ease;
 }
 .card:hover { box-shadow: var(--shadow-hover); }
-.card-flat {
-  background: var(--color-ghost-fill);
-  border-radius: var(--radius-cards);
-  box-shadow: var(--shadow-card);
-  padding: var(--card-padding);
-}
-.card-title {
-  font-size: var(--text-body); font-weight: var(--font-weight-medium);
-  color: var(--color-white-canvas);
-  margin: 0 0 var(--spacing-12);
-  display: flex; align-items: center; gap: var(--spacing-8);
-  line-height: var(--leading-body);
-}
-.card-title::before {
-  content: ''; display: inline-block;
-  width: 3px; height: 16px;
-  background: var(--color-electric-blue);
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-.muted { color: var(--color-silver-whisper); }
-.tiny {
-  font-size: var(--text-caption); color: var(--color-silver-whisper);
-  line-height: var(--leading-caption); font-weight: var(--font-weight-regular);
-}
-
 /* ============ Grids — OpenSea element gap ============ */
 .grid { display: grid; gap: var(--element-gap); }
-.grid-4 { grid-template-columns: repeat(4, 1fr); }
-.grid-3 { grid-template-columns: repeat(3, 1fr); }
-.grid-2 { grid-template-columns: repeat(2, 1fr); }
-@media (max-width: 900px) {
-  .grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .grid-3, .grid-2 { grid-template-columns: 1fr; }
-}
-
-/* ============ KPI — Compact (OpenSea data display) ============ */
-.kpi { padding: var(--card-padding); }
-.kpi-label {
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  color: var(--color-mute-whisper);
-  margin-bottom: var(--spacing-4);
-  text-transform: uppercase; letter-spacing: 0.06em;
-}
-.kpi-value {
-  font-family: var(--font-mono); font-weight: var(--font-weight-medium);
-  font-size: 32px; color: var(--color-white-canvas);
-  line-height: 1; letter-spacing: normal;
-  font-variant-numeric: tabular-nums lining-nums;
-}
-.kpi-sub {
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-silver-whisper);
-  margin-top: var(--spacing-4);
-  line-height: var(--leading-caption);
-}
-.kpi-value.pos { color: var(--color-success-green); }
-.kpi-value.neg { color: var(--color-error-red); }
-.kpi-value.acc { color: var(--color-electric-blue); }
-
 /* ============ Banner / Hero — Inset Border Card ============ */
 .hero {
   position: relative;
@@ -489,22 +339,12 @@ h1.title {
   overflow: hidden;
 }
 .hero::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0; right: 0;
   width: 300px; height: 300px;
   background: radial-gradient(circle, rgba(131,195,255,0.07) 0%, transparent 70%);
   pointer-events: none;
-}
-.hero-badge {
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  padding: 4px 10px;
-  background: rgba(131,195,255,0.12);
-  color: var(--color-electric-blue);
-  border: 1px solid rgba(131,195,255,0.25);
-  border-radius: 20px;
-  display: inline-block; margin-bottom: 10px;
 }
 .hero-title {
   font-size: 22px; font-weight: 700;
@@ -521,46 +361,9 @@ h1.title {
   max-width: 1100px;
 }
 .hero-body b { color: var(--color-white-canvas); font-weight: var(--font-weight-medium); }
-
-/* 빠른 결과 스트립 */
-.result-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: var(--spacing-16);
-}
-.result-strip-item {
-  background: var(--color-ghost-fill);
-  border: 1px solid var(--color-steel-border);
-  border-radius: var(--radius-default);
-  padding: 12px 14px;
-  display: flex; flex-direction: column; gap: 4px;
-  transition: border-color 0.2s;
-}
-.result-strip-item:hover { border-color: rgba(131,195,255,0.3); }
-.result-strip-label { font-size: 11px; color: var(--color-mute-whisper); font-weight: 500; letter-spacing: 0.03em; }
-.result-strip-value { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--color-white-canvas); line-height: 1; }
-.result-strip-sub { font-size: 11px; color: var(--color-mute-whisper); }
-
-/* ============ Tags / Pills — Ghost style ============ */
-.tag {
-  display: inline-flex; align-items: center;
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  padding: 2px var(--spacing-8); border-radius: var(--radius-default);
-  border: 1px solid var(--color-steel-border);
-  color: var(--color-silver-whisper);
-  background: transparent;
-  white-space: nowrap;
-}
-.tag.pos { border-color: rgba(71,187,100,0.3); background: rgba(71,187,100,0.08); color: var(--color-success-green); }
-.tag.neg { border-color: rgba(226,71,86,0.3); background: rgba(226,71,86,0.08); color: var(--color-error-red); }
-.tag.accent { border-color: rgba(131,195,255,0.3); background: rgba(131,195,255,0.08); color: var(--color-electric-blue); }
-.tag.warn { border-color: rgba(165,107,22,0.3); background: rgba(165,107,22,0.06); color: var(--color-warn-amber); }
-.tag.mute { color: var(--color-mute-whisper); }
-
 /* ============ Buttons — Ghost Button (OpenSea) ============ */
 .btn {
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
+  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif; font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
   padding: var(--spacing-8) var(--spacing-16);
   background: transparent;
   border: 1px solid var(--color-steel-border);
@@ -583,10 +386,9 @@ h1.title {
   color: #fff;
   border-color: var(--color-electric-blue);
 }
-
 /* ============ Inputs ============ */
 .input, .select {
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; font-size: var(--text-body-sm); font-weight: var(--font-weight-regular);
+  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif; font-size: var(--text-body-sm); font-weight: var(--font-weight-regular);
   background: var(--color-slate-card);
   border: 1px solid var(--color-steel-border);
   color: var(--color-white-canvas);
@@ -600,18 +402,7 @@ h1.title {
   box-shadow: 0 0 0 3px rgba(131,195,255,0.15);
 }
 .input::placeholder { color: var(--color-mute-whisper); }
-
 /* ============ Table — OpenSea compact style ============ */
-.table-wrap {
-  border-radius: var(--radius-cards);
-  overflow: hidden;
-  background: var(--color-slate-card);
-  box-shadow: var(--shadow-card);
-}
-.table-scroll { max-height: 520px; overflow-y: auto; }
-.table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-.table-scroll::-webkit-scrollbar-track { background: transparent; }
-.table-scroll::-webkit-scrollbar-thumb { background: var(--color-soft-stone); border-radius: var(--radius-default); }
 table { width: 100%; border-collapse: collapse; font-size: var(--text-body-sm); }
 thead { position: sticky; top: 0; background: var(--color-ghost-fill); z-index: 1; }
 thead th {
@@ -629,32 +420,7 @@ tbody td {
   font-weight: var(--font-weight-regular);
 }
 tbody tr:hover { background: rgba(131, 195, 255, 0.05); }
-.truncate { max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
 /* ============ Compare — 3-way ============ */
-.compare3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--element-gap); }
-@media (max-width: 900px) { .compare3 { grid-template-columns: 1fr; } }
-.compare-col {
-  padding: 24px;
-  background: #FFFFFF;
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.03);
-  border: 1px solid var(--color-steel-border);
-}
-.compare-col.highlight {
-  background: rgba(131,195,255,0.05);
-  box-shadow: rgba(131,195,255,0.2) 0px 0px 0px 1px inset;
-}
-.compare-col h4 {
-  margin: 0 0 var(--spacing-4); font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
-  color: var(--color-white-canvas);
-}
-.compare-col .role {
-  font-size: var(--text-caption); color: var(--color-silver-whisper);
-  margin-bottom: var(--spacing-8); line-height: var(--leading-caption);
-  font-weight: var(--font-weight-regular);
-}
-.bar-pair { margin-top: var(--spacing-8); }
 .bar {
   display: flex; height: 22px; border-radius: var(--radius-default);
   overflow: hidden; background: var(--color-steel-border);
@@ -672,191 +438,9 @@ tbody tr:hover { background: rgba(131, 195, 255, 0.05); }
 /* 막대가 너무 좁으면 텍스트 숨김 (15% 미만은 자체 폭 < 라벨 폭) */
 .bar > div[style*="width:0%"],
 .bar > div[style*="width: 0%"] { color: transparent; }
-
-/* ============ Aspect Evidence ============ */
-.evidence-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--element-gap); }
-.evidence-block {
-  padding: var(--card-padding); background: var(--color-ghost-fill);
-  border-radius: var(--radius-cards);
-  box-shadow: var(--shadow-card);
-}
-.evidence-block .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-8); }
-.evidence-block .label { font-weight: var(--font-weight-medium); font-size: var(--text-body-sm); }
-.evidence-block .quote {
-  font-size: var(--text-caption); color: var(--color-silver-whisper);
-  line-height: var(--leading-caption); margin: var(--spacing-4) 0;
-  padding: var(--spacing-4) 0 var(--spacing-4) var(--spacing-8);
-  border-left: 2px solid var(--color-steel-border);
-  font-weight: var(--font-weight-regular);
-}
-
-/* ============ Sample Design ============ */
-.sd-row { display: flex; gap: var(--element-gap); flex-wrap: wrap; }
-.sd-block {
-  flex: 1 1 200px; padding: var(--card-padding);
-  background: var(--color-ghost-fill);
-  box-shadow: var(--shadow-card);
-  border-radius: var(--radius-cards);
-}
-.sd-block .label {
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  color: var(--color-silver-whisper);
-  text-transform: uppercase; letter-spacing: 0.04em;
-  margin-bottom: var(--spacing-4);
-}
-.sd-block .value {
-  font-family: var(--font-mono);
-  font-size: var(--text-heading-sm); font-weight: var(--font-weight-medium);
-  line-height: var(--leading-heading-sm);
-  color: var(--color-white-canvas);
-  font-variant-numeric: tabular-nums;
-}
-.sd-block .note {
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-silver-whisper);
-  margin-top: var(--spacing-4); line-height: var(--leading-caption);
-}
-
-/* ============ Bias Audit Checklist ============ */
-.bias-check-row {
-  display: flex; gap: var(--spacing-12); align-items: flex-start;
-  padding: var(--spacing-12) 0; border-bottom: 1px solid var(--color-steel-border);
-}
-.bias-check-row:last-child { border-bottom: none; }
-.bias-area {
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  color: var(--color-mute-whisper);
-  text-transform: uppercase; letter-spacing: 0.04em;
-  margin-bottom: 2px;
-}
-.bias-item { font-size: var(--text-body-sm); font-weight: var(--font-weight-medium); }
-.bias-detail {
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-silver-whisper);
-  margin-top: var(--spacing-4); line-height: var(--leading-caption);
-}
-
 /* ============ Findings & Recs — 좌우 통일 톤앤매너 ============ */
-.findings-list, .recs-list {
-  display: flex; flex-direction: column;
-  gap: var(--spacing-8);
-}
-
-.finding, .rec {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: var(--spacing-12) var(--spacing-16);
-  background: var(--color-ghost-fill);
-  box-shadow: var(--shadow-card);
-  border-left: 3px solid var(--color-electric-blue);
-  border-radius: 0 var(--radius-cards) var(--radius-cards) 0;
-}
-
-.finding .head {
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  color: var(--color-electric-blue);
-  text-transform: uppercase; letter-spacing: 0.04em;
-  margin-bottom: var(--spacing-4);
-}
-.finding .body {
-  font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
-  line-height: var(--leading-body-sm);
-  color: var(--color-white-canvas);
-}
-.finding .body b { font-weight: var(--font-weight-medium); }
-.finding .impact {
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-silver-whisper);
-  margin-top: var(--spacing-4); line-height: var(--leading-caption);
-}
-.ev-quote {
-  display: block; margin-top: 4px;
-  font-style: italic; font-size: var(--text-caption);
-  color: var(--color-mute-whisper);
-  border-left: 2px solid var(--color-steel-border);
-  padding-left: 8px; line-height: 1.5;
-}
-
-.rec {
-  flex-direction: row;
-  align-items: flex-start;
-  gap: var(--spacing-12);
-}
-.rec.p1-item { border-left-color: var(--color-error-red); }
-.rec.p2-item { border-left-color: var(--color-success-green); }
-.rec.p3-item { border-left-color: var(--color-electric-blue); }
-.rec .pri {
-  font-family: var(--font-mono);
-  font-weight: var(--font-weight-medium); font-size: var(--text-caption);
-  padding: var(--spacing-4) var(--spacing-8); border-radius: var(--radius-default); flex-shrink: 0;
-  min-width: 36px; text-align: center;
-  margin-top: 1px;
-}
-.rec .pri.P1 { background: rgba(177,37,37,0.06); border: 1px solid rgba(177,37,37,0.25); color: var(--color-error-red); }
-.rec .pri.P2 { background: rgba(29,112,68,0.06); border: 1px solid rgba(29,112,68,0.25); color: var(--color-success-green); }
-.rec .pri.P3 { background: rgba(131,195,255,0.06); border: 1px solid rgba(131,195,255,0.25); color: var(--color-electric-blue); }
-.rec .text {
-  font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
-  line-height: var(--leading-body-sm);
-  color: var(--color-white-canvas);
-}
-.rec .reason {
-  color: var(--color-silver-whisper);
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  margin-top: var(--spacing-4); line-height: var(--leading-caption);
-}
-
 .grid > .card { display: flex; flex-direction: column; align-self: stretch; }
-
 /* ============ API Lab — SaaS console style ============ */
-.api-grid {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: var(--spacing-12);
-  align-items: start;
-}
-@media (max-width: 900px) { .api-grid { grid-template-columns: 1fr; } }
-
-.api-sidebar {
-  background: var(--color-slate-card);
-  border-radius: var(--radius-cards);
-  box-shadow: var(--shadow-card);
-  padding: var(--spacing-12);
-  position: sticky; top: 80px;
-}
-.api-sidebar-title {
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  color: var(--color-mute-whisper);
-  text-transform: uppercase; letter-spacing: 0.04em;
-  margin-bottom: var(--spacing-12);
-  padding-left: var(--spacing-4);
-}
-.endpoint-list { display: flex; flex-direction: column; gap: 2px; }
-.endpoint {
-  display: flex; align-items: center; gap: var(--spacing-8);
-  padding: var(--spacing-8) var(--spacing-12);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-default);
-  cursor: pointer;
-  transition: all .15s ease;
-  position: relative;
-}
-.endpoint:hover {
-  background: rgba(0, 71, 187, 0.04);
-}
-.endpoint.active {
-  background: rgba(0, 71, 187, 0.06);
-  border-color: rgba(0, 71, 187, 0.2);
-}
-.endpoint.active::before {
-  content: '';
-  position: absolute; left: -1px; top: 8px; bottom: 8px;
-  width: 3px;
-  background: var(--color-electric-blue);
-  border-radius: 2px;
-}
 .method {
   font-family: var(--font-mono);
   font-size: 11px; font-weight: var(--font-weight-medium);
@@ -866,456 +450,16 @@ tbody tr:hover { background: rgba(131, 195, 255, 0.05); }
   letter-spacing: 0.04em;
   min-width: 40px; text-align: center;
 }
-.method.GET {
-  background: rgba(0, 71, 187, 0.10);
-  color: var(--color-electric-blue);
-  border: 1px solid rgba(0, 71, 187, 0.25);
-}
 .method.POST {
   background: rgba(29, 112, 68, 0.10);
   color: var(--color-success-green);
   border: 1px solid rgba(29, 112, 68, 0.3);
 }
-.endpoint .path {
-  font-family: var(--font-mono); font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  color: var(--color-white-canvas);
-  line-height: 1.3;
-}
-.endpoint .desc {
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-silver-whisper);
-  margin-top: 2px;
-  line-height: var(--leading-caption);
-}
-
-.api-panel-header {
-  display: flex; align-items: center; gap: var(--spacing-12);
-  padding: var(--spacing-4) 0 var(--spacing-12);
-  border-bottom: 1px solid var(--color-steel-border);
-  margin-bottom: var(--spacing-12);
-}
-.api-panel-header .endpoint-path {
-  font-family: var(--font-mono); font-size: var(--text-body); font-weight: var(--font-weight-medium);
-  color: var(--color-white-canvas);
-}
-.api-panel-header .endpoint-desc {
-  margin-left: auto;
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-silver-whisper);
-}
-
-.response-wrap {
-  position: relative;
-  margin-top: var(--spacing-12);
-}
-.response-label {
-  display: flex; align-items: center; gap: var(--spacing-8);
-  margin-bottom: var(--spacing-8);
-}
-.response-label-title {
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  color: var(--color-mute-whisper);
-  text-transform: uppercase; letter-spacing: 0.04em;
-}
-.response-status {
-  font-family: var(--font-mono); font-size: 11px; font-weight: var(--font-weight-medium);
-  padding: 2px var(--spacing-8); border-radius: var(--radius-default);
-  background: rgba(24,24,27,0.06);
-  color: var(--color-mute-whisper);
-}
-.response-status.ok { background: rgba(29,112,68,0.08); color: var(--color-success-green); }
-.response-status.err { background: rgba(177,37,37,0.08); color: var(--color-error-red); }
-.response-box {
-  background: #1e1e23;
-  color: #e4e4e7;
-  border: 1px solid #2d2d33;
-  border-radius: var(--radius-cards);
-  padding: var(--spacing-12) var(--spacing-16);
-  font-family: var(--font-mono); font-size: var(--text-caption);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.6;
-  white-space: pre-wrap; word-break: break-word;
-  max-height: 420px; overflow-y: auto;
-  position: relative;
-}
-.response-box::-webkit-scrollbar { width: 6px; }
-.response-box::-webkit-scrollbar-track { background: transparent; }
-.response-box::-webkit-scrollbar-thumb { background: #3a3a42; border-radius: var(--radius-default); }
-.response-box.empty {
-  background: var(--color-ghost-fill);
-  color: var(--color-mute-whisper);
-  border: 1px dashed var(--color-soft-stone);
-  text-align: center;
-  padding: var(--spacing-32) var(--spacing-16);
-  font-style: normal;
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-  font-size: var(--text-body-sm);
-}
-.response-box.success { border-color: var(--color-success-green); }
-.response-box.error { border-color: var(--color-error-red); }
-
-/* API KPI 카드 — 마이크로 차트 추가 */
-.api-kpi-card {
-  position: relative;
-  overflow: hidden;
-}
-.api-kpi-card .kpi-trend {
-  display: flex; align-items: center; gap: var(--spacing-4);
-  margin-top: var(--spacing-8);
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  color: var(--color-silver-whisper);
-}
-.api-kpi-card .kpi-progress {
-  margin-top: var(--spacing-8);
-  height: 3px;
-  background: rgba(24,24,27,0.06);
-  border-radius: var(--radius-default);
-  overflow: hidden;
-}
-.api-kpi-card .kpi-progress > div {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-electric-blue), #5b87dd);
-  border-radius: var(--radius-default);
-  transition: none;
-}
-.api-kpi-card.success .kpi-progress > div {
-  background: linear-gradient(90deg, var(--color-success-green), #4a9c6f);
-}
-.api-kpi-card.warn .kpi-progress > div {
-  background: linear-gradient(90deg, var(--color-warn-amber), #d39537);
-}
-.api-kpi-card .kpi-icon {
-  position: absolute; top: var(--spacing-12); right: var(--spacing-12);
-  width: 28px; height: 28px;
-  border-radius: var(--radius-cards);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  background: rgba(0, 71, 187, 0.06);
-  color: var(--color-electric-blue);
-}
-.api-kpi-card.success .kpi-icon { background: rgba(29,112,68,0.06); color: var(--color-success-green); }
-.api-kpi-card.warn .kpi-icon { background: rgba(165,107,22,0.06); color: var(--color-warn-amber); }
-
-.api-form-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--spacing-12);
-  margin-bottom: var(--spacing-12);
-}
-.api-form-row .select { width: 100%; }
-
-/* ============ Download cards ============ */
-.dl-card { display: flex; flex-direction: column; gap: var(--spacing-8); }
-.dl-card .name { font-weight: var(--font-weight-medium); font-size: var(--text-body-sm); }
-.dl-card .size { font-family: var(--font-mono); font-size: var(--text-caption); color: var(--color-silver-whisper); }
-
-/* ============ Grid 4-col ============ */
-.grid-4 { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 900px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 500px) { .grid-4 { grid-template-columns: 1fr; } }
-
 /* ============ Pipeline Timeline ============ */
-.pipeline-timeline {
-  display: flex; flex-direction: column; gap: 0;
-  position: relative;
-}
-.pipeline-step {
-  display: flex; align-items: center; gap: var(--spacing-12);
-  padding: var(--spacing-12) var(--spacing-16);
-  position: relative;
-  transition: background .15s;
-}
-.pipeline-step:hover { background: var(--color-ghost-fill); border-radius: var(--radius-cards); }
-.pipeline-step::before {
-  content: '';
-  position: absolute; left: 27px; top: 0; bottom: 0;
-  width: 2px; background: var(--color-steel-border);
-}
-.pipeline-step:first-child::before { top: 50%; }
-.pipeline-step:last-child::before { bottom: 50%; }
-.step-icon {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--color-ghost-fill);
-  box-shadow: var(--shadow-card);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; flex-shrink: 0; position: relative; z-index: 1;
-}
-.pipeline-step.done .step-icon {
-  background: rgba(29,112,68,0.06);
-  box-shadow: rgba(29,112,68,0.2) 0px 0px 0px 1px inset;
-}
-.pipeline-step.running .step-icon {
-  background: rgba(131,195,255,0.06);
-  box-shadow: rgba(131,195,255,0.3) 0px 0px 0px 1px inset;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-.step-body { flex: 1; min-width: 0; }
-.step-label {
-  font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
-  color: var(--color-white-canvas);
-}
-.step-desc {
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-silver-whisper);
-  margin-top: 2px; line-height: var(--leading-caption);
-}
-.step-badge {
-  font-family: var(--font-mono);
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  padding: 2px var(--spacing-8); border-radius: var(--radius-default);
-  flex-shrink: 0;
-}
-.step-badge.done {
-  background: rgba(29,112,68,0.06); color: var(--color-success-green);
-  border: 1px solid rgba(29,112,68,0.2);
-}
-.step-badge.running {
-  background: rgba(131,195,255,0.06); color: var(--color-electric-blue);
-  border: 1px solid rgba(131,195,255,0.2);
-}
-.step-badge.pending {
-  background: var(--color-ghost-fill); color: var(--color-mute-whisper);
-  border: 1px solid var(--color-steel-border);
-}
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
-
-/* ============ Charts ============ */
-.chart-wrap { position: relative; }
-.chart-md { height: 280px; }
-.chart-lg { height: 340px; }
-
-/* ============ Verify — 신뢰도 검증 탭 전용 ============ */
-.verify-matrix {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-12);
-}
-@media (max-width: 700px) { .verify-matrix { grid-template-columns: 1fr; } }
-.verify-cell {
-  padding: var(--spacing-16);
-  border-radius: var(--radius-cards);
-  box-shadow: var(--shadow-card);
-  background: var(--color-ghost-fill);
-  position: relative;
-  overflow: hidden;
-  transition: box-shadow .15s ease;
-}
-.verify-cell:hover { box-shadow: var(--shadow-hover); }
-.verify-cell::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0;
-  width: 3px;
-  background: var(--color-mute-whisper);
-}
-.verify-cell.best    { box-shadow: rgba(29,112,68,0.2) 0px 0px 0px 1px inset;   background: rgba(29,112,68,0.03); }
-.verify-cell.best::before    { background: var(--color-success-green); }
-.verify-cell.danger  { box-shadow: rgba(177,37,37,0.2) 0px 0px 0px 1px inset;   background: rgba(177,37,37,0.03); }
-.verify-cell.danger::before  { background: var(--color-error-red); }
-.verify-cell.warn    { box-shadow: rgba(165,107,22,0.2) 0px 0px 0px 1px inset;  background: rgba(165,107,22,0.03); }
-.verify-cell.warn::before    { background: var(--color-warn-amber); }
-.verify-cell.info    { }
-.verify-cell.info::before    { background: var(--color-mute-whisper); }
-.verify-cell .vm-label {
-  font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
-  color: var(--color-silver-whisper);
-  margin-bottom: var(--spacing-4);
-}
-.verify-cell .vm-count {
-  font-family: var(--font-mono);
-  font-size: var(--text-display); font-weight: var(--font-weight-medium);
-  line-height: 1;
-  color: var(--color-white-canvas);
-  font-variant-numeric: tabular-nums;
-  margin-bottom: var(--spacing-4);
-}
-.verify-cell.best .vm-count { color: var(--color-success-green); }
-.verify-cell.danger .vm-count { color: var(--color-error-red); }
-.verify-cell.warn .vm-count { color: var(--color-warn-amber); }
-.verify-cell .vm-tip {
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-silver-whisper);
-  line-height: var(--leading-caption);
-}
-
-.verify-danger-row {
-  padding: var(--spacing-12);
-  background: var(--color-ghost-fill);
-  box-shadow: rgba(177,37,37,0.15) 0px 0px 0px 1px inset;
-  border-left: 3px solid var(--color-error-red);
-  border-radius: 0 var(--radius-cards) var(--radius-cards) 0;
-  margin-bottom: var(--spacing-8);
-}
-.verify-danger-row .vd-meta {
-  display: flex; align-items: center; gap: var(--spacing-8);
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  color: var(--color-silver-whisper);
-  margin-bottom: var(--spacing-8);
-  flex-wrap: wrap;
-}
-.verify-danger-row .vd-content {
-  font-size: var(--text-body-sm); font-weight: var(--font-weight-regular);
-  color: var(--color-white-canvas);
-  line-height: var(--leading-body-sm);
-}
-.verify-danger-row .vd-reason {
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-mute-whisper);
-  margin-top: var(--spacing-4);
-  font-style: italic;
-}
-
-.verify-rec-item {
-  display: flex; gap: var(--spacing-12); align-items: flex-start;
-  padding: var(--spacing-12);
-  background: var(--color-ghost-fill);
-  border-left: 3px solid var(--color-electric-blue);
-  border-radius: 0 var(--radius-cards) var(--radius-cards) 0;
-  margin-bottom: var(--spacing-8);
-}
-.verify-rec-item .vri-num {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  background: var(--color-electric-blue);
-  color: #fff;
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-}
-.verify-rec-item .vri-text {
-  font-size: var(--text-body-sm); font-weight: var(--font-weight-regular);
-  line-height: var(--leading-body-sm);
-  color: var(--color-white-canvas);
-}
-
-/* 신뢰도 배지 (테이블 안) */
-.conf-badge {
-  display: inline-flex; align-items: center;
-  font-family: var(--font-mono);
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  padding: 2px var(--spacing-8); border-radius: var(--radius-default);
-  font-variant-numeric: tabular-nums;
-}
-.conf-badge.high { background: rgba(29,112,68,0.06);  color: var(--color-success-green); border: 1px solid rgba(29,112,68,0.2); }
-.conf-badge.mid  { background: rgba(165,107,22,0.06); color: var(--color-warn-amber);    border: 1px solid rgba(165,107,22,0.2); }
-.conf-badge.low  { background: rgba(177,37,37,0.06);  color: var(--color-error-red);     border: 1px solid rgba(177,37,37,0.2); }
-
-/* 결과 아이콘 */
-.outcome-icon {
-  display: inline-flex; align-items: center;
-  font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
-}
-.outcome-icon.correct  { color: var(--color-success-green); }
-.outcome-icon.cautious { color: var(--color-warn-amber); }
-.outcome-icon.wrong    { color: var(--color-error-red); }
-
-/* ── Chart Pair (연관 차트 묶음) ───────────────────────────────────
-   같은 분석의 두 차원/뷰를 한 카드 안에 좌우로 배치.
-   가운데 divider 또는 → 화살표로 연관성 시각화. */
-.chart-pair {
-  display: grid;
-  grid-template-columns: 1fr 1px 1fr;
-  gap: var(--spacing-16);
-  align-items: start;
-}
-.chart-pair.with-arrow {
-  grid-template-columns: 1fr auto 1fr;
-  gap: var(--spacing-12);
-}
-@media (max-width: 900px) {
-  .chart-pair,
-  .chart-pair.with-arrow {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-24);
-  }
-  .chart-pair-divider { display: none; }
-}
-
-.chart-pair-half {
-  display: flex; flex-direction: column;
-  min-width: 0;
-}
-.chart-pair-divider {
-  width: 1px;
-  background: linear-gradient(180deg,
-    transparent 0%,
-    var(--color-steel-border) 20%,
-    var(--color-steel-border) 80%,
-    transparent 100%);
-  align-self: stretch;
-  margin: var(--spacing-8) 0;
-}
-
-/* 가운데 → 화살표 (편향 보정 전 → 후 같은 비교용) */
-.chart-pair-arrow {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  align-self: stretch;
-  position: relative;
-  padding: 0 4px;
-}
-.chart-pair-arrow::before,
-.chart-pair-arrow::after {
-  content: '';
-  width: 1px;
-  flex: 1;
-  background: linear-gradient(180deg, transparent, var(--color-steel-border));
-}
-.chart-pair-arrow::after {
-  background: linear-gradient(180deg, var(--color-steel-border), transparent);
-}
-.chart-pair-arrow .arrow-icon {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: var(--color-slate-card);
-  border: 1px solid var(--color-electric-blue);
-  color: var(--color-electric-blue);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: var(--font-weight-medium);
-  box-shadow: 0 2px 6px -2px rgba(131,195,255,0.15);
-  margin: var(--spacing-8) 0;
-}
-
-/* Sub-label (차트 위 위치) — 텍스트 hierarchy로 sub-section 구분 */
-.chart-pair-label {
-  display: flex; align-items: baseline; gap: var(--spacing-8);
-  margin-bottom: var(--spacing-12);
-  padding-left: 2px;
-  flex-wrap: wrap;
-}
-.chart-pair-label .label-text {
-  font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
-  color: var(--color-white-canvas);
-  line-height: var(--leading-body-sm);
-}
-.chart-pair-label .label-sub {
-  font-size: var(--text-caption); font-weight: var(--font-weight-regular);
-  color: var(--color-mute-whisper);
-  line-height: var(--leading-caption);
-}
-/* Before/After chip (편향 보정 전후 비교 전용) */
-.chart-pair-label .chip {
-  font-size: var(--text-caption); font-weight: var(--font-weight-medium);
-  padding: var(--spacing-4) var(--spacing-8); border-radius: var(--radius-default);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-.chart-pair-label .chip.before {
-  background: rgba(24,24,27,0.06);
-  color: var(--color-mute-whisper);
-  border: 1px solid var(--color-steel-border);
-}
-.chart-pair-label .chip.after {
-  background: rgba(131,195,255,0.08);
-  color: var(--color-electric-blue);
-  border: 1px solid rgba(131,195,255,0.25);
-}
-
 /* ============ Footer ============ */
 footer {
   text-align: center;
@@ -1326,41 +470,30 @@ footer {
   border-top: 1px solid var(--color-steel-border);
   margin-top: var(--spacing-24);
 }
-
 /* ============ Print / PDF ============ */
 @media print {
-  /* 화면 배경색·색상을 그대로 인쇄 */
-  *, *::before, *::after {
+/* 화면 배경색·색상을 그대로 인쇄 */
+*, *::before, *::after {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-
-  /* 페이지 여백 — 모든 페이지에 균일 적용 */
-  @page { margin: 8mm 10mm; }
-
-  body { margin: 0 !important; padding: 0 !important; }
-
-  /* topbar: 보이되 sticky 해제 */
-  .topbar { position: relative !important; }
-
-  /* sticky thead 해제 */
-  thead { position: relative !important; }
-
-  /* ── 카드·차트 페이지 분리 방지 ── */
-  .card, .hero, .compare-col, .evidence-block,
-  .finding, .rec, .sd-block,
-  .grid.grid-2, .grid.grid-4,
-  .chart-pair {
+/* 페이지 여백 — 모든 페이지에 균일 적용 */
+@page { margin: 8mm 10mm; }
+body { margin: 0 !important; padding: 0 !important; }
+/* topbar: 보이되 sticky 해제 */
+.topbar { position: relative !important; }
+/* sticky thead 해제 */
+thead { position: relative !important; }
+/* ── 카드·차트 페이지 분리 방지 ── */
+.card,
+.hero {
     break-inside: avoid;
   }
-
-  /* 비활성 탭 숨김 */
-  section.page:not(.active) { display: none !important; }
-
-  /* footer 숨김 */
-  footer { display: none !important; }
+/* 비활성 탭 숨김 */
+section.page:not(.active) { display: none !important; }
+/* footer 숨김 */
+footer { display: none !important; }
 }
-
 /* ============ Toast UI ============ */
 .toast {
   position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -1400,16 +533,8 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
 .hero { border:1px solid #d9e3ff; box-shadow:none; padding:20px 22px 18px; margin-bottom:12px; }
 .hero-title { font-size:19px; line-height:1.4; }
 .hero-body { font-size:14px; line-height:1.65; }
-.result-strip { gap:8px; margin-bottom:14px; }
-.result-strip-item { background:#fff; border-color:var(--studio-line); padding:14px 16px; min-height:88px; }
-.result-strip-value { font-size:22px; }
 .card { border:1px solid var(--studio-line); border-radius:12px; box-shadow:none; padding:18px; }
 .card:hover { box-shadow:0 8px 20px rgba(24,39,75,.05); }
-.card-title { font-size:15px; margin-bottom:16px; }
-.compare3 { gap:12px; }
-.compare-col { border-radius:10px; border-color:var(--studio-line); padding:16px; }
-.compare-col.highlight { background:#f4f7ff; border-color:#cdd9ff; }
-.chart-pair-label .label-text { font-size:14px; }
 .studio-modal-backdrop { position:fixed; inset:0; z-index:10001; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(20,27,38,.34); }
 .studio-modal-backdrop.open { display:flex; }
 .studio-modal { width:min(440px,100%); background:#fff; border:1px solid var(--studio-line); border-radius:16px; box-shadow:0 16px 32px rgba(20,27,38,.18); padding:22px; color:var(--studio-ink); }
@@ -1423,49 +548,46 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
 .studio-modal button { border:0; border-radius:8px; padding:10px 13px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
 .studio-modal .secondary { background:#f1f3f6; color:#344054; }
 .studio-modal .primary { background:var(--studio-ink); color:#fff; }
-.studio-modal .danger { margin-right:auto; background:transparent; color:#d92d20; }
 .compact-density main { padding-top:20px; }
 .compact-density .card { padding:14px; }
 .compact-density .hero { padding:16px 18px 14px; }
-.compact-density .chart-wrap { min-height:210px; }
-@media (max-width:900px) { .topbar-inner, main { padding-left:24px; padding-right:24px; } .result-strip { grid-template-columns:repeat(2,1fr); } }
-
-    /* ── 분석 정밀도 슬라이더 ──────────────────────────────────────
+@media (max-width:900px) {
+.topbar-inner, main { padding-left:24px; padding-right:24px; }
+}
+/* ── 분석 정밀도 슬라이더 ──────────────────────────────────────
        손잡이는 "오차범위"다. 표본 수는 전체 리뷰 수와 거의 무관하므로
        "전체의 몇 %"로 조절하게 만들면 통계적으로 틀린 도구가 된다. */
-    .precision {
+.precision {
       margin-bottom: 28px;
       padding: 20px;
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       background: var(--color-bg-surface);
     }
-    .precision-top {
+.precision-top {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 14px;
     }
-    .precision-label { font-size: 14px; font-weight: 600; color: var(--color-text-title); }
-    .precision-badge { font-size: 13px; color: var(--color-text-sub); }
-    .precision-badge b { font-size: 17px; color: var(--color-primary); font-weight: 700; }
-    .precision-sub {
+.precision-label { font-size: 14px; font-weight: 600; color: var(--color-text-title); }
+.precision-badge { font-size: 13px; color: var(--color-text-sub); }
+.precision-badge b { font-size: 17px; color: var(--color-primary); font-weight: 700; }
+.precision-sub {
       margin: -8px 0 14px;
       font-size: 13px;
       line-height: 1.6;
       color: var(--color-text-sub);
     }
-
-    .precision-curve-wrap { margin-bottom: 4px; }
-    .precision-curve { display: block; width: 100%; height: 72px; overflow: visible; }
-    .precision-curve-area { fill: rgba(49, 130, 246, .10); }
-    .precision-curve-line { fill: none; stroke: #3182F6; stroke-width: 2; vector-effect: non-scaling-stroke; }
-    .precision-curve-mark { stroke: #3182F6; stroke-width: 1; stroke-dasharray: 3 3; opacity: .5; vector-effect: non-scaling-stroke; }
-    .precision-curve-dot { fill: #fff; stroke: #3182F6; stroke-width: 2; }
-    .precision-curve-caption { margin-top: 6px; font-size: 12px; color: var(--color-text-sub); }
-
-    .precision-slider {
+.precision-curve-wrap { margin-bottom: 4px; }
+.precision-curve { display: block; width: 100%; height: 72px; overflow: visible; }
+.precision-curve-area { fill: rgba(49, 130, 246, .10); }
+.precision-curve-line { fill: none; stroke: #3182F6; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.precision-curve-mark { stroke: #3182F6; stroke-width: 1; stroke-dasharray: 3 3; opacity: .5; vector-effect: non-scaling-stroke; }
+.precision-curve-dot { fill: #fff; stroke: #3182F6; stroke-width: 2; }
+.precision-curve-caption { margin-top: 6px; font-size: 12px; color: var(--color-text-sub); }
+.precision-slider {
       width: 100%;
       margin: 10px 0 6px;
       height: 4px;
@@ -1475,8 +597,8 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       background: var(--color-border);
       cursor: pointer;
     }
-    .precision-slider:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
-    .precision-slider::-webkit-slider-thumb {
+.precision-slider:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
+.precision-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
       width: 20px; height: 20px;
@@ -1485,23 +607,21 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       background: var(--color-primary);
       box-shadow: 0 2px 8px rgba(25, 31, 40, .22);
     }
-    .precision-slider::-moz-range-thumb {
+.precision-slider::-moz-range-thumb {
       width: 18px; height: 18px;
       border: 2px solid #fff;
       border-radius: 50%;
       background: var(--color-primary);
       box-shadow: 0 2px 8px rgba(25, 31, 40, .22);
     }
-
-    .precision-ends {
+.precision-ends {
       display: flex;
       justify-content: space-between;
       font-size: 12px;
       color: var(--color-text-sub);
       margin-bottom: 16px;
     }
-
-    .precision-readout {
+.precision-readout {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
@@ -1509,8 +629,8 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       border-top: 1px solid var(--color-border);
       border-bottom: 1px solid var(--color-border);
     }
-    .precision-cell { min-width: 0; text-align: center; }
-    .precision-cell b {
+.precision-cell { min-width: 0; text-align: center; }
+.precision-cell b {
       display: block;
       font-size: 19px;
       font-weight: 700;
@@ -1518,17 +638,15 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       font-variant-numeric: tabular-nums;
       line-height: 1.3;
     }
-    .precision-cell small { display: block; margin-top: 2px; font-size: 12px; color: var(--color-text-sub); }
-
-    .precision-note {
+.precision-cell small { display: block; margin-top: 2px; font-size: 12px; color: var(--color-text-sub); }
+.precision-note {
       margin: 12px 0 0;
       font-size: 13px;
       line-height: 1.6;
       color: var(--color-text-sub);
     }
-    .precision-note b { color: var(--color-text-title); font-weight: 600; }
-    .precision-note.is-warn b { color: #C2410C; }
-    .precision-snap {
+.precision-note b { color: var(--color-text-title); font-weight: 600; }
+.precision-snap {
       margin-left: 4px;
       padding: 4px 10px;
       border: 1px solid var(--color-primary);
@@ -1540,9 +658,8 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       font-weight: 600;
       cursor: pointer;
     }
-    .precision-snap:hover { background: var(--color-primary); color: #fff; }
-
-    .precision-custom {
+.precision-snap:hover { background: var(--color-primary); color: #fff; }
+.precision-custom {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -1553,8 +670,8 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       color: var(--color-text-sub);
       cursor: pointer;
     }
-    .precision-custom input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer; }
-    .precision-custom input[type="number"] {
+.precision-custom input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer; }
+.precision-custom input[type="number"] {
       width: 96px;
       padding: 7px 10px;
       border: 1px solid var(--color-border);
@@ -1565,11 +682,11 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       font-size: 13px;
       font-variant-numeric: tabular-nums;
     }
-    .precision-custom input[type="number"]:disabled { opacity: .45; cursor: not-allowed; }
-    /* 분석 전에는 빈 숫자 카드를 감춘다. 고장처럼 보이는 것을 막는다. */
-    body.no-analysis .page[data-page="overview"] > *:not(.title):not(.subtitle):not(.hero) { display: none; }
-    body.no-analysis .hero { border-color: var(--color-border); }
-    .hero-cta {
+.precision-custom input[type="number"]:disabled { opacity: .45; cursor: not-allowed; }
+/* 분석 전에는 빈 숫자 카드를 감춘다. 고장처럼 보이는 것을 막는다. */
+body.no-analysis .page[data-page="overview"] > *:not(.title):not(.subtitle):not(.hero) { display: none; }
+body.no-analysis .hero { border-color: var(--color-border); }
+.hero-cta {
       display: inline-block;
       margin-left: 8px;
       padding: 10px 18px;
@@ -1582,28 +699,26 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       font-weight: 600;
       cursor: pointer;
     }
-    .hero-cta:hover { background: var(--color-primary-hover); }
-
-    /* 조회 전에는 곡선 위의 점과 보조선을 감춘다. */
-    .precision-curve-dot.is-hidden, .precision-curve-mark.is-hidden { display: none; }
-    /* 분석 진행 화면 — 멈춘 것인지 도는 것인지 한눈에 보이게 한다. */
-    .run-head { text-align: center; margin-bottom: 20px; }
-    .run-headline { font-size: 15px; font-weight: 600; color: var(--color-text-title); }
-    .run-count { margin: 10px 0 6px; color: var(--color-text-title); }
-    .run-count b { font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .run-count span { font-size: 15px; color: var(--color-text-sub); }
-    .run-meta { display: flex; justify-content: center; gap: 10px; font-size: 13px; color: var(--color-text-sub); }
-    .run-meta span:empty { display: none; }
-    .run-analyze { margin: -4px 0 2px; padding-left: 4px; }
-    .run-analyze-bar {
+.hero-cta:hover { background: var(--color-primary-hover); }
+/* 조회 전에는 곡선 위의 점과 보조선을 감춘다. */
+.precision-curve-dot.is-hidden, .precision-curve-mark.is-hidden { display: none; }
+/* 분석 진행 화면 — 멈춘 것인지 도는 것인지 한눈에 보이게 한다. */
+.run-head { text-align: center; margin-bottom: 20px; }
+.run-headline { font-size: 15px; font-weight: 600; color: var(--color-text-title); }
+.run-count { margin: 10px 0 6px; color: var(--color-text-title); }
+.run-count b { font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.run-count span { font-size: 15px; color: var(--color-text-sub); }
+.run-meta { display: flex; justify-content: center; gap: 10px; font-size: 13px; color: var(--color-text-sub); }
+.run-meta span:empty { display: none; }
+.run-analyze { margin: -4px 0 2px; padding-left: 4px; }
+.run-analyze-bar {
       height: 6px; border-radius: 999px; background: var(--color-border); overflow: hidden;
     }
-    .run-analyze-bar i {
+.run-analyze-bar i {
       display: block; width: 0; height: 100%; border-radius: 999px;
       background: var(--color-primary); transition: none;
     }
-    .run-analyze-text { margin-top: 4px; font-size: 12px; color: var(--color-text-sub); font-variant-numeric: tabular-nums; }
-
+.run-analyze-text { margin-top: 4px; font-size: 12px; color: var(--color-text-sub); font-variant-numeric: tabular-nums; }
 /* Summary assets are scoped to the review diagnosis. */
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid var(--color-primary);
@@ -1613,10 +728,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927f">
-<script src="/static/review-dashboard.js?v=20260927f"></script>
-<link rel="stylesheet" href="/static/review-pages.css?v=20260927f">
-<script src="/static/review-pages.js?v=20260927f"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927g">
+<script src="/static/review-dashboard.js?v=20260927g"></script>
+<link rel="stylesheet" href="/static/review-pages.css?v=20260927g">
+<script src="/static/review-pages.js?v=20260927g"></script>
 </head>
 <body>
 <div class="app">
@@ -1733,205 +848,6 @@ body.no-analysis #ovBody { display: none; }
       <div id="rpSample" class="rp"></div>
     </section>
 
-    <!-- ================================================================ -->
-    <!-- 6) API LAB                                                        -->
-    <!-- ================================================================ -->
-    <section class="page" data-page="system">
-      <h1 class="title">AI 분석</h1>
-      <p class="subtitle">리뷰 텍스트를 AI로 실시간 분석합니다</p>
-
-      <!-- ── 실시간 단건 분석 (메인 기능) ── -->
-      <div class="card" style="margin-bottom: var(--spacing-16)">
-        <div class="section-head">
-          <span class="accent-bar"></span>
-          <span>실시간 리뷰 분석</span>
-        </div>
-        <p class="tiny" style="margin: var(--spacing-4) 0 var(--spacing-12); color: var(--color-silver-whisper)">
-          게임 리뷰를 입력하면 AI가 <b style="color:var(--color-white-canvas)">반응 · 주제 · 핵심어</b>를 짧게 분류합니다.
-        </p>
-        <textarea id="testReviewInput" class="input" rows="3" style="width:100%; resize:vertical; font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; font-size: var(--text-body-sm); margin-bottom: var(--spacing-12);" placeholder="분석할 리뷰 텍스트를 입력하세요…">정말 재밌는 게임이지만 버그가 많아서 모바일에서도 안정성이 우려됨</textarea>
-        <div style="display: flex; align-items: center; gap: var(--spacing-8); flex-wrap: wrap;">
-          <select id="modelSelect" class="select" style="flex: 1; min-width: 200px;">
-            <option value="google/gemini-2.0-flash-001" selected>Gemini 2.0 Flash · 현재 모델</option>
-            <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
-            <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-            <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5</option>
-          </select>
-          <button class="btn primary" id="testAnalyzeBtn" style="white-space:nowrap; padding: var(--spacing-8) var(--spacing-24);">분석하기</button>
-        </div>
-
-        <!-- 분석 결과: 구조화된 카드 -->
-        <div id="analyzeResultArea" style="margin-top: var(--spacing-16); display: none;">
-          <div style="display: flex; align-items: center; gap: var(--spacing-8); margin-bottom: var(--spacing-12);">
-            <span class="response-label-title">분석 결과</span>
-            <span class="response-status" id="testAnalyzeStatus">대기</span>
-            <span id="analyzeModel" style="font-family: var(--font-mono); font-size: var(--text-caption); color: var(--color-mute-whisper); margin-left: auto;"></span>
-          </div>
-
-          <!-- 결과 카드 4칸 -->
-          <div class="grid grid-4" id="analyzeCards" style="margin-bottom: var(--spacing-12);">
-            <div class="card kpi" id="resultSentiment">
-              <div class="kpi-label">감성</div>
-              <div class="kpi-value" style="font-size: var(--text-heading-sm);">—</div>
-              <div class="kpi-sub">리뷰 전체 반응</div>
-            </div>
-            <div class="card kpi" id="resultTopics">
-              <div class="kpi-label">핵심 주제</div>
-              <div class="kpi-value" style="font-size: var(--text-heading-sm);">—</div>
-              <div class="kpi-sub">최대 3개</div>
-            </div>
-
-            <div class="card kpi" id="resultKeywords">
-              <div class="kpi-label">키워드</div>
-              <div class="kpi-value" style="font-size: var(--text-body-sm); line-height: normal;">—</div>
-              <div class="kpi-sub">원문 핵심어</div>
-            </div>
-          </div>
-
-          <!-- AI 원문 (접기/펼치기) -->
-          <details style="margin-top: var(--spacing-8);">
-            <summary style="font-size: var(--text-caption); color: var(--color-mute-whisper); cursor: pointer; font-weight: var(--font-weight-medium);">📋 AI 원본 응답 보기</summary>
-            <div class="response-box" id="testAnalyzeOut" style="margin-top: var(--spacing-8); max-height: 200px;">—</div>
-          </details>
-        </div>
-
-        <!-- 로딩 상태 -->
-        <div id="analyzeLoading" style="margin-top: var(--spacing-16); display: none; text-align: center; padding: var(--spacing-24) 0;">
-          <div style="font-size: 24px; margin-bottom: var(--spacing-8); animation: pulse 1.5s ease-in-out infinite;">🤖</div>
-          <div style="font-size: var(--text-body-sm); color: var(--color-silver-whisper);">AI가 분석 중입니다…</div>
-        </div>
-      </div>
-
-      <!-- ── 파이프라인 6단계 타임라인 ── -->
-      <div class="card" style="margin-bottom: var(--spacing-16)">
-        <div class="section-head">
-          <span class="accent-bar"></span>
-          <span>분석 파이프라인</span>
-        </div>
-        <p class="tiny" style="margin: var(--spacing-4) 0 var(--spacing-16); color: var(--color-silver-whisper)">
-          Steam 리뷰 수집부터 인사이트 생성까지 6단계 자동화 과정
-        </p>
-        <div class="pipeline-timeline" id="pipelineTimeline">
-          <div class="pipeline-step done">
-            <div class="step-icon">📐</div>
-            <div class="step-body">
-              <div class="step-label">① 표본 설계</div>
-              <div class="step-desc">모집단 크기 → 필요 리뷰 수 산정</div>
-            </div>
-            <div class="step-badge done">완료</div>
-          </div>
-          <div class="pipeline-step done">
-            <div class="step-icon">📥</div>
-            <div class="step-body">
-              <div class="step-label">② 리뷰 수집</div>
-              <div class="step-desc">Steam API로 한국어 리뷰 자동 수집</div>
-            </div>
-            <div class="step-badge done">완료</div>
-          </div>
-          <div class="pipeline-step done">
-            <div class="step-icon">🤖</div>
-            <div class="step-body">
-              <div class="step-label">③ AI 분석</div>
-              <div class="step-desc">Gemini 2.0 Flash로 다차원 감성 분석</div>
-            </div>
-            <div class="step-badge done">완료</div>
-          </div>
-          <div class="pipeline-step done">
-            <div class="step-icon">🔍</div>
-            <div class="step-body">
-              <div class="step-label">④ 품질 점검</div>
-              <div class="step-desc">데이터 무결성 + 이상치 탐지</div>
-            </div>
-            <div class="step-badge done">완료</div>
-          </div>
-          <div class="pipeline-step done">
-            <div class="step-icon">🎯</div>
-            <div class="step-body">
-              <div class="step-label">⑤ 신뢰도 검증</div>
-              <div class="step-desc">AI 예측 vs 사람 판단 교차 검증</div>
-            </div>
-            <div class="step-badge done">완료</div>
-          </div>
-          <div class="pipeline-step done">
-            <div class="step-icon">📊</div>
-            <div class="step-body">
-              <div class="step-label">⑥ 인사이트 생성</div>
-              <div class="step-desc">가중치 보정 + 차트 + 리포트 산출</div>
-            </div>
-            <div class="step-badge done">완료</div>
-          </div>
-        </div>
-        <div id="pipelineResult" style="margin-top: var(--spacing-12); padding: var(--spacing-12); background: var(--color-ghost-fill); border-radius: var(--radius-cards); font-size: var(--text-caption); color: var(--color-silver-whisper);">
-          마지막 실행 결과를 로딩 중…
-        </div>
-      </div>
-
-      <!-- ── 사용 현황 KPI (보조 정보) ── -->
-      <div class="section-head" style="margin-bottom: var(--spacing-12)">
-        <span class="accent-bar"></span>
-        <span>API 사용 현황</span>
-      </div>
-      <div class="grid grid-3">
-        <div class="card kpi api-kpi-card">
-          <div class="kpi-icon">⚡</div>
-          <div class="kpi-label">AI 처리량 (누적)</div>
-          <div class="kpi-value acc" id="usageTokens">—</div>
-          <div class="kpi-sub" id="usageBreak">—</div>
-          <div class="kpi-progress"><div id="usageTokensBar" style="width: 0%"></div></div>
-        </div>
-        <div class="card kpi api-kpi-card success">
-          <div class="kpi-icon">💰</div>
-          <div class="kpi-label">누적 비용</div>
-          <div class="kpi-value pos" id="usageCost">—</div>
-          <div class="kpi-sub" id="usageRemain">설정 단가 기준 추정</div>
-          <div class="kpi-progress"><div id="usageCostBar" style="width: 0%"></div></div>
-        </div>
-        <div class="card kpi api-kpi-card warn">
-          <div class="kpi-icon">📞</div>
-          <div class="kpi-label">분석 호출 수</div>
-          <div class="kpi-value" id="usageCalls" style="color:var(--color-warn-amber)">—</div>
-          <div class="kpi-sub">응답 사용량이 기록된 호출</div>
-          <div class="kpi-progress"><div id="usageCallsBar" style="width: 100%"></div></div>
-        </div>
-      </div>
-    
-
-      <!-- API 사용 현황 하단 여백 추가 -->
-      <div style="margin-bottom: var(--spacing-16)"></div>
-    <div style="margin-top: 64px; border-top: 1px solid var(--color-steel-border); padding-top: 32px">
-      <h1 class="title">데이터 다운로드</h1>
-      <p class="subtitle">수집 및 AI 분석이 완료된 게임 데이터를 CSV로 내려받습니다</p>
-      
-      <div class="card" style="margin-top: var(--spacing-24)">
-        <div class="section-head">
-          <span class="accent-bar"></span>
-          <span id="downloadGameTitle">Palworld (현재 활성화된 게임)</span>
-        </div>
-        <p class="tiny" style="margin: var(--spacing-8) 0 var(--spacing-24); color: var(--color-silver-whisper)">
-          수집된 원문 텍스트 데이터와 감성/속성/카테고리가 라벨링된 AI 분석 결과를 Excel 또는 데이터 분석 툴에서 자유롭게 활용할 수 있도록 CSV 형식으로 내보냅니다.
-        </p>
-        
-        <div style="display: flex; gap: var(--spacing-16); flex-wrap: wrap;">
-          <a id="btnDownloadReviews" href="/api/reviews/download?app_id=1623730" download
-             style="display:inline-flex;align-items:center;gap:8px;padding:var(--spacing-12) var(--spacing-24);
-                    background:var(--color-ghost-fill);border:1px solid var(--color-steel-border);
-                    border-radius:var(--radius-default);color:var(--color-white-canvas);
-                    text-decoration:none;font-size:var(--text-body-sm);font-weight:var(--font-weight-medium);
-                    cursor:pointer;transition:all 0.2s;box-shadow:var(--shadow-subtle)">
-            📥 리뷰 원문 CSV 다운로드
-          </a>
-          <a id="btnDownloadAnalysis" href="/api/analysis/download?app_id=1623730" download
-             style="display:inline-flex;align-items:center;gap:8px;padding:var(--spacing-12) var(--spacing-24);
-                    background:var(--color-ghost-fill);border:1px solid var(--color-steel-border);
-                    border-radius:var(--radius-default);color:var(--color-white-canvas);
-                    text-decoration:none;font-size:var(--text-body-sm);font-weight:var(--font-weight-medium);
-                    cursor:pointer;transition:all 0.2s;box-shadow:var(--shadow-subtle)">
-            📊 AI 분석 결과 CSV 다운로드
-          </a>
-        </div>
-      </div>
-    </div>
-    </section>
 
   <!-- 분석 설정 모달 -->
   <div id="pipelineModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; padding:24px 0;">
@@ -2142,23 +1058,6 @@ function switchGame(appId) {
 /* ============ Search ============ */
 let searchDropdown = null;
 
-function toggleSearch() {
-  const bar = document.getElementById('searchBar');
-  const input = document.getElementById('searchInput');
-  if (bar) {
-    bar.style.transition = 'all 0.3s ease';
-    bar.style.transform = 'scale(1.03)';
-    bar.style.borderColor = 'var(--color-electric-blue)';
-    bar.style.boxShadow = '0 0 0 4px rgba(131,195,255,0.15)';
-    setTimeout(() => {
-      bar.style.transform = '';
-      bar.style.borderColor = '';
-      bar.style.boxShadow = '';
-    }, 1200);
-  }
-  input.focus();
-  input.value = '';
-}
 
 async function searchGame() {
   const input = document.getElementById('searchInput');
@@ -2434,8 +1333,6 @@ async function load(appId) {
   try { renderReviews(); } catch (error) { console.error('리뷰 목록 오류:', error); }
   try { renderSample(); } catch (error) { console.error('표본 화면 오류:', error); }
   try { ReviewPages.renderDeep(DATA); } catch (error) { console.error('심층 분석 오류:', error); }
-  try { renderApiLab(); } catch (error) { console.error('분석 도구 오류:', error); }
-  try { renderDownloads(); } catch (error) { console.error('내려받기 오류:', error); }
 }
 
 /* ============ Overview ============ */
@@ -2450,152 +1347,12 @@ function destroy(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]
 let V5 = null;
 function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 
-function setBar(posId, negId, posPct, negPct, posLabel, negLabel) {
-  const p = document.getElementById(posId), n = document.getElementById(negId);
-  if (!p || !n) return;
-  /* 좁은 막대(<15%)에서는 라벨 빼고 퍼센트만 표시 → 잘림 방지 */
-  const fmt = (label, pct) => pct < 15 ? pct.toFixed(1) + '%' : label + ' ' + pct.toFixed(1) + '%';
-  p.style.width = posPct.toFixed(1) + '%'; p.textContent = fmt(posLabel, posPct);
-  n.style.width = negPct.toFixed(1) + '%'; n.textContent = fmt(negLabel, negPct);
-  /* 5% 미만이면 텍스트 자체 숨김 (가독성 회피) */
-  p.style.color = posPct < 5 ? 'transparent' : '';
-  n.style.color = negPct < 5 ? 'transparent' : '';
-}
 
 function escapeHtml(s) { return (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 /* ============ Reviews / Sample (static/review-pages.js) ============ */
 function renderReviews() { ReviewPages.renderReviews(DATA); }
 function renderSample() { ReviewPages.renderSample(DATA); }
-
-/* ============ API Lab → AI 분석 ============ */
-function renderApiLab() {
-  /* ── 사용 현황 KPI ── */
-  fetch('/api/usage' + (currentAppId ? `?app_id=${currentAppId}` : '')).then(r => r.json()).then(u => {
-    set('usageTokens', (u.total_tokens || 0).toLocaleString());
-    set('usageBreak', `입력 ${(u.input_tokens||0).toLocaleString()} + 출력 ${(u.output_tokens||0).toLocaleString()}`);
-    set('usageCost', '$' + (u.cost_usd || 0).toFixed(4));
-    set('usageRemain', '설정 단가 기준 추정 · 실제 청구액과 다를 수 있음');
-    set('usageCalls', (u.calls || 0).toLocaleString());
-    const tokenPct = Math.min(100, ((u.total_tokens || 0) / 1_000_000) * 100);
-    const costPct = u.budget_usd > 0 ? Math.min(100, ((u.cost_usd || 0) / u.budget_usd) * 100) : 0;
-    const tb = document.getElementById('usageTokensBar'); if (tb) tb.style.width = tokenPct.toFixed(1) + '%';
-    const cb = document.getElementById('usageCostBar'); if (cb) cb.style.width = costPct.toFixed(1) + '%';
-  }).catch(() => {});
-
-  /* ── 파이프라인 마지막 결과 로드 ── */
-  fetch('/pipeline/result' + (currentAppId ? `?app_id=${currentAppId}` : '')).then(r => r.json()).then(pr => {
-    const el = document.getElementById('pipelineResult');
-    if (pr.status === 'done') {
-      const dur = pr.started_at && pr.finished_at
-        ? `${((new Date(pr.finished_at) - new Date(pr.started_at)) / 1000).toFixed(0)}초`
-        : '';
-      el.innerHTML = `✅ 마지막 실행: <b>${pr.started_at?.slice(0, 16).replace('T', ' ')}</b> · 상태: <b>완료</b>${dur ? ` · 소요: <b>${dur}</b>` : ''} · 모델: <b>${pr.config?.model || '—'}</b>`;
-    } else if (pr.status === 'no_runs') {
-      el.textContent = 'ℹ️ 아직 파이프라인이 실행된 적 없습니다.';
-    } else {
-      el.textContent = `⚠️ 상태: ${pr.status} ${pr.error ? '— ' + pr.error : ''}`;
-    }
-  }).catch(() => {
-    const el = document.getElementById('pipelineResult');
-    if (el) el.textContent = 'ℹ️ 파이프라인 결과를 불러올 수 없습니다.';
-  });
-
-  /* ── 실시간 분석 버튼 ── */
-  document.getElementById('testAnalyzeBtn').addEventListener('click', async () => {
-    const content = document.getElementById('testReviewInput').value.trim();
-    const model = document.getElementById('modelSelect').value;
-    if (!content) return;
-
-    // 로딩 표시
-    document.getElementById('analyzeLoading').style.display = 'block';
-    document.getElementById('analyzeResultArea').style.display = 'none';
-
-    const statusEl = document.getElementById('testAnalyzeStatus');
-    const out = document.getElementById('testAnalyzeOut');
-    const t0 = performance.now();
-
-    try {
-      const r = await fetch('/api/test-analyze', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, model })
-      });
-      const j = await r.json();
-      const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
-
-      // 로딩 숨기고 결과 표시
-      document.getElementById('analyzeLoading').style.display = 'none';
-      document.getElementById('analyzeResultArea').style.display = 'block';
-
-      if (r.ok) {
-        // AI 응답 파싱 (reviews 배열 중첩 구조도 처리)
-        let parsed = {};
-        try {
-          parsed = JSON.parse(j.content || '{}');
-          if (parsed.reviews && Array.isArray(parsed.reviews) && parsed.reviews.length > 0) {
-            parsed = parsed.reviews[0];
-          }
-        } catch { parsed = {}; }
-
-        // 감성 카드
-        const sentMap = { '긍정': { emoji: '😊', color: 'var(--color-success-green)' },
-          '부정': { emoji: '😤', color: 'var(--color-error-red)' },
-          '혼합': { emoji: '🤔', color: 'var(--color-warn-amber)' },
-          '중립': { emoji: '😐', color: 'var(--color-mute-whisper)' } };
-        const sent = parsed.sentiment || '—';
-        const sentInfo = sentMap[sent] || { emoji: '❓', color: 'var(--color-mute-whisper)' };
-        const sentCard = document.querySelector('#resultSentiment .kpi-value');
-        sentCard.innerHTML = `${sentInfo.emoji} ${sent}`;
-        sentCard.style.color = sentInfo.color;
-
-        // 리뷰에 직접 언급된 주제
-        const topics = parsed.topics || [];
-        document.querySelector('#resultTopics .kpi-value').innerHTML =
-          topics.length ? topics.map(topic => `<span class="tag">${escapeHtml(String(topic))}</span>`).join(' ') : '—';
-
-        // 키워드 카드
-        const kws = parsed.keywords || [];
-        document.querySelector('#resultKeywords .kpi-value').innerHTML =
-          kws.length ? kws.map(k => `<span class="tag">${k}</span>`).join(' ') : '—';
-
-        // 모델 정보
-        document.getElementById('analyzeModel').textContent = `${j.model || model} · ${elapsed}s`;
-
-        // 상태 배지
-        statusEl.textContent = `200 OK · ${elapsed}s`;
-        statusEl.className = 'response-status ok';
-
-        // 원본 응답
-        out.textContent = JSON.stringify(j, null, 2);
-        out.className = 'response-box success';
-      } else {
-        statusEl.textContent = `${r.status} ERROR`;
-        statusEl.className = 'response-status err';
-        document.querySelector('#resultSentiment .kpi-value').textContent = '오류';
-        out.textContent = JSON.stringify(j, null, 2);
-        out.className = 'response-box error';
-      }
-    } catch (e) {
-      document.getElementById('analyzeLoading').style.display = 'none';
-      document.getElementById('analyzeResultArea').style.display = 'block';
-      statusEl.textContent = 'FAILED';
-      statusEl.className = 'response-status err';
-      document.querySelector('#resultSentiment .kpi-value').textContent = '연결 실패';
-      out.textContent = '에러: ' + e.message;
-      out.className = 'response-box error';
-    }
-  });
-}
-
-/* ============ Downloads Page ============ */
-function renderDownloads() {
-  const appId = currentAppId;
-  const game = (ALL_GAMES || []).find(g => g.app_id === appId);
-  const gameName = DATA.game_name || (game ? (game.name_kr || game.name) : '선택된 게임');
-  document.getElementById('downloadGameTitle').textContent = `${gameName} (현재 활성화된 게임)`;
-  document.getElementById('btnDownloadReviews').href = `/api/reviews/download?app_id=${appId}`;
-  document.getElementById('btnDownloadAnalysis').href = `/api/analysis/download?app_id=${appId}`;
-}
 
 // 초기화: 파라미터 확인 → 게임 탭 로드 → 데이터 로드
 (async () => {
@@ -2887,19 +1644,6 @@ async function openNewAnalysisModal() {
 }
 
 // 실시간 한국어 긍정 비율(p)을 반영한 Cochran 표본 설계 공식 계산 (보수적 표준 vs 긍정비율 최적화 선택)
-function calculateCochranSampleSize(N, posRate, marginOfError, useConservative = true) {
-  const z = 1.96; // 95% 신뢰수준
-  let p = useConservative ? 0.50 : (posRate / 100);
-  
-  // 극단적인 추천율(예: 100% 긍정)로 인한 왜곡 방지용 임계값 보정
-  if (p > 0.95) p = 0.95;
-  if (p < 0.05) p = 0.05;
-  
-  const n0 = (z * z * p * (1 - p)) / (marginOfError * marginOfError);
-  // 유한 모집단 보정 적용 (Finite Population Correction)
-  const n = n0 / (1 + (n0 - 1) / N);
-  return Math.ceil(n);
-}
 
 async function fetchGameStatsForModal() {
   const appIdInput = document.getElementById('modalAppId');

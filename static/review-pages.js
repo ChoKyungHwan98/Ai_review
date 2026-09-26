@@ -164,7 +164,24 @@ window.ReviewPages = (() => {
           ${sd.actual?.error_pct ? `<li class="rp-muted">참고: 무작위 표본이었다면 오차는 약 ±${sd.actual.error_pct}%p 수준입니다.</li>` : ''}
         </ul>
       </section>
-      ${qualityHTML(data?.quality_report)}`;
+      ${qualityHTML(data?.quality_report)}${usageHTML(data?.usage)}`;
+  }
+
+  // AI 사용량: 단계별 호출 수와 토큰. 비용은 설정한 단가로 계산한 추정치다.
+  function usageHTML(u) {
+    if (!u) return '';
+    const stages = [['A', '주제 찾기'], ['B', '전체 분류'], ['C', '불만 심층'], ['D', '요약']].filter(([k]) => u[k]?.calls);
+    if (!stages.length) return '';
+    const tokens = k => (u[k].input || 0) + (u[k].output || 0);
+    const total = stages.reduce((n, [k]) => n + tokens(k), 0) || 1;
+    const price = u.pricing || {};
+    const cost = stages.reduce((n, [k]) => n + (u[k].input || 0) * (price.input_per_1m || 0) + (u[k].output || 0) * (price.output_per_1m || 0), 0) / 1e6;
+    return `<section class="rp-card">
+        <h2>AI 사용량</h2>
+        <div class="rp-split">${stages.map(([k, label], i) => `<i class="use-${i}" style="flex:${tokens(k)} 1 0" title="${label} ${num(tokens(k))} 토큰"><span>${tokens(k) / total > .12 ? label : ''}</span></i>`).join('')}</div>
+        <div class="rp-use-list">${stages.map(([k, label], i) => `<span><i class="use-${i}"></i>${label} <b>${num(u[k].calls)}회</b> · ${num(tokens(k))} 토큰</span>`).join('')}</div>
+        <p class="rp-note">모델 ${esc(u.model || '')} · 합계 ${num(total)} 토큰${cost ? ` · 설정 단가 기준 약 $${cost.toFixed(cost < 1 ? 3 : 2)}` : ''}. 본문이 같은 리뷰는 한 번만 보내고, 긴 리뷰는 앞·끝만 보내 토큰을 줄입니다.</p>
+      </section>`;
   }
 
   // 품질 점검: 네 가지 점수를 같은 0~100 눈금 막대로. 80점 이상 통과, 60점 이상 주의.

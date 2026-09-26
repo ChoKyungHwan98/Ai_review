@@ -33,8 +33,7 @@ import random
 import argparse
 import httpx
 from budget_control import BudgetExceeded, current as current_budget
-from collections import Counter, defaultdict
-from dotenv import load_dotenv
+from collections import defaultdict
 
 from config import cfg
 

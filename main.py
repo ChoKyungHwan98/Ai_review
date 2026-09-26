@@ -11,7 +11,6 @@
 """
 
 import os, csv, json
-import httpx
 import sys
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -315,7 +314,6 @@ def dashboard_data_v5(app_id: int = None):
     supporting_files = {
         "sample_design_full": "sample_design.json",
         "quality_report": "quality_report.json",
-        "verify_report": "verify_report.json",
     }
     for key, filename in supporting_files.items():
         source = _game_file(app_id, filename)
@@ -346,93 +344,7 @@ def dashboard_topic_evidence(app_id: int = Query(..., gt=0), theme: str = Query(
     return result
 
 
-@app.get("/api/download/{kind}", summary="파일 다운로드", include_in_schema=False)
-def download(kind: str):
-    mapping = {
-        "reviews":  ("reviews.csv",       "text/csv"),
-        "analysis": ("analysis_v3.csv",   "text/csv"),
-        "insights": ("insights_v5.json",  "application/json"),
-        "sample":   ("sample_design.json","application/json"),
-    }
-    if kind not in mapping:
-        raise HTTPException(status_code=404, detail="지원하지 않는 종류")
-    filename, media = mapping[kind]
-    path = cfg.project_file(filename)
-    if not os.path.exists(path):
-        raise HTTPException(status_code=404, detail=f"{path} 없음")
-    return FileResponse(path, media_type=media, filename=os.path.basename(path))
 
-
-@app.get("/api/usage", summary="토큰 사용량/비용 추정", include_in_schema=False)
-def api_usage(app_id: int = None):
-    """Return recorded response usage; cost uses configured rates, not provider billing."""
-    usage_path = cfg.project_file("usage_v3.json", app_id)
-    usage = {}
-    if os.path.exists(usage_path):
-        with open(usage_path, "r", encoding="utf-8") as f:
-            usage = json.load(f)
-    stages = [usage.get(stage) or {} for stage in ("A", "B", "C", "D", "V")]
-    calls = sum(int(stage.get("calls") or 0) for stage in stages)
-    in_tok = sum(int(stage.get("input") or 0) for stage in stages)
-    out_tok = sum(int(stage.get("output") or 0) for stage in stages)
-    pricing = usage.get("pricing") or {"input_per_1m": cfg.MODEL_COST_INPUT,
-                                       "output_per_1m": cfg.MODEL_COST_OUTPUT}
-    cost = (in_tok * float(pricing["input_per_1m"]) + out_tok * float(pricing["output_per_1m"])) / 1_000_000
-    return {
-        "calls": calls,
-        "input_tokens": in_tok,
-        "output_tokens": out_tok,
-        "total_tokens": in_tok + out_tok,
-        "cost_usd": round(cost, 4),
-        "model": usage.get("model") or cfg.MODEL,
-        "pricing": pricing,
-        "budget_usd": cfg.BUDGET_USD,
-        "cost_basis": "configured_rates",
-    }
-
-
-@app.post("/api/test-analyze", summary="단건 분석 테스트 (모델 선택)", include_in_schema=False)
-def api_test_analyze(payload: dict):
-    """리뷰 텍스트 1건을 선택한 모델로 분석. (API Lab의 시연용)"""
-    import httpx
-    content = (payload.get("content") or "").strip()
-    model   = (payload.get("model") or "google/gemini-2.5-flash-lite").strip()
-    if not content:
-        raise HTTPException(status_code=400, detail="content가 비어 있음")
-    api_key = os.getenv("OPENROUTER_API_KEY", "")
-    if not api_key or "여기에" in api_key:
-        raise HTTPException(status_code=500, detail=".env의 OPENROUTER_API_KEY 미설정")
-
-    system = ("게임 리뷰 한 건을 짧게 분류하세요. JSON 객체로만 응답하세요. "
-              "필드는 sentiment(긍정/부정/혼합/판단 어려움), "
-              "topics(리뷰에 직접 언급된 주제, 최대 3개), "
-              "keywords(원문 핵심어, 최대 5개), reason(근거 한 문장)입니다. "
-              "원문에 없는 원인이나 개선안을 추측하지 마세요.")
-    user = f'리뷰: "{content[:1000]}"'
-    try:
-        r = httpx.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={
-                "model": model,
-                "messages": [{"role":"system","content":system},{"role":"user","content":user}],
-                "temperature": 0.2, "max_tokens": 500,
-                "response_format": {"type": "json_object"},
-            },
-            timeout=45.0,
-        )
-        if r.status_code != 200:
-            raise HTTPException(status_code=r.status_code, detail=r.text[:500])
-        j = r.json()
-        return {
-            "model": j.get("model", model),
-            "usage": j.get("usage", {}),
-            "content": j["choices"][0]["message"]["content"],
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

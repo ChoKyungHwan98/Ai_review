@@ -8,7 +8,8 @@ Steam 리뷰를 수집해 AI로 주제·감성을 분류하고, 게임 기획자
 - `dashboard_evidence.py` — 대시보드 집계(`build_evidence`)와 원문 페이지(`evidence_page`). 숫자는 여기서만 계산한다.
 - `static/dashboard.html` — 앱 틀(사이드바, 검색, 다른 페이지). 요약 화면은 `ReviewDashboard.render`에 맡긴다.
 - `static/review-dashboard.js` / `.css` — '진단 요약' 화면 전부.
-- `static/review-pages.js` / `.css` — '리뷰 원문'과 '수집 설계' 화면.
+- `static/review-pages.js` / `.css` — '심층 분석', '리뷰 원문', '수집 설계' 화면.
+- 메뉴 순서: 진단 요약 → 심층 분석 → 리뷰 원문 → 수집 설계. '한 장 보고서'는 진단 요약의 버튼(A4 인쇄)이다.
 - `docs/리뷰진단_시각화_설계.md` — 요약 화면의 설계 기준. 화면을 바꾸면 이 문서도 같이 고친다.
 
 ## 요약 화면 원칙 (바꾸기 전에 설계 문서를 먼저 읽는다)
