@@ -1613,8 +1613,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260925k">
-<script src="/static/review-dashboard.js?v=20260925h"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927a">
+<script src="/static/review-dashboard.js?v=20260927a"></script>
 </head>
 <body>
 <div class="app">
@@ -1687,16 +1687,10 @@ body.no-analysis #ovBody { display: none; }
     <!-- ================================================================ -->
     <section class="page active" data-page="overview">
       <div class="rd-page-header">
-        <div class="rd-game-summary">
-          <div class="rd-page-art" id="rdPageArt" aria-hidden="true"></div>
-          <div class="rd-page-copy">
-            <h1 class="title" id="overviewTitle">리뷰 진단</h1>
-            <p class="subtitle ov-coverage" id="ovCoverage"></p>
-          </div>
-        </div>
-        <div class="rd-summary-panel">
-          <div class="rd-header-mood" id="rdMoodChart"></div>
-          <div class="rd-header-verdict" id="rdHeaderVerdict"></div>
+        <div class="rd-page-art" id="rdPageArt" aria-hidden="true"></div>
+        <div class="rd-page-copy">
+          <h1 class="title" id="overviewTitle">리뷰 진단</h1>
+          <p class="subtitle ov-coverage" id="ovCoverage"></p>
         </div>
       </div>
 
@@ -2457,8 +2451,6 @@ function setNoAnalysisState(on, title, body, cta) {
   if (!on) return;
   document.getElementById('rdPageArt')?.replaceChildren();
   document.getElementById('rdPageActions')?.replaceChildren();
-  document.getElementById('rdMoodChart')?.replaceChildren();
-  document.getElementById('rdHeaderVerdict')?.replaceChildren();
   const titleEl = document.getElementById('execTitle');
   const bodyEl = document.getElementById('execSummary');
   if (titleEl) titleEl.textContent = title;
