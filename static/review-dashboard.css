@@ -47,27 +47,6 @@ body:not(:has(.page[data-page="overview"].active)) .rd-top-actions { display:non
 .rd-hl-pos { color:var(--rd-pos-ink); box-shadow:inset 0 -.32em 0 var(--rd-pos-bg); }
 .rd-hl-neg { color:var(--rd-neg-ink); box-shadow:inset 0 -.32em 0 var(--rd-neg-bg); }
 .page[data-page="overview"] .rd-page-copy .subtitle { margin:0; font-size:13px; line-height:1.5; color:var(--rd-sub); display:flex; flex-wrap:wrap; gap:0 14px; max-width:none; }
-.rd-anchors { display:flex; gap:10px; margin-left:auto; flex:none; }
-.rd-anchors:empty { display:none; }
-.rd-anchor { display:flex; align-items:center; gap:10px; padding:8px 14px 8px 8px; border:1px solid var(--rd-line); border-radius:14px; background:#fff; text-align:left; font-family:inherit; cursor:pointer; }
-.rd-anchor:hover { border-color:#C8DCF8; }
-.rd-anchor.is-fix { background:var(--rd-neg-bg); border-color:var(--rd-neg-mute); }
-.rd-anchor.is-keep { background:var(--rd-pos-bg); border-color:#C8DCF8; }
-.rd-anchor span { display:flex; flex-direction:column; }
-.rd-anchor em { font-style:normal; font-size:12px; font-weight:800; }
-.rd-anchor.is-keep em { color:var(--rd-pos-ink); }
-.rd-anchor.is-fix em { color:var(--rd-neg-ink); }
-.rd-anchor b { font-size:18px; font-weight:800; color:var(--rd-ink); letter-spacing:-.02em; }
-.rd-anchor small { font-size:12px; color:var(--rd-sub); }
-.rd-hl-ring { display:inline-block; vertical-align:-9px; margin-right:6px; }
-.rd-hl-ring .rd-ring-num { font-size:12px; }
-.rd-ring-num { font-size:17px; font-weight:800; fill:var(--rd-ink); }
-.rd-ring-sub { font-size:11px; fill:var(--rd-sub); }
-.rd-focus-ring { display:flex; align-items:center; gap:16px; }
-.rd-focus-ring .rd-ring-num { font-size:24px; }
-.rd-focus-ring div { display:flex; flex-direction:column; gap:4px; font-size:13px; }
-.rd-focus-ring .neg { color:var(--rd-neg-ink); } .rd-focus-ring .pos { color:var(--rd-pos-ink); }
-.rd-focus-ring b { font-size:22px; font-weight:800; margin-right:4px; }
 .ov-coverage b, .ov-coverage .rd-game-name { color:var(--rd-text); font-weight:650; }
 body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 
@@ -96,17 +75,10 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 .rd-q-label.is-small { fill:var(--rd-muted); }
 .rd-dot { cursor:pointer; outline:none; }
 .rd-dot-hit { fill:transparent; }
-.rd-dot-mark { fill:#fff; stroke:#fff; stroke-width:2; transition:stroke-width .12s; }
-.rd-dot.is-concern .rd-dot-mark, .rd-dot.is-watch .rd-dot-mark { fill:var(--rd-neg-bg); }
-.rd-dot.is-strength .rd-dot-mark { fill:var(--rd-pos-bg); }
-.rd-arc-neg { stroke:var(--rd-neg); }
-.rd-arc-pos { stroke:var(--rd-pos); }
-.rd-arc-track { stroke:var(--rd-grid); }
-.rd-dot.is-praised .rd-arc-pos { stroke:#8DB8F5; }
-.rd-dot.is-praised .rd-arc-neg, .rd-dot.is-disliked .rd-arc-neg { stroke:var(--rd-neg-mid); }
-.rd-dot.is-disliked .rd-arc-pos { stroke:#8DB8F5; }
+.rd-dot-mark { stroke:#fff; stroke-width:2; fill-opacity:.9; transition:stroke-width .12s; }
+.rd-dot.is-concern .rd-dot-mark, .rd-dot.is-strength .rd-dot-mark, .rd-dot.is-watch .rd-dot-mark { fill-opacity:1; }
 .rd-dot:hover .rd-dot-mark { stroke:#191F28; stroke-width:1.5; }
-.rd-dot[aria-pressed="true"] .rd-dot-mark { stroke:#191F28; stroke-width:3; }
+.rd-dot[aria-pressed="true"] .rd-dot-mark { stroke:#191F28; stroke-width:2.5; }
 .rd-dot:focus-visible .rd-dot-mark { stroke:#3182F6; stroke-width:3; }
 .rd-dot-label { font-weight:600; fill:var(--rd-text); cursor:pointer; }
 .rd-dot-sub { cursor:pointer; }
@@ -246,9 +218,6 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
   .rd-top-actions { flex-basis:100%; justify-content:flex-start; }
   .page[data-page="overview"] .rd-page-copy .title { font-size:24px; }
   .rd-page-art { display:none; }
-  .page[data-page="overview"] .rd-page-header { flex-wrap:wrap; }
-  .rd-anchors { margin-left:0; width:100%; }
-  .rd-anchor { flex:1; min-width:0; }
   .rd-method-grid { grid-template-columns:1fr; }
   .rd-cohort { grid-template-columns:96px minmax(0,1fr) 72px; gap:8px; }
   .rd-cohort-val small { font-size:11px; }

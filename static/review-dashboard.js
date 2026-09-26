@@ -28,16 +28,6 @@ window.ReviewDashboard = (() => {
   function concern() { return groups().disliked[0]; }
   // 불만이 앞서는 주제가 없을 때 보조로 보여줄 가장 많은 불만
   function loudest() { return [...evidence.themes].filter(t => t.neg > 0).sort((a,b) => b.neg - a.neg)[0]; }
-  // 도넛 링: 빨강(불만)을 12시부터 시계 방향, 나머지를 파랑(칭찬)으로. 2px 틈으로 두 색을 가른다.
-  function ringArcs(cx, cy, r, sw, negShare) {
-    const c = 2 * Math.PI * r, neg = c * negShare, gap = negShare > 0 && negShare < 1 ? Math.min(2, c * .02) : 0;
-    const arc = (len, rot, cls) => len > 0 ? `<circle cx="${cx}" cy="${cy}" r="${r}" class="${cls}" stroke-width="${sw}" fill="none" stroke-dasharray="${Math.max(0, len - gap)} ${c}" transform="rotate(${rot} ${cx} ${cy})"/>` : '';
-    return arc(neg, -90, 'rd-arc-neg') + arc(c - neg, -90 + negShare * 360, 'rd-arc-pos');
-  }
-  function ringSVG(size, negShare, center, sub) {
-    const r = size / 2 - 7, cx = size / 2;
-    return `<svg class="rd-ring" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true"><circle cx="${cx}" cy="${cx}" r="${r}" fill="none" class="rd-arc-track" stroke-width="10"/>${ringArcs(cx, cx, r, 10, negShare)}<text x="${cx}" y="${cx + (sub ? 2 : 6)}" text-anchor="middle" class="rd-ring-num">${center}</text>${sub ? `<text x="${cx}" y="${cx + 17}" text-anchor="middle" class="rd-ring-sub">${sub}</text>` : ''}</svg>`;
-  }
   function themeByName(name) { return evidence.themes.find(t => t.name === name); }
   function role(t) {
     if (!t) return null;
@@ -56,10 +46,8 @@ window.ReviewDashboard = (() => {
 
   function verdictHTML() {
     const s = strength(), c = concern(), loud = loudest();
-    const inline = !['cards','panel'].includes(new URLSearchParams(location.search).get('proto'));
-    const mini = (t, kind) => inline ? `<span class="rd-hl-ring" title="${kind === 'pos' ? `칭찬 ${Math.round(t.pos / t.mentions * 100)}%` : `불만 ${Math.round(t.neg / t.mentions * 100)}%`}">${ringSVG(40, t.neg / t.mentions, `${Math.round((kind === 'pos' ? t.pos : t.neg) / t.mentions * 100)}`)}</span>` : '';
-    const pos = t => `${mini(t, 'pos')}<span class="rd-hl rd-hl-pos">${esc(t.name)}</span>${topicJosa(t.name)}`;
-    const neg = t => `${mini(t, 'neg')}<span class="rd-hl rd-hl-neg">${esc(t.name)}</span>${topicJosa(t.name)}`;
+    const pos = t => `<span class="rd-hl rd-hl-pos">${esc(t.name)}</span>${topicJosa(t.name)}`;
+    const neg = t => `<span class="rd-hl rd-hl-neg">${esc(t.name)}</span>${topicJosa(t.name)}`;
     if (s && c) return `${pos(s)} 지키고, ${neg(c)} 고쳐야 합니다`;
     if (c) return `${neg(c)} 고쳐야 합니다`;
     if (s && loud) return `${pos(s)} 지키고, <span class="rd-hl rd-hl-neg">${esc(loud.name)}</span> 불만을 살펴보세요`;
@@ -135,21 +123,7 @@ window.ReviewDashboard = (() => {
       let timer;
       addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(() => { if (view === 'map' && document.getElementById('rdTopicChart')) renderChart(); }, 150); });
     }
-    renderAnchors(); renderChart(); renderDetail(); renderCohorts();
-  }
-
-  // 시안 비교용: 기본은 결론 문장 안 작은 링(③). ?proto=cards 는 머리말 링 카드(①), ?proto=panel 은 패널 링만(②).
-  // 머리말 오른쪽: 지킬 것·고칠 것 링 카드. 누르면 해당 주제를 고른다.
-  function renderAnchors() {
-    const box = document.getElementById('rdAnchors');
-    if (!box) return;
-    const proto = new URLSearchParams(location.search).get('proto');
-    const card = (t, kind) => {
-      if (!t) return '';
-      const neg = t.neg / t.mentions, main = kind === 'keep' ? 1 - neg : neg;
-      return `<button class="rd-anchor is-${kind}" type="button" data-theme="${esc(t.name)}" onclick="ReviewDashboard.select(this.dataset.theme)">${ringSVG(64, neg, `${Math.round(main * 100)}%`)}<span><em>${kind === 'keep' ? '지킬 것' : '고칠 것'}</em><b>${esc(t.name)}</b><small>언급 ${num(t.mentions)}건 중 ${kind === 'keep' ? `칭찬 ${num(t.pos)}` : `불만 ${num(t.neg)}`}건</small></span></button>`;
-    };
-    box.innerHTML = proto !== 'cards' ? '' : card(strength(), 'keep') + card(concern() || loudest(), 'fix');
+    renderChart(); renderDetail(); renderCohorts();
   }
 
   function renderChart() {
@@ -230,8 +204,8 @@ window.ReviewDashboard = (() => {
       <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" class="rd-map-axis"/>
       ${quadLabels}
       ${tick(L - 6, T + 4, '100%')}${tick(L - 6, ym + 4, '50%')}${tick(L - 6, H - B + 4, '0%')}
-      ${tick(L, H - 8, '0', 'start')}${tick(xm, H - 8, `중앙값 ${num(Math.round(median))}건`, 'middle')}${tick(W - R, H - 8, W < 480 ? `${num(xMax)}건` : `언급 리뷰 수 → ${num(xMax)}건 · 원 크기도 언급 수`, 'end')}
-      ${[...dots].sort((a,b) => (a.t.name === selected || ['concern','strength','watch'].includes(a.r)) - (b.t.name === selected || ['concern','strength','watch'].includes(b.r)) || b.rad - a.rad).map(d => `<g class="rd-dot is-${d.r}" data-action="select" data-theme="${esc(d.t.name)}" tabindex="0" role="button" aria-pressed="${selected === d.t.name}" aria-label="${esc(d.t.name)}: 언급 ${d.t.mentions}건, 불만 ${Math.round(share(d.t) * 100)}%, 칭찬 ${d.t.pos}건, 불만 ${d.t.neg}건"><title>${esc(d.t.name)} · 언급 ${num(d.t.mentions)}건 · 칭찬 ${num(d.t.pos)} · 불만 ${num(d.t.neg)} (${Math.round(share(d.t) * 100)}%)</title>${d.rad < 12 ? `<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad + 6}" class="rd-dot-hit"/>` : ''}<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad}" class="rd-dot-mark"/>${ringArcs(d.cx, d.cy, d.rad - Math.max(3.5, d.rad * .42) / 2, Math.max(3.5, d.rad * .42), share(d.t))}</g>`).join('')}
+      ${tick(L, H - 8, '0', 'start')}${tick(xm, H - 8, `중앙값 ${num(Math.round(median))}건`, 'middle')}${tick(W - R, H - 8, `언급 리뷰 수 → ${num(xMax)}건 · 원 크기도 언급 수`, 'end')}
+      ${[...dots].sort((a,b) => (a.t.name === selected || ['concern','strength','watch'].includes(a.r)) - (b.t.name === selected || ['concern','strength','watch'].includes(b.r)) || b.rad - a.rad).map(d => `<g class="rd-dot is-${d.r}" data-action="select" data-theme="${esc(d.t.name)}" tabindex="0" role="button" aria-pressed="${selected === d.t.name}" aria-label="${esc(d.t.name)}: 언급 ${d.t.mentions}건, 불만 ${Math.round(share(d.t) * 100)}%, 칭찬 ${d.t.pos}건, 불만 ${d.t.neg}건"><title>${esc(d.t.name)} · 언급 ${num(d.t.mentions)}건 · 칭찬 ${num(d.t.pos)} · 불만 ${num(d.t.neg)} (${Math.round(share(d.t) * 100)}%)</title>${d.rad < 12 ? `<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad + 6}" class="rd-dot-hit"/>` : ''}<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad}" fill="${fills[d.r]}" class="rd-dot-mark"/></g>`).join('')}
       <g aria-hidden="true">${labels.join('')}</g>
     </svg>`;
   }
@@ -307,10 +281,10 @@ window.ReviewDashboard = (() => {
         <h2>${esc(t.name)}</h2>
         ${definition ? `<p>${esc(definition)}</p>` : ''}
       </div>
-      ${new URLSearchParams(location.search).get('proto') !== 'cards' ? `<div class="rd-focus-ring" role="img" aria-label="불만 ${t.neg}건, 칭찬 ${t.pos}건">${ringSVG(112, negShare / 100, `${Math.round(t.neg > t.pos ? negShare : 100 - negShare)}%`, t.neg > t.pos ? '불만' : '칭찬')}<div><span class="neg"><b>${num(t.neg)}</b> 불만</span><span class="pos"><b>${num(t.pos)}</b> 칭찬</span></div></div>` : `<div class="rd-split" role="img" aria-label="불만 ${t.neg}건, 칭찬 ${t.pos}건">
+      <div class="rd-split" role="img" aria-label="불만 ${t.neg}건, 칭찬 ${t.pos}건">
         <div class="rd-split-labels"><span class="neg"><b>${num(t.neg)}</b> 불만 ${Math.round(negShare)}%</span><span class="pos">칭찬 ${Math.round(100 - negShare)}% <b>${num(t.pos)}</b></span></div>
         <div class="rd-split-bar"><i class="neg" style="width:${negShare}%"></i><i class="pos" style="width:${100 - negShare}%"></i></div>
-      </div>`}
+      </div>
       ${when}
       ${action?.prob ? `<div class="rd-focus-block rd-ai"><h3>AI 요약</h3><p>${esc(action.prob)}</p></div>` : ''}
       ${quote ? `<figure class="rd-quote"><figcaption>실제 리뷰 · ${quote.recommended ? '게임 추천' : '게임 비추천'}${quote.hours == null ? '' : ` · ${num(Math.round(quote.hours))}시간`}</figcaption><blockquote>“${esc(quote.content)}${quote.truncated ? '…' : ''}”</blockquote></figure>` : ''}
@@ -381,6 +355,5 @@ window.ReviewDashboard = (() => {
       body.innerHTML='<p class="rd-empty">원문을 불러오지 못했습니다. <button class="rd-btn" data-action="retry-evidence">다시 시도</button></p>';
     }
   }
-  function select(name) { if (!themeByName(name)) return; selected = name; updateURL(); renderChart(); renderDetail(); }
-  return {render, select};
+  return {render};
 })();

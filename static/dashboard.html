@@ -1613,8 +1613,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927c">
-<script src="/static/review-dashboard.js?v=20260927c"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927a">
+<script src="/static/review-dashboard.js?v=20260927a"></script>
 </head>
 <body>
 <div class="app">
@@ -1692,7 +1692,6 @@ body.no-analysis #ovBody { display: none; }
           <h1 class="title" id="overviewTitle">리뷰 진단</h1>
           <p class="subtitle ov-coverage" id="ovCoverage"></p>
         </div>
-        <div class="rd-anchors" id="rdAnchors"></div>
       </div>
 
       <!-- 분석 전·옛 방식일 때만 보이는 안내 -->
@@ -2452,7 +2451,6 @@ function setNoAnalysisState(on, title, body, cta) {
   if (!on) return;
   document.getElementById('rdPageArt')?.replaceChildren();
   document.getElementById('rdPageActions')?.replaceChildren();
-  document.getElementById('rdAnchors')?.replaceChildren();
   const titleEl = document.getElementById('execTitle');
   const bodyEl = document.getElementById('execSummary');
   if (titleEl) titleEl.textContent = title;
