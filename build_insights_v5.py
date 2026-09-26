@@ -292,7 +292,10 @@ def summary_prompt(game, result, parts_by_theme):
         "플레이 시간별 추천률": [f"{p['label']} {p['rate']}%" + (" (표본 적음)" if p["small"] else "") for p in result["playtime"]],
         "스팀 추천률": result["rates"]["steam"],
     }
-    parts = {t["name"]: {k: v[:20] for k, v in parts_by_theme.get(t["name"], {}).items()} for t in result["drags"]}
+    # 같은 문장은 한 번만, 종류별로 몇 개만 보낸다. 요약에 필요한 것은 대표 사례이지 전체 목록이 아니다.
+    caps = {"prob": 12, "why": 8, "fix": 8}
+    parts = {t["name"]: {k: list(dict.fromkeys(v))[:caps.get(k, 8)] for k, v in parts_by_theme.get(t["name"], {}).items()}
+             for t in result["drags"]}
     return USER_D.format(
         game=game,
         facts=json.dumps(facts, ensure_ascii=False),

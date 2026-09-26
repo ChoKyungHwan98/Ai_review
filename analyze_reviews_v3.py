@@ -52,11 +52,11 @@ FUN_TYPES = {
 }
 
 THEME_SAMPLE = 150       # A에서 읽을 리뷰 수
-BATCH_B = 10             # B 한 번에 담을 리뷰 수
-BATCH_C = 4              # 심층 답변이 길어 JSON이 잘리지 않도록 작은 묶음 사용
+BATCH_B = 15             # B 한 번에 담을 리뷰 수. 고정 지시문 비용을 더 많은 리뷰가 나눠 낸다
+BATCH_C = 5              # 심층 답변이 길어 JSON이 잘리지 않도록 작은 묶음 사용
 CONCURRENCY = 3
-CLIP_B = 600             # B에 보낼 본문 최대 글자
-CLIP_C = 1000            # C에 보낼 본문 최대 글자
+CLIP_B = 480             # B에 보낼 본문 최대 글자 (앞부분 + 끝부분)
+CLIP_C = 720             # C에 보낼 본문 최대 글자 (앞부분 + 끝부분)
 MIN_LEN_C = 15           # 이보다 짧은 불만은 심층 분석할 내용이 없다
 SHORT_COMPLAINT_CUES = ("렉", "버그", "오류", "튕", "끊", "불편", "환불", "노잼",
                         "lag", "bug", "crash", "error", "refund")
@@ -143,6 +143,27 @@ async def ask(client, stage, system, user, max_tokens):
 
 def compact(items):
     return json.dumps(items, ensure_ascii=False, separators=(",", ":"))
+
+
+def clip(text, limit):
+    """긴 리뷰는 앞부분과 끝부분만 보낸다. "재밌는데 … 근데 렉이 심함"처럼 불만이 끝에 오는 경우가 많다."""
+    text = " ".join((text or "").split())
+    if len(text) <= limit:
+        return text
+    tail = limit // 4
+    return text[: limit - tail - 1] + "…" + text[-tail:]
+
+
+def same_text_groups(rows):
+    """본문이 같은 리뷰는 한 번만 AI에 보낸다. 대표 리뷰 목록과 {대표 번호: [같은 본문 리뷰]}를 돌려준다."""
+    first, copies = {}, {}
+    for r in rows:
+        key = " ".join((r.get("content") or "").split()).casefold()
+        if key in first:
+            copies.setdefault(first[key]["recommendationid"], []).append(r)
+        else:
+            first[key] = r
+    return list(first.values()), copies
 
 
 def load_reviews():
@@ -253,7 +274,7 @@ USER_B = """주제: {themes}
 재미 종류: {fun}
 리뷰 원문은 여러 언어일 수 있습니다. k 요약은 한국어로 쓰세요.
 
-리뷰 (up=추천 여부, h=작성 시점 플레이 시간):
+리뷰 (up=추천 여부):
 {reviews}
 
 리뷰마다 한 항목씩 {{"items":[...]}} 형식의 JSON 객체로 답하세요.
@@ -339,6 +360,9 @@ async def classify(client, long_rows, themes):
     print(f"[B] 분류 대상 {len(long_rows)}건 / 이미 {len(done)}건 / 남은 {len(pending)}건")
     if not pending:
         return done
+    pending, copies = same_text_groups(pending)
+    if copies:
+        print(f"[B] 본문이 같은 리뷰 {sum(map(len, copies.values()))}건은 대표 리뷰 결과를 함께 씁니다")
 
     write_header = not os.path.exists(cfg.ANALYSIS_CSV)
     f_v3 = open(out_path, "a", encoding="utf-8")
@@ -368,11 +392,16 @@ async def classify(client, long_rows, themes):
         writer.writerow(analysis_row(src, res, area_of))
         done[item["id"]] = item
         stats["ok"] += 1
+        for twin in copies.pop(src["recommendationid"], []):
+            save(twin, res)
+
+    def brief(r):
+        return {"id": r["recommendationid"], "up": 1 if r["voted_up"] not in ("0", "False", "false") else 0,
+                "t": clip(r["content"], CLIP_B)}
 
     async def run(batch):
         async with sem:
-            payload = [{"id": r["recommendationid"], "up": 1 if r["voted_up"] not in ("0", "False", "false") else 0,
-                        "h": hours(r), "t": r["content"][:CLIP_B]} for r in batch]
+            payload = [brief(r) for r in batch]
             user = USER_B.format(themes=", ".join(theme_names), fun=", ".join(fun_names), reviews=compact(payload))
             try:
                 res = await ask(client, "B", SYSTEM_B, user, 90 * len(batch) + 60)
@@ -389,8 +418,7 @@ async def classify(client, long_rows, themes):
             except Exception as e:
                 print(f"  [B 묶음 실패 → 한 건씩] {str(e)[:80]}")
             for r in batch:  # 빠진 것만 한 건씩 다시
-                one = [{"id": r["recommendationid"], "up": 1 if r["voted_up"] not in ("0", "False", "false") else 0,
-                        "h": hours(r), "t": r["content"][:CLIP_B]}]
+                one = [brief(r)]
                 try:
                     res = await ask(client, "B", SYSTEM_B,
                                     USER_B.format(themes=", ".join(theme_names), fun=", ".join(fun_names),
@@ -464,6 +492,7 @@ async def dig_complaints(client, long_rows, classified, themes):
     print(f"[C] 심층 대상 {len(targets)}건 / 이미 {len(done)}건 / 남은 {len(pending)}건")
     if not pending:
         return done
+    pending, copies = same_text_groups(pending)
 
     f_out = open(out_path, "a", encoding="utf-8")
     sem = asyncio.Semaphore(CONCURRENCY)
@@ -479,15 +508,16 @@ async def dig_complaints(client, long_rows, classified, themes):
             for p in x.get("p") or []:
                 if isinstance(p, dict) and p.get("t") in theme_names:
                     parts.append({k: str(p.get(k, ""))[:60] for k in ("t", "prob", "why", "fix")})
-            item = {"id": rid, "p": parts}
-            f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
-            done[rid] = item
+            for twin in [rid] + [r["recommendationid"] for r in copies.pop(rid, [])]:
+                item = {"id": twin, "p": parts}
+                f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
+                done[twin] = item
         f_out.flush()
 
     async def run(batch):
         async with sem:
             batch_ids = {r["recommendationid"] for r in batch}
-            payload = [{"id": r["recommendationid"], "t": r["content"][:CLIP_C]} for r in batch]
+            payload = [{"id": r["recommendationid"], "t": clip(r["content"], CLIP_C)} for r in batch]
             try:
                 res = await ask(client, "C", SYSTEM_C,
                                 USER_C.format(themes=", ".join(theme_names), reviews=compact(payload)),
@@ -502,7 +532,7 @@ async def dig_complaints(client, long_rows, classified, themes):
     async def retry_one(row):
         async with sem:
             rid = row["recommendationid"]
-            payload = [{"id": rid, "t": row["content"][:CLIP_C]}]
+            payload = [{"id": rid, "t": clip(row["content"], CLIP_C)}]
             try:
                 res = await ask(client, "C", SYSTEM_C,
                                 USER_C.format(themes=", ".join(theme_names), reviews=compact(payload)), 900)
@@ -519,7 +549,7 @@ async def dig_complaints(client, long_rows, classified, themes):
             await t
             if i % max(1, len(batches) // 5) == 0 or i == len(batches):
                 print(f"  [C] {i}/{len(batches)} 묶음")
-        retry_rows = [r for r in targets if r["recommendationid"] not in done]
+        retry_rows = [r for r in pending if r["recommendationid"] not in done]
         if retry_rows:
             print(f"  [C] 빠진 {len(retry_rows)}건만 단건 재시도")
             await asyncio.gather(*(retry_one(r) for r in retry_rows))

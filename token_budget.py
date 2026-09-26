@@ -59,7 +59,8 @@ def estimate_remaining(config, app_id=None):
         not verify_set.exists() or (analysis_csv.exists() and verify_set.stat().st_mtime < analysis_csv.stat().st_mtime))
 
     # Conservative per-review allowances. They estimate a budget, not provider billing.
-    input_tokens = (12000 if needs_a else 0) + pending_b * 160 + (pending_c + expected_new_c) * 250 + (3500 if needs_d else 0) + (30000 if needs_verify else 0)
+    # B sends 15 clipped reviews per call and C sends 5, so the fixed instructions are shared by more reviews.
+    input_tokens = (12000 if needs_a else 0) + pending_b * 130 + (pending_c + expected_new_c) * 210 + (3500 if needs_d else 0) + (30000 if needs_verify else 0)
     output_tokens = (1500 if needs_a else 0) + pending_b * 90 + (pending_c + expected_new_c) * 180 + (900 if needs_d else 0) + (6000 if needs_verify else 0)
     estimated_usd = round((input_tokens * config.MODEL_COST_INPUT +
                            output_tokens * config.MODEL_COST_OUTPUT) / 1_000_000, 4)

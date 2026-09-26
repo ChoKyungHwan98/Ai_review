@@ -86,7 +86,7 @@ class TokenOptimizationTests(unittest.TestCase):
         self.assertTrue(estimate["needs_verify"])
 
     def test_incomplete_deep_batch_is_not_silent(self):
-        rows = [{"recommendationid": str(i), "content": "저장 오류가 여러 번 반복됩니다"} for i in (1, 2)]
+        rows = [{"recommendationid": str(i), "content": f"저장 오류가 {i}번째로 반복됩니다"} for i in (1, 2)]
         classified = {str(i): {"s": "N", "t": []} for i in (1, 2)}
         fake_answer = [{"id": "1", "p": []}]
         with patch.object(analyzer, "path", side_effect=lambda name: str(self.folder / name)), \
@@ -96,7 +96,7 @@ class TokenOptimizationTests(unittest.TestCase):
         self.assertEqual(len((self.folder / "complaints_v3.jsonl").read_text(encoding="utf-8").splitlines()), 1)
 
     def test_deep_batch_retries_only_missing_review(self):
-        rows = [{"recommendationid": str(i), "content": "저장 오류가 여러 번 반복됩니다"} for i in (1, 2)]
+        rows = [{"recommendationid": str(i), "content": f"저장 오류가 {i}번째로 반복됩니다"} for i in (1, 2)]
         classified = {str(i): {"s": "N", "t": []} for i in (1, 2)}
         answers = [[{"id": "1", "p": []}], [{"id": "2", "p": []}]]
         with patch.object(analyzer, "path", side_effect=lambda name: str(self.folder / name)), \
@@ -104,6 +104,28 @@ class TokenOptimizationTests(unittest.TestCase):
             result = asyncio.run(analyzer.dig_complaints(None, rows, classified, []))
         self.assertEqual(set(result), {"1", "2"})
         self.assertEqual(ask.await_count, 2)
+
+    def test_same_text_reviews_are_sent_once_and_share_the_answer(self):
+        rows = [{"recommendationid": "1", "content": "거점이 커지면 렉이 너무 심해요"},
+                {"recommendationid": "2", "content": " 거점이 커지면  렉이 너무 심해요 "},
+                {"recommendationid": "3", "content": "세이브 파일이 통째로 날아갔어요"}]
+        classified = {r["recommendationid"]: {"s": "N", "t": []} for r in rows}
+        answer = [{"id": "1", "p": [{"t": "최적화", "prob": "렉", "why": "", "fix": ""}]},
+                  {"id": "3", "p": []}]
+        with patch.object(analyzer, "path", side_effect=lambda name: str(self.folder / name)), \
+             patch.object(analyzer, "ask", new=AsyncMock(return_value=answer)) as ask:
+            result = asyncio.run(analyzer.dig_complaints(None, rows, classified, [{"name": "최적화"}]))
+        self.assertEqual(ask.await_count, 1)
+        sent = json.loads(ask.await_args.args[3].split("불만이 있을 수 있는 리뷰입니다:\n")[1].split("\n")[0])
+        self.assertEqual([x["id"] for x in sent], ["1", "3"])
+        self.assertEqual(result["2"]["p"], result["1"]["p"])
+
+    def test_long_reviews_keep_their_ending(self):
+        text = "가" * 600 + " 근데 렉이 심함"
+        clipped = analyzer.clip(text, 100)
+        self.assertLessEqual(len(clipped), 100)
+        self.assertTrue(clipped.endswith("근데 렉이 심함"))
+        self.assertEqual(analyzer.clip("짧은 리뷰", 100), "짧은 리뷰")
 
     def test_identical_summary_reuses_saved_answer(self):
         result = {"lifts": [{"name": "건축", "pos": 3}], "drags": [], "fun": [], "playtime": [], "rates": {"steam": 90}}
