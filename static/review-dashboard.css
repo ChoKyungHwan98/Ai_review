@@ -53,9 +53,39 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 /* ---------- 주인공: 주제 차트 + 근거 패널 ---------- */
 .rd-hero { display:grid; grid-template-columns:minmax(0,1fr) 360px; background:var(--rd-surface); border:1px solid var(--rd-line); border-radius:16px; overflow:hidden; margin-bottom:16px; }
 .rd-chart-card { padding:16px 22px 10px; min-width:0; display:flex; flex-direction:column; }
-.rd-chart-head { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
+.rd-chart-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
 .rd-chart-head h2 { font-size:18px; font-weight:700; letter-spacing:-.02em; color:var(--rd-ink); }
 .rd-chart-head p { margin:0; font-size:12px; color:var(--rd-muted); }
+.rd-chart-head p:empty { display:none; }
+.rd-view-toggle { margin-left:auto; }
+.rd-view-toggle button { font-size:12px; padding:6px 10px; }
+
+/* 우선순위 지도 */
+.rd-map { display:block; width:100%; height:auto; overflow:visible; }
+.rd-q-fix { fill:#FFF1F2; }
+.rd-q-keep { fill:#EFF5FE; }
+.rd-q-watch { fill:#FFF8F8; }
+.rd-map-mid { stroke:#C5CDD8; stroke-dasharray:4 4; }
+.rd-map-axis { stroke:#C5CDD8; }
+.rd-map-tick { font-size:11px; fill:var(--rd-muted); }
+.rd-q-label { font-size:13px; font-weight:800; }
+.rd-q-label.is-fix { fill:var(--rd-neg-ink); font-size:14px; }
+.rd-q-label.is-keep { fill:var(--rd-pos-ink); font-size:14px; }
+.rd-q-label.is-watch { fill:#D9707A; }
+.rd-q-label.is-small { fill:var(--rd-muted); }
+.rd-dot { cursor:pointer; outline:none; }
+.rd-dot-hit { fill:transparent; }
+.rd-dot-mark { stroke:#fff; stroke-width:2; fill-opacity:.9; transition:stroke-width .12s; }
+.rd-dot.is-concern .rd-dot-mark, .rd-dot.is-strength .rd-dot-mark, .rd-dot.is-watch .rd-dot-mark { fill-opacity:1; }
+.rd-dot:hover .rd-dot-mark { stroke:#191F28; stroke-width:1.5; }
+.rd-dot[aria-pressed="true"] .rd-dot-mark { stroke:#191F28; stroke-width:2.5; }
+.rd-dot:focus-visible .rd-dot-mark { stroke:#3182F6; stroke-width:3; }
+.rd-dot-label { font-weight:600; fill:var(--rd-text); cursor:pointer; }
+.rd-dot-sub { cursor:pointer; }
+.rd-dot-label.is-concern, .rd-dot-label.is-watch { font-weight:800; fill:var(--rd-neg-ink); }
+.rd-dot-label.is-strength { font-weight:800; fill:var(--rd-pos-ink); }
+.rd-dot-label.is-disliked { fill:var(--rd-neg-ink); }
+.rd-dot-sub { font-size:12px; fill:var(--rd-sub); }
 .rd-chart-foot { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:auto; padding-top:8px; border-top:1px solid var(--rd-grid); font-size:12px; color:var(--rd-muted); }
 
 /* 행: [주제명][플롯][태그]. 플롯 안에서 --zero가 0선 위치 */

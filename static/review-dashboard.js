@@ -6,7 +6,7 @@ window.ReviewDashboard = (() => {
   const pct = x => x == null ? '—' : `${Number(x).toFixed(1)}%`;
   const clamp = x => Math.max(0, Math.min(100, Number(x) || 0));
   const COLLAPSED_ROWS = 10, MAX_CONCERN_ROWS = 4;
-  let data, evidence, appId, root, selected, expanded = false;
+  let data, evidence, appId, root, selected, expanded = false, view = 'map', resizeBound = false;
   let dialogTheme, dialogSentiment, dialogPage, request, restoreFocus;
 
   // 받침 유무로 은/는을 고른다. 한글이 아니면 둘 다 적는다.
@@ -79,12 +79,14 @@ window.ReviewDashboard = (() => {
     const params = new URLSearchParams(location.search);
     selected = themeByName(params.get('topic'))?.name || concern()?.name || strength()?.name || evidence.themes[0]?.name;
     expanded = false;
+    view = params.get('view') === 'bars' ? 'bars' : 'map';
     root.innerHTML = `
       <div class="rd-hero">
         <section class="rd-chart-card" aria-labelledby="rdTopicsTitle">
           <div class="rd-chart-head">
-            <h2 id="rdTopicsTitle">주제별 칭찬과 불만</h2>
-            <p>리뷰 수 · 주제를 누르면 근거가 나옵니다</p>
+            <h2 id="rdTopicsTitle"></h2>
+            <p id="rdTopicsNote"></p>
+            <div class="rd-toggle rd-view-toggle" aria-label="차트 보기"><button data-action="view" data-view="map">우선순위 지도</button><button data-action="view" data-view="bars">칭찬·불만 막대</button></div>
           </div>
           <div id="rdTopicChart"></div>
           <div class="rd-chart-foot">
@@ -99,7 +101,8 @@ window.ReviewDashboard = (() => {
         <div id="rdCohortChart"></div>
       </section>
       <dialog class="rd-dialog rd-method-dialog" id="rdMethodDialog" aria-labelledby="rdMethodTitle"><div class="rd-dialog-head"><div><h2 id="rdMethodTitle">분석 기준</h2><p>${num(counts.collected)}건 수집 · ${num(counts.analyzed)}건 AI 분석</p></div><button class="rd-btn" data-action="close-method" aria-label="분석 기준 닫기">닫기 ×</button></div><div class="rd-method-grid">
-        <p><b>차트 읽는 법</b><br>막대 길이는 해당 주제를 칭찬하거나 불만으로 언급한 AI 분석 리뷰 수입니다. 양쪽이 같은 눈금을 씁니다. 칭찬이 더 많은 주제는 위에서 칭찬순, 불만이 더 많은 주제는 아래 구역에서 불만순으로 놓입니다.</p>
+        <p><b>우선순위 지도</b><br>가로축은 주제를 언급한 AI 분석 리뷰 수(칭찬+불만), 세로축은 그중 불만 비율입니다. 원 크기도 언급 수입니다. 세로 점선은 전체 주제의 언급 수 중앙값, 가로 점선은 불만 50%입니다. 오른쪽 위 칸은 많이 언급되면서 불만이 더 많은 주제입니다.</p>
+        <p><b>칭찬·불만 막대</b><br>막대 길이는 해당 주제를 칭찬하거나 불만으로 언급한 AI 분석 리뷰 수입니다. 양쪽이 같은 눈금을 씁니다. 칭찬이 더 많은 주제는 위에서 칭찬순, 불만이 더 많은 주제는 아래 구역에서 불만순으로 놓입니다.</p>
         <p><b>지킬 것 · 고칠 것</b><br>지킬 것은 칭찬이 더 많은 주제 중 칭찬 리뷰가 가장 많은 주제, 고칠 것은 불만이 더 많은 주제 중 불만 리뷰가 가장 많은 주제입니다. 조사를 시작할 곳이지 개선 효과나 우선순위를 증명하지 않습니다.</p>
         <p><b>수집 범위</b><br>최신순으로 수집한 리뷰입니다. 추천·비추천 비율을 맞춰도 전체 유저나 전체 기간의 무작위 표본이 되지는 않습니다. 리뷰는 자발적으로 작성한 의견입니다.</p>
         <p><b>표본과 AI 분류</b><br>주제 수치는 AI가 원문을 분류한 결과입니다. 짧은 리뷰 등 ${num(counts.collected - counts.analyzed)}건은 주제 분석에 포함되지 않습니다. 플레이 시간별 비추천율은 수집 리뷰 전체의 Steam 추천 여부로 계산합니다.${counts.skipped_analysis ? ` 읽을 수 없거나 원문이 없는 분석 ${num(counts.skipped_analysis)}건 제외.` : ''}</p>
@@ -112,7 +115,99 @@ window.ReviewDashboard = (() => {
     const methodDialog = document.getElementById('rdMethodDialog');
     methodDialog.addEventListener('click', event => { if (event.target === methodDialog) closeMethod(); });
     methodDialog.addEventListener('close', () => restoreFocus?.focus());
-    renderTopics(); renderDetail(); renderCohorts();
+    root.onkeydown = event => {
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches?.('.rd-dot')) { event.preventDefault(); event.target.dispatchEvent(new MouseEvent('click', {bubbles:true})); }
+    };
+    if (!resizeBound) {
+      resizeBound = true;
+      let timer;
+      addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(() => { if (view === 'map' && document.getElementById('rdTopicChart')) renderChart(); }, 150); });
+    }
+    renderChart(); renderDetail(); renderCohorts();
+  }
+
+  function renderChart() {
+    const title = {map:'주제 우선순위 지도', bars:'주제별 칭찬과 불만'}[view];
+    const note = {map:'', bars:'리뷰 수 · 주제를 누르면 근거가 나옵니다'}[view];
+    document.getElementById('rdTopicsTitle').textContent = title;
+    document.getElementById('rdTopicsNote').textContent = note;
+    root.querySelectorAll('[data-action="view"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
+    if (view === 'map') renderMap(); else renderTopics();
+  }
+
+  // 우선순위 지도: x = 언급 수, y = 불만 비율, 원 크기 = 언급 수. 점선은 언급 수 중앙값과 불만 50%.
+  function renderMap() {
+    const target = document.getElementById('rdTopicChart');
+    const topics = evidence.themes.filter(t => t.mentions > 0);
+    if (!topics.length) { target.innerHTML = '<div class="rd-empty">분류된 주제가 아직 없습니다.</div>'; return; }
+    const W = Math.max(300, target.clientWidth || 800), H = W < 480 ? 320 : Math.round(Math.min(520, Math.max(380, W * .5)));
+    const L = 40, R = 12, T = 16, B = 30, pw = W - L - R, ph = H - T - B;
+    const maxM = Math.max(...topics.map(t => t.mentions));
+    const step = maxM > 200 ? 100 : maxM > 60 ? 50 : 10;
+    const xMax = Math.ceil(maxM * 1.18 / step) * step;
+    const sorted = topics.map(t => t.mentions).sort((a,b) => a - b);
+    const median = sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length/2 - 1] + sorted[sorted.length/2]) / 2;
+    const x = v => L + pw * v / xMax, y = v => T + ph * (1 - v);
+    const xm = x(median), ym = y(.5);
+    const share = t => t.neg / t.mentions;
+    const radius = t => 5 + 19 * Math.sqrt(t.mentions / maxM);
+    const fills = {concern:'var(--rd-neg)', watch:'var(--rd-neg)', disliked:'var(--rd-neg-mid)', strength:'var(--rd-pos)', praised:'var(--rd-pos-mute)'};
+    const dots = topics.map(t => ({t, r: role(t), cx: x(t.mentions), cy: y(share(t)), rad: radius(t)}));
+    // 라벨: 중요한 주제부터 빈 자리에 놓고, 자리가 없으면 생략(마우스를 올리면 이름이 보임)
+    const textW = (str, size) => [...str].reduce((w, ch) => w + (/[\u3131-\uD79D]/.test(ch) ? size : size * .6), 0);
+    const boxes = [], labels = [];
+    const hits = (b, edge = W - R) => b.x < L || b.x + b.w > edge || b.y < T || b.y + b.h > H - B + 4
+      || boxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y)
+      || dots.some(d => { const nx = Math.max(b.x, Math.min(d.cx, b.x + b.w)), ny = Math.max(b.y, Math.min(d.cy, b.y + b.h)); return Math.hypot(d.cx - nx, d.cy - ny) < d.rad + 1; });
+    const quads = [
+      {cls:'is-fix', text:'먼저 고칠 것', size:14, x0:xm, x1:W - R, y0:T, y1:ym},
+      {cls:'is-keep', text:'지킬 강점', size:14, x0:xm, x1:W - R, y0:ym, y1:H - B},
+      {cls:'is-watch', text:'지켜볼 불만', size:13, x0:L, x1:xm, y0:T, y1:ym},
+      {cls:'is-small', text:'작은 강점', size:13, x0:L, x1:xm, y0:ym, y1:H - B}];
+    const quadLabels = quads.map(q => {
+      const w = textW(q.text, q.size), h = q.size + 4, pad = 8;
+      const corners = q.cls === 'is-fix' || q.cls === 'is-keep'
+        ? [[q.x1 - pad - w, q.y0 + pad], [q.x1 - pad - w, q.y1 - pad - h], [q.x0 + pad, q.y0 + pad], [q.x0 + pad, q.y1 - pad - h]]
+        : [[q.x0 + pad, q.y0 + pad], [q.x0 + pad, q.y1 - pad - h], [q.x1 - pad - w, q.y0 + pad], [q.x1 - pad - w, q.y1 - pad - h]];
+      const spot = corners.find(([bx, by]) => q.x1 - q.x0 > w + pad * 2 && !hits({x:bx, y:by, w, h})) ;
+      if (!spot) return '';
+      boxes.push({x:spot[0], y:spot[1], w, h});
+      return `<text class="rd-q-label ${q.cls}" x="${spot[0]}" y="${spot[1] + q.size}">${q.text}</text>`;
+    }).join('');
+    const order = [...dots].sort((a,b) => (b.r === 'concern' || b.r === 'strength' || b.r === 'watch') - (a.r === 'concern' || a.r === 'strength' || a.r === 'watch')
+      || (b.t.name === selected) - (a.t.name === selected) || b.t.mentions - a.t.mentions);
+    order.forEach(d => {
+      const hero = ['concern','strength','watch'].includes(d.r);
+      const size = hero ? 14 : 13, sub = hero ? `${num(d.t.mentions)}건 · 불만 ${Math.round(share(d.t) * 100)}%` : '';
+      const w = Math.max(textW(d.t.name, size), sub ? textW(sub, 12) : 0), h = hero ? 32 : 17;
+      const g = d.rad + 5;
+      const k = g * .72;
+      const spots = [[d.cx + g, d.cy - h / 2, 'start'], [d.cx - g - w, d.cy - h / 2, 'end'], [d.cx - w / 2, d.cy - g - h, 'middle'], [d.cx - w / 2, d.cy + g, 'middle'],
+        [d.cx + k, d.cy - k - h, 'start'], [d.cx - k - w, d.cy - k - h, 'end'], [d.cx + k, d.cy + k, 'start'], [d.cx - k - w, d.cy + k, 'end']];
+      for (const [bx, by, anchor] of spots) {
+        const b = {x: bx, y: by, w, h};
+        // 지킬 것·고칠 것 이름은 반드시 보이도록 카드 여백까지 허용
+        if (hits(b, hero ? W + 18 : W - R)) continue;
+        boxes.push(b);
+        const tx = anchor === 'start' ? bx : anchor === 'end' ? bx + w : bx + w / 2;
+        labels.push(`<text class="rd-dot-label is-${d.r}" data-action="select" data-theme="${esc(d.t.name)}" x="${tx}" y="${by + size - 1}" text-anchor="${anchor}" font-size="${size}">${esc(d.t.name)}</text>${sub ? `<text class="rd-dot-sub" data-action="select" data-theme="${esc(d.t.name)}" x="${tx}" y="${by + size + 14}" text-anchor="${anchor}">${sub}</text>` : ''}`);
+        break;
+      }
+    });
+    const tick = (tx, ty, str, anchor = 'end') => `<text class="rd-map-tick" x="${tx}" y="${ty}" text-anchor="${anchor}">${str}</text>`;
+    target.innerHTML = `<svg class="rd-map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="group" aria-label="주제 우선순위 지도">
+      <rect x="${xm}" y="${T}" width="${W - R - xm}" height="${ym - T}" class="rd-q rd-q-fix"/>
+      <rect x="${xm}" y="${ym}" width="${W - R - xm}" height="${H - B - ym}" class="rd-q rd-q-keep"/>
+      <rect x="${L}" y="${T}" width="${xm - L}" height="${ym - T}" class="rd-q rd-q-watch"/>
+      <line x1="${L}" x2="${W - R}" y1="${ym}" y2="${ym}" class="rd-map-mid"/>
+      <line x1="${xm}" x2="${xm}" y1="${T}" y2="${H - B}" class="rd-map-mid"/>
+      <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" class="rd-map-axis"/>
+      ${quadLabels}
+      ${tick(L - 6, T + 4, '100%')}${tick(L - 6, ym + 4, '50%')}${tick(L - 6, H - B + 4, '0%')}
+      ${tick(L, H - 8, '0', 'start')}${tick(xm, H - 8, `중앙값 ${num(Math.round(median))}건`, 'middle')}${tick(W - R, H - 8, `언급 리뷰 수 → ${num(xMax)}건 · 원 크기도 언급 수`, 'end')}
+      ${[...dots].sort((a,b) => (a.t.name === selected || ['concern','strength','watch'].includes(a.r)) - (b.t.name === selected || ['concern','strength','watch'].includes(b.r)) || b.rad - a.rad).map(d => `<g class="rd-dot is-${d.r}" data-action="select" data-theme="${esc(d.t.name)}" tabindex="0" role="button" aria-pressed="${selected === d.t.name}" aria-label="${esc(d.t.name)}: 언급 ${d.t.mentions}건, 불만 ${Math.round(share(d.t) * 100)}%, 칭찬 ${d.t.pos}건, 불만 ${d.t.neg}건"><title>${esc(d.t.name)} · 언급 ${num(d.t.mentions)}건 · 칭찬 ${num(d.t.pos)} · 불만 ${num(d.t.neg)} (${Math.round(share(d.t) * 100)}%)</title>${d.rad < 12 ? `<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad + 6}" class="rd-dot-hit"/>` : ''}<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad}" fill="${fills[d.r]}" class="rd-dot-mark"/></g>`).join('')}
+      <g aria-hidden="true">${labels.join('')}</g>
+    </svg>`;
   }
 
   // 나비형 막대: 가운데 0선에서 왼쪽 불만, 오른쪽 칭찬. 두 방향이 같은 눈금이라 0선 위치는 최대값 비율로 정한다.
@@ -222,10 +317,11 @@ window.ReviewDashboard = (() => {
     const action = button.dataset.action;
     if (action === 'select') {
       if (!themeByName(button.dataset.theme)) return;
-      selected = button.dataset.theme; updateURL(); renderTopics(); renderDetail();
+      selected = button.dataset.theme; updateURL(); renderChart(); renderDetail();
       // 좁은 화면에서는 근거 패널이 차트 아래에 있으므로 그쪽으로 이동
       if (innerWidth < 1080) document.getElementById('rdDetail')?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
     } else if (action === 'expand') { expanded = !expanded; renderTopics(); }
+    else if (action === 'view') { view = button.dataset.view; const url = new URL(location.href); url.searchParams.set('view', view); history.replaceState(null, '', url); renderChart(); }
     else if (action === 'method') { restoreFocus=button; document.getElementById('rdMethodDialog').showModal(); }
     else if (action === 'evidence') {
       restoreFocus = button; dialogTheme=selected; dialogSentiment=button.dataset.sentiment; dialogPage=1;
