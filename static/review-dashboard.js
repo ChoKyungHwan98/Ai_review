@@ -74,6 +74,8 @@ window.ReviewDashboard = (() => {
     const language = ({koreana:'한국어',english:'영어',all:'전체 언어',japanese:'일본어',schinese:'중국어 간체',unknown:'언어 정보 없음'})[evidence.language] || evidence.language;
     const period = evidence.period ? `${evidence.period.start.replaceAll('-','.')} – ${evidence.period.end.replaceAll('-','.')}` : '기간 정보 없음';
     document.getElementById('overviewTitle').innerHTML = verdictHTML();
+    const summary = document.getElementById('ovSummary');
+    if (summary) summary.innerHTML = V.summary ? `<b>${V.summary_source === 'rule' ? '요약' : 'AI 요약'}</b>${esc(V.summary)}` : '';
     document.getElementById('ovCoverage').innerHTML = `<span class="rd-game-name">${esc(V.game?.name || '게임')} 리뷰 진단</span><span>${esc(language)} Steam 리뷰</span><span>${esc(period)}</span><span>AI 분석 <b>${num(counts.analyzed)}건</b> / 수집 ${num(counts.collected)}건</span>`;
 
     const params = new URLSearchParams(location.search);
@@ -290,6 +292,7 @@ window.ReviewDashboard = (() => {
       <div class="rd-split" role="img" aria-label="불만 ${t.neg}건, 칭찬 ${t.pos}건">
         <div class="rd-split-labels"><span class="neg"><b>${num(t.neg)}</b> 불만 ${Math.round(negShare)}%</span><span class="pos">칭찬 ${Math.round(100 - negShare)}% <b>${num(t.pos)}</b></span></div>
         <div class="rd-split-bar"><i class="neg" style="width:${negShare}%"></i><i class="pos" style="width:${100 - negShare}%"></i></div>
+        ${t.neg && t.negative_recommended != null ? `<p class="rd-note">불만을 쓴 ${num(t.neg)}건 중 <b>${num(t.negative_recommended)}건</b>은 그래도 게임을 추천했습니다${t.negative_recommended / t.neg >= .5 ? ' — 떠나게 만들 정도의 불만은 아닐 수 있습니다' : ' — 비추천으로 이어진 불만이 많습니다'}.</p>` : ''}
       </div>
       ${when}
       ${action?.prob ? `<div class="rd-focus-block rd-ai"><h3>AI 요약</h3><p>${esc(action.prob)}</p>${action.why || action.fix?.length ? `<details class="rd-why"><summary>원인과 개선 제안 보기</summary>${action.why ? `<p><b>리뷰가 말하는 원인</b>${esc(action.why)}</p>` : ''}${action.fix?.length ? `<p><b>리뷰에서 나온 제안</b></p><ul>${action.fix.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}<p class="rd-note">AI가 리뷰를 요약한 내용입니다. 원문으로 확인한 뒤 기획에 반영하세요.</p></details>` : ''}</div>` : ''}

@@ -5,6 +5,7 @@ recommendation are different dimensions; one review may contain both sentiments.
 """
 import csv
 import json
+import re
 from collections import Counter
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -43,7 +44,7 @@ def is_positive(row):
 
 def load_sources(directory):
     folder = Path(directory)
-    names = ("reviews.csv", "analysis_v3.jsonl", "sample_design.json")
+    names = ("reviews.csv", "analysis_v3.jsonl", "sample_design.json", "complaints_v3.jsonl")
     stamps = tuple((folder / name).stat().st_mtime_ns if (folder / name).exists() else None
                    for name in names)
     return _load_sources(str(folder), stamps)
@@ -75,7 +76,17 @@ def _load_sources(directory, stamps):
     if (folder / "sample_design.json").exists():
         with (folder / "sample_design.json").open(encoding="utf-8") as stream:
             design = json.load(stream)
-    return reviews, analyzed, design, skipped
+    complaints = []
+    if (folder / "complaints_v3.jsonl").exists():
+        with (folder / "complaints_v3.jsonl").open(encoding="utf-8") as stream:
+            for line in stream:
+                try:
+                    item = json.loads(line) if line.strip() else None
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(item, dict) and str(item.get("id")) in reviews:
+                    complaints.append(item)
+    return reviews, analyzed, design, skipped, complaints
 
 
 def topic_members(analyzed):
@@ -111,7 +122,7 @@ def build_evidence(directory, app_id):
     source = load_sources(directory)
     if source is None:
         return None
-    reviews, analyzed, design, skipped = source
+    reviews, analyzed, design, skipped, complaints = source
     members = topic_members(analyzed)
     n = len(reviews)
     up = sum(is_positive(r) for r in reviews.values())
@@ -160,16 +171,121 @@ def build_evidence(directory, app_id):
             "mood": {key: mood[key] for key in ("P", "M", "N", "U")},
             "themes": sorted(themes, key=lambda t: (-t["mentions"], t["name"])),
             "cohorts": cohorts,
+            "deep": build_deep(reviews, analyzed, members, complaints, app_id),
             "fun_denominator": len(liked),
             "fun": [{"name": f, "desc": FUN[f], "count": c, "share": round(c / len(liked) * 100, 1)}
                     for f, c in fun_counts.most_common()]}
+
+
+# ── 심층 분석: AI를 다시 부르지 않고 이미 저장된 결과만 다시 센다 ──────────────
+EARLY_HOURS = 20
+STOPWORDS = {"게임", "너무", "진짜", "정말", "많이", "조금", "좀", "계속", "자꾸", "때문", "문제", "현상",
+             "발생", "있음", "없음", "있다", "없다", "하는", "되는", "되지", "않음", "않는", "안됨", "경우",
+             "부분", "관련", "상태", "이후", "이상", "그냥", "매우", "가끔", "자주", "일부", "전체", "유저",
+             "플레이", "플레이어", "느낌", "생각", "수준", "정도", "해서", "하고", "으로", "에서"}
+SUFFIXES = ("에서는", "으로는", "에서", "으로", "이나", "까지", "부터", "하고", "해서", "하면", "하는", "되는",
+            "됨", "함", "음", "이", "가", "은", "는", "을", "를", "에", "의", "도", "로", "과", "와", "만")
+REQUEST_MARKS = ("해주", "해 주", "했으면", "좋겠", "추가", "수정", "개선", "희망", "부탁", "늘려", "줄여",
+                 "바꿔", "복구", "지원", "넣어", "고쳐", "상향", "하향", "가능하게", "필요")
+VAGUE = {"버그 수정", "버그 개선", "개선 필요", "최적화 필요", "최적화 개선", "수정 필요", "편의성 개선"}
+
+
+def words(text):
+    """짧은 한국어 문장을 뜻 있는 낱말로. 형태소 분석기 없이 흔한 조사·어미만 떼어 낸다."""
+    out = set()
+    for w in re.findall(r"[0-9A-Za-z가-힣]+", text or ""):
+        for suffix in SUFFIXES:
+            if len(w) > len(suffix) + 1 and w.endswith(suffix):
+                w = w[: -len(suffix)]
+                break
+        if len(w) >= 2 and w not in STOPWORDS:
+            out.add(w)
+    return out
+
+
+def votes(row):
+    return int(number(row.get("votes_up")) or 0)
+
+
+def build_deep(reviews, analyzed, members, complaints, app_id):
+    parts = {}  # 주제 → [(리뷰 번호, 문제, 원인, 제안)]
+    for item in complaints:
+        rid = str(item["id"])
+        for p in item.get("p") or []:
+            if isinstance(p, dict) and p.get("t"):
+                parts.setdefault(p["t"], []).append((rid, str(p.get("prob") or ""), str(p.get("why") or ""), str(p.get("fix") or "")))
+    focus = sorted((name for name, g in members.items() if g["N"]),
+                   key=lambda name: (-(len(members[name]["N"]) > len(members[name]["P"])), -len(members[name]["N"])))[:4]
+
+    # ① 불만 세부 원인: 주제별 불만 문장에서 여러 리뷰가 함께 쓴 낱말
+    causes = []
+    for name in focus:
+        rows = parts.get(name) or []
+        seen, example = Counter(), {}
+        for rid, prob, why, _ in rows:
+            for w in sorted(words(f"{prob} {why}") - words(name)):
+                seen[w] += 1
+                example.setdefault(w, prob or why)
+        ranked = sorted(seen.items(), key=lambda kv: (-kv[1], kv[0]))[:6]
+        terms = [{"word": w, "count": c, "example": example[w][:60]} for w, c in ranked if c >= 2]
+        causes.append({"theme": name, "reviews": len({r[0] for r in rows}), "terms": terms})
+
+    # ② 초반 이탈: 20시간 전에 비추천한 리뷰와 그 뒤에 비추천한 리뷰가 불만으로 꼽은 주제
+    early, later = Counter(), Counter()
+    early_n = later_n = 0
+    for rid, item in analyzed.items():
+        row = reviews[rid]
+        hours = review_hours(row)
+        if is_positive(row) or hours is None:
+            continue
+        names = {n for n, s in (item.get("t") or []) if s == "N" and n != "기타"}
+        if hours < EARLY_HOURS:
+            early_n += 1
+            early.update(names)
+        else:
+            later_n += 1
+            later.update(names)
+    share = lambda c, n: round(c / n * 100, 1) if n else None
+    churn_topics = [{"name": k, "early": early[k], "later": later[k],
+                     "early_share": share(early[k], early_n), "later_share": share(later[k], later_n)}
+                    for k in sorted(set(early) | set(later), key=lambda k: (-early[k], -later[k]))[:6]]
+
+    # ③ 공감 많은 불만: 다른 유저가 "도움됨"을 누른 수
+    total_votes = sum(votes(reviews[rid]) for g in members.values() for rid in g["N"]) or 0
+    total_neg = sum(len(g["N"]) for g in members.values()) or 0
+    agreed = sorted(({"name": name, "neg": len(g["N"]), "votes": sum(votes(reviews[rid]) for rid in g["N"])}
+                     for name, g in members.items() if g["N"]), key=lambda t: -t["votes"])[:6]
+    for t in agreed:
+        t["vote_share"] = share(t["votes"], total_votes)
+        t["count_share"] = share(t["neg"], total_neg)
+    loudest = sorted({rid for g in members.values() for rid in g["N"]}, key=lambda rid: -votes(reviews[rid]))[:3]
+    top_reviews = [dict(excerpt(reviews[rid], app_id, 160),
+                        themes=[n for n, g in members.items() if rid in g["N"]]) for rid in loudest if votes(reviews[rid]) > 0]
+
+    # ④ 유저가 원하는 것: 불만 리뷰의 구체적인 요청. 같은 문장은 합치고 공감 순
+    wants = {}
+    for name, rows in parts.items():
+        for rid, _, _, fix in rows:
+            text = " ".join(fix.split())
+            if len(text) < 6 or text in VAGUE or not any(m in text for m in REQUEST_MARKS):
+                continue
+            key = re.sub(r"\s+", "", text)
+            w = wants.setdefault(key, {"text": text[:60], "theme": name, "count": 0, "votes": 0})
+            w["count"] += 1
+            w["votes"] += votes(reviews[rid])
+    wants = sorted(wants.values(), key=lambda w: (-w["count"], -w["votes"]))[:8]
+
+    return {"early_hours": EARLY_HOURS, "has_complaints": bool(complaints), "causes": causes,
+            "churn": {"early_n": early_n, "later_n": later_n, "topics": churn_topics},
+            "agreed": {"topics": agreed, "total_votes": total_votes, "reviews": top_reviews},
+            "wants": wants}
 
 
 def evidence_page(directory, app_id, theme, sentiment="N", page=1):
     source = load_sources(directory)
     if source is None:
         return None
-    reviews, analyzed, _, _ = source
+    reviews, analyzed = source[0], source[1]
     group = topic_members(analyzed).get(theme)
     if group is None:
         return None

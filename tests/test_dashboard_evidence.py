@@ -83,6 +83,32 @@ class DashboardEvidenceTests(unittest.TestCase):
         self.assertEqual(e["counts"]["skipped_analysis"], 2)
         self.assertEqual(e["counts"]["analyzed"], 3)
 
+    def test_deep_analysis_recounts_saved_results_without_ai(self):
+        complaints = [
+            {"id": "1", "p": [{"t": "저장", "prob": "세이브 파일이 날아감", "why": "서버 오류", "fix": "자동 저장 추가해주세요"}]},
+            {"id": "2", "p": [{"t": "저장", "prob": "세이브 파일 손상", "why": "", "fix": "자동 저장 추가해주세요"},
+                              {"t": "저장", "prob": "", "why": "", "fix": "버그 수정"}]},
+        ]
+        (self.folder / "complaints_v3.jsonl").write_text("\n".join(json.dumps(c, ensure_ascii=False) for c in complaints), encoding="utf-8")
+        deep = build_evidence(self.folder, 42)["deep"]
+        storage = next(c for c in deep["causes"] if c["theme"] == "저장")
+        self.assertEqual(storage["reviews"], 2)
+        self.assertEqual(storage["terms"][0]["word"], "세이브")
+        self.assertEqual({t["word"] for t in storage["terms"]}, {"세이브", "파일"})
+        # 2번만 비추천이고 2시간 플레이 → 초반 이탈
+        self.assertEqual(deep["churn"]["early_n"], 1)
+        self.assertEqual(deep["churn"]["topics"][0], {"name": "저장", "early": 1, "later": 0, "early_share": 100.0, "later_share": None})
+        agreed = next(t for t in deep["agreed"]["topics"] if t["name"] == "저장")
+        self.assertEqual(agreed["votes"], 7)
+        self.assertEqual(deep["agreed"]["reviews"][0]["id"], "2")
+        self.assertEqual(deep["wants"], [{"text": "자동 저장 추가해주세요", "theme": "저장", "count": 2, "votes": 7}])
+
+    def test_deep_analysis_without_complaint_file(self):
+        deep = build_evidence(self.folder, 42)["deep"]
+        self.assertFalse(deep["has_complaints"])
+        self.assertEqual(deep["wants"], [])
+        self.assertTrue(all(c["terms"] == [] for c in deep["causes"]))
+
     def test_empty_and_missing_sources_are_explicit(self):
         self.analyses = []
         self.write()

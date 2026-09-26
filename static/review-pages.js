@@ -163,8 +163,113 @@ window.ReviewPages = (() => {
           ${params.min_neg ? `<li>불만을 볼 수 있도록 비추천을 최소 <b>${num(params.min_neg)}건</b> 모으도록 설정했습니다.</li>` : ''}
           ${sd.actual?.error_pct ? `<li class="rp-muted">참고: 무작위 표본이었다면 오차는 약 ±${sd.actual.error_pct}%p 수준입니다.</li>` : ''}
         </ul>
+      </section>
+      ${qualityHTML(data?.quality_report)}`;
+  }
+
+  // 품질 점검: 네 가지 점수를 같은 0~100 눈금 막대로. 80점 이상 통과, 60점 이상 주의.
+  function qualityHTML(q) {
+    if (!q || !q.dimensions) return '';
+    const dims = [
+      ['completeness', '완전성', '빠진 데이터가 없는가'],
+      ['consistency', '일관성', 'AI 판단이 Steam 추천 여부와 크게 어긋나지 않는가'],
+      ['representativeness', '대표성', '모은 리뷰의 추천 비율이 Steam 전체와 가까운가'],
+      ['accuracy', '분석 가능성', '너무 짧거나 판단이 어려운 리뷰가 적은가']];
+    const pass = q.thresholds?.pass ?? 80, warn = q.thresholds?.warn ?? 60;
+    const tone = v => v >= pass ? 'ok' : v >= warn ? 'warn' : 'bad';
+    const issues = dims.flatMap(([k]) => q.dimensions[k]?.issues || []).slice(0, 4);
+    return `<section class="rp-card">
+        <h2>분석 품질 점검 <span class="rp-grade ${tone(q.overall_score)}">${esc(q.grade_kr || '')} ${num(q.overall_score)}점</span></h2>
+        <div class="rp-quality">${dims.map(([k, label, desc]) => {
+          const v = q.dimensions[k]?.score;
+          return v == null ? '' : `<div class="rp-q-row"><span class="rp-q-label"><b>${label}</b><small>${desc}</small></span><span class="rp-q-track"><i class="${tone(v)}" style="width:${Math.max(0, Math.min(100, v))}%"></i><em style="left:${pass}%"></em></span><span class="rp-q-val">${num(v)}</span></div>`;
+        }).join('')}</div>
+        <p class="rp-note">세로선 = 통과 기준 ${pass}점. 일관성은 정답 비교가 아닙니다. 게임을 추천하면서도 불만을 쓰는 리뷰가 있기 때문입니다.</p>
+        ${issues.length ? `<ul class="rp-issues">${issues.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}
       </section>`;
   }
 
-  return {renderReviews, renderSample};
+  /* ---------------- 심층 분석 ---------------- */
+  let deepTheme;
+  function renderDeep(data) {
+    const box = document.getElementById('rpDeep');
+    if (!box) return;
+    const deep = data?.evidence?.deep;
+    if (!deep) { box.innerHTML = '<div class="rp-card rp-empty">분석 결과가 아직 없습니다.</div>'; return; }
+    deepTheme = deep.causes.find(c => c.terms.length)?.theme || deep.causes[0]?.theme;
+    box.innerHTML = `<div class="rp-deep">
+      <section class="rp-card rp-deep-card" id="rpCauses"></section>
+      <section class="rp-card rp-deep-card" id="rpChurn"></section>
+      <section class="rp-card rp-deep-card" id="rpAgreed"></section>
+      <section class="rp-card rp-deep-card" id="rpWants"></section></div>`;
+    box.onclick = e => { const b = e.target.closest('[data-cause]'); if (b) { deepTheme = b.dataset.cause; drawCauses(deep); } };
+    drawCauses(deep); drawChurn(deep); drawAgreed(deep); drawWants(deep);
+  }
+  const noComplaints = '<p class="rp-empty">불만 리뷰의 AI 메모(complaints_v3.jsonl)가 없습니다. 분석을 다시 실행하면 채워집니다.</p>';
+  const head = (n, title, insight) => `<span class="rp-deep-no">${n}</span><h2>${title}</h2>${insight ? `<p class="rp-insight">${insight}</p>` : ''}`;
+  const hbar = (label, sub, value, max, text, cls = '') => `<div class="rp-hrow ${cls}"><span class="rp-hlabel"><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</span><span class="rp-htrack"><i style="width:${max ? value / max * 100 : 0}%"></i></span><span class="rp-hval">${text}</span></div>`;
+
+  // ① 불만 세부 원인
+  function drawCauses(deep) {
+    const el = document.getElementById('rpCauses');
+    const c = deep.causes.find(x => x.theme === deepTheme);
+    const tabs = `<div class="rp-chips">${deep.causes.map(x => `<button class="rp-chip" data-cause="${esc(x.theme)}" aria-pressed="${x.theme === deepTheme}">${esc(x.theme)}</button>`).join('')}</div>`;
+    if (!deep.has_complaints || !c) { el.innerHTML = head('①', '불만 세부 원인') + noComplaints; return; }
+    const top = c.terms[0], max = top?.count || 1;
+    el.innerHTML = head('①', '불만 세부 원인', top ? `<b>${esc(c.theme)}</b> 불만에서 가장 많이 나온 말은 <b>'${esc(top.word)}'</b>입니다 (${num(top.count)}건).` : '')
+      + tabs
+      + (c.terms.length ? `<div class="rp-hbars">${c.terms.map((t, i) => hbar(esc(t.word), `“${esc(t.example)}”`, t.count, max, `${num(t.count)}건`, i ? '' : 'is-top')).join('')}</div>`
+        : '<p class="rp-empty">여러 리뷰가 함께 쓴 말이 없습니다.</p>')
+      + `<p class="rp-note">${esc(c.theme)} 불만 리뷰 ${num(c.reviews)}건에 AI가 적어 둔 문제·원인 메모에서, 두 리뷰 이상이 쓴 낱말입니다.</p>`;
+  }
+
+  // ② 초반 이탈 원인
+  function drawChurn(deep) {
+    const el = document.getElementById('rpChurn');
+    const {early_n, later_n, topics} = deep.churn, h = deep.early_hours;
+    if (!early_n) { el.innerHTML = head('②', '초반 이탈 원인') + `<p class="rp-empty">${h}시간 전에 비추천한 리뷰가 없습니다.</p>`; return; }
+    const gap = t => (t.early_share ?? 0) - (t.later_share ?? 0);
+    const pick = [...topics].filter(t => t.early >= 2).sort((a, b) => gap(b) - gap(a))[0];
+    const max = Math.max(...topics.flatMap(t => [t.early_share || 0, t.later_share || 0]), 1);
+    el.innerHTML = head('②', '초반 이탈 원인', pick && gap(pick) > 5
+        ? `${h}시간 전에 떠난 사람은 <b>'${esc(pick.name)}'</b>을(를) 더 많이 말합니다 (${pct(pick.early_share)} vs ${pct(pick.later_share ?? 0)}).`
+        : `${h}시간 전후로 비추천 이유가 크게 다르지 않습니다.`)
+      + `<div class="rp-legend"><span class="early">${h}시간 전 비추천 ${num(early_n)}건</span><span class="later">${h}시간 뒤 비추천 ${num(later_n)}건</span></div>`
+      + `<div class="rp-pairs">${topics.map(t => `<div class="rp-pair ${t === pick && gap(pick) > 5 ? 'is-top' : ''}"><b>${esc(t.name)}</b>
+          <span class="rp-ptrack early"><i style="width:${(t.early_share || 0) / max * 100}%"></i><em>${pct(t.early_share ?? 0)}</em></span>
+          <span class="rp-ptrack later"><i style="width:${(t.later_share || 0) / max * 100}%"></i><em>${pct(t.later_share ?? 0)}</em></span></div>`).join('')}</div>`
+      + `<p class="rp-note">비율 = 각 묶음의 비추천 리뷰 중 그 주제를 불만으로 말한 비율. ${early_n < 30 ? `<b>${h}시간 전 비추천이 ${num(early_n)}건뿐이라 참고용입니다.</b>` : ''}</p>`;
+  }
+
+  // ③ 공감 많은 불만
+  function drawAgreed(deep) {
+    const el = document.getElementById('rpAgreed');
+    const {topics, total_votes, reviews} = deep.agreed;
+    if (!total_votes) { el.innerHTML = head('③', '공감 많은 불만') + '<p class="rp-empty">불만 리뷰에 "도움됨"이 눌린 기록이 없습니다.</p>'; return; }
+    const gap = t => (t.vote_share || 0) - (t.count_share || 0);
+    const pick = [...topics].sort((a, b) => gap(b) - gap(a))[0];
+    const max = Math.max(...topics.flatMap(t => [t.vote_share || 0, t.count_share || 0]), 1);
+    const quote = reviews[0];
+    el.innerHTML = head('③', '공감 많은 불만', pick && gap(pick) > 5
+        ? `<b>'${esc(pick.name)}'</b> 불만은 건수로는 ${pct(pick.count_share)}지만, 다른 유저의 공감은 ${pct(pick.vote_share)}를 받았습니다.`
+        : '공감은 불만 건수와 비슷하게 나뉘어 있습니다.')
+      + `<div class="rp-legend"><span class="later">불만 건수 비율</span><span class="agree">공감(도움됨) 비율</span></div>`
+      + `<div class="rp-pairs">${topics.map(t => `<div class="rp-pair ${t === pick && gap(pick) > 5 ? 'is-top' : ''}"><b>${esc(t.name)}</b>
+          <span class="rp-ptrack later"><i style="width:${(t.count_share || 0) / max * 100}%"></i><em>${pct(t.count_share)}</em></span>
+          <span class="rp-ptrack agree"><i style="width:${(t.vote_share || 0) / max * 100}%"></i><em>${pct(t.vote_share)} · ${num(t.votes)}</em></span></div>`).join('')}</div>`
+      + (quote ? `<figure class="rp-quote"><figcaption>가장 공감받은 불만 · 도움됨 ${num(quote.helpful)} · ${quote.themes.map(esc).join(', ')}</figcaption><blockquote>“${esc(quote.content)}${quote.truncated ? '…' : ''}”</blockquote></figure>` : '');
+  }
+
+  // ④ 유저가 원하는 것
+  function drawWants(deep) {
+    const el = document.getElementById('rpWants');
+    if (!deep.has_complaints) { el.innerHTML = head('④', '유저가 원하는 것') + noComplaints; return; }
+    const list = deep.wants;
+    el.innerHTML = head('④', '유저가 원하는 것', list[0] ? `가장 많이 나온 요청은 <b>“${esc(list[0].text)}”</b>입니다 (${num(list[0].count)}건).` : '')
+      + (list.length ? `<ol class="rp-wants">${list.map(w => `<li><span class="rp-want-text">${esc(w.text)}</span><span class="rp-want-meta"><em>${esc(w.theme)}</em>${num(w.count)}건 · 공감 ${num(w.votes)}</span></li>`).join('')}</ol>`
+        : '<p class="rp-empty">구체적인 요청 문장이 없습니다.</p>')
+      + '<p class="rp-note">불만 리뷰에서 "~해 주세요", "~했으면" 같은 구체적인 요청만 모았습니다. "버그 수정"처럼 막연한 말은 뺐습니다.</p>';
+  }
+
+  return {renderReviews, renderSample, renderDeep};
 })();

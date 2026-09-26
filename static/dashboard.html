@@ -1613,10 +1613,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927d">
-<script src="/static/review-dashboard.js?v=20260927d"></script>
-<link rel="stylesheet" href="/static/review-pages.css?v=20260927d">
-<script src="/static/review-pages.js?v=20260927d"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927e">
+<script src="/static/review-dashboard.js?v=20260927e"></script>
+<link rel="stylesheet" href="/static/review-pages.css?v=20260927e">
+<script src="/static/review-pages.js?v=20260927e"></script>
 </head>
 <body>
 <div class="app">
@@ -1635,6 +1635,7 @@ body.no-analysis #ovBody { display: none; }
     <div class="nav-group">
       <div class="nav-label">리뷰 분석 파이프라인</div>
       <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)">진단 요약</a>
+      <a href="#" class="nav-item" data-page="deep" onclick="navTo(this)">심층 분석</a>
       <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)">리뷰 원문</a>
       <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)">수집 설계</a>
     </div>
@@ -1693,6 +1694,7 @@ body.no-analysis #ovBody { display: none; }
         <div class="rd-page-copy">
           <h1 class="title" id="overviewTitle">리뷰 진단</h1>
           <p class="subtitle ov-coverage" id="ovCoverage"></p>
+          <p class="rd-summary" id="ovSummary"></p>
         </div>
       </div>
 
@@ -1710,6 +1712,12 @@ body.no-analysis #ovBody { display: none; }
     <!-- ================================================================ -->
     <!-- 2) REVIEWS                                                        -->
     <!-- ================================================================ -->
+    <section class="page" data-page="deep">
+      <h1 class="title">심층 분석</h1>
+      <p class="subtitle">불만을 더 잘게 나누고, 누가 떠났고, 무엇에 공감했고, 무엇을 원하는지</p>
+      <div id="rpDeep" class="rp"></div>
+    </section>
+
     <section class="page" data-page="reviews">
       <h1 class="title">리뷰 원문</h1>
       <p class="subtitle">AI가 분석한 리뷰를 반응·주제·평가로 걸러 봅니다</p>
@@ -2388,6 +2396,7 @@ function setNoAnalysisState(on, title, body, cta) {
   if (!on) return;
   document.getElementById('rdPageArt')?.replaceChildren();
   document.getElementById('rdPageActions')?.replaceChildren();
+  document.getElementById('ovSummary')?.replaceChildren();
   const titleEl = document.getElementById('execTitle');
   const bodyEl = document.getElementById('execSummary');
   if (titleEl) titleEl.textContent = title;
@@ -2424,6 +2433,7 @@ async function load(appId) {
   try { renderOverviewV5(V5); } catch (error) { console.error('요약 화면 오류:', error); }
   try { renderReviews(); } catch (error) { console.error('리뷰 목록 오류:', error); }
   try { renderSample(); } catch (error) { console.error('표본 화면 오류:', error); }
+  try { ReviewPages.renderDeep(DATA); } catch (error) { console.error('심층 분석 오류:', error); }
   try { renderApiLab(); } catch (error) { console.error('분석 도구 오류:', error); }
   try { renderDownloads(); } catch (error) { console.error('내려받기 오류:', error); }
 }
