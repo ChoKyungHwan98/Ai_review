@@ -63,7 +63,7 @@ window.ReviewDashboard = (() => {
     const art = document.getElementById('rdPageArt');
     art.innerHTML = V.game?.header_image
       ? `<img src="${esc(V.game.header_image)}" alt="" onerror="this.remove()" />` : '';
-    document.getElementById('rdPageActions').innerHTML = `<button class="rd-btn" type="button" onclick="startNewAnalysis(${Number(id)},null,null,true)">추가 수집</button><a class="rd-btn" href="/api/reviews/download?app_id=${Number(id)}" download>원문 내려받기</a><a class="rd-btn primary" href="/api/analysis/download?app_id=${Number(id)}" download>분석 결과 내려받기</a>`;
+    document.getElementById('rdPageActions').innerHTML = `<button class="rd-btn" type="button" onclick="startNewAnalysis(${Number(id)},null,null,true)">추가 수집</button><button class="rd-btn" type="button" onclick="ReviewDashboard.report()">한 장 보고서</button><a class="rd-btn" href="/api/reviews/download?app_id=${Number(id)}" download>원문 내려받기</a><a class="rd-btn primary" href="/api/analysis/download?app_id=${Number(id)}" download>분석 결과 내려받기</a>`;
     if (!evidence) {
       document.getElementById('overviewTitle').textContent = `${V.game?.name || '게임'} 리뷰 진단`;
       document.getElementById('ovCoverage').textContent = '';
@@ -146,9 +146,14 @@ window.ReviewDashboard = (() => {
   // 우선순위 지도: x = 언급 수, y = 불만 비율, 원 크기 = 언급 수. 점선은 언급 수 중앙값과 불만 50%.
   function renderMap() {
     const target = document.getElementById('rdTopicChart');
-    const topics = evidence.themes.filter(t => t.mentions > 0);
-    if (!topics.length) { target.innerHTML = '<div class="rd-empty">분류된 주제가 아직 없습니다.</div>'; return; }
     const W = Math.max(300, target.clientWidth || 800), H = W < 480 ? 320 : Math.round(Math.min(520, Math.max(380, W * .5)));
+    target.innerHTML = mapSVG(W, H) || '<div class="rd-empty">분류된 주제가 아직 없습니다.</div>';
+  }
+
+  // 지도 SVG 문자열. 화면과 한 장 보고서가 같은 그림을 쓴다.
+  function mapSVG(W, H) {
+    const topics = evidence.themes.filter(t => t.mentions > 0);
+    if (!topics.length) return '';
     const L = 40, R = 12, T = 16, B = 30, pw = W - L - R, ph = H - T - B;
     const maxM = Math.max(...topics.map(t => t.mentions));
     const step = maxM > 200 ? 100 : maxM > 60 ? 50 : 10;
@@ -203,7 +208,7 @@ window.ReviewDashboard = (() => {
       }
     });
     const tick = (tx, ty, str, anchor = 'end') => `<text class="rd-map-tick" x="${tx}" y="${ty}" text-anchor="${anchor}">${str}</text>`;
-    target.innerHTML = `<svg class="rd-map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="group" aria-label="주제 우선순위 지도">
+    return `<svg class="rd-map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="group" aria-label="주제 우선순위 지도">
       <rect x="${xm}" y="${T}" width="${W - R - xm}" height="${ym - T}" class="rd-q rd-q-fix"/>
       <rect x="${xm}" y="${ym}" width="${W - R - xm}" height="${H - B - ym}" class="rd-q rd-q-keep"/>
       <rect x="${L}" y="${T}" width="${xm - L}" height="${ym - T}" class="rd-q rd-q-watch"/>
@@ -376,5 +381,82 @@ window.ReviewDashboard = (() => {
       body.innerHTML='<p class="rd-empty">원문을 불러오지 못했습니다. <button class="rd-btn" data-action="retry-evidence">다시 시도</button></p>';
     }
   }
-  return {render};
+  /* ---------- 한 장 보고서: A4 한 쪽. 새 창에서 열고 인쇄(PDF 저장) ---------- */
+  function reportHTML() {
+    if (!evidence) return '';
+    const s = strength(), c = concern() || loudest(), counts = evidence.counts;
+    const game = data.game?.name || '게임';
+    const period = evidence.period ? `${evidence.period.start.replaceAll('-','.')} – ${evidence.period.end.replaceAll('-','.')}` : '';
+    const action = c && data.actions?.find(a => a.theme === c.name);
+    const quote = (t, k) => t?.examples?.[k]?.[0]?.content;
+    const topicBox = (t, kind) => {
+      if (!t) return '';
+      const q = quote(t, kind === 'keep' ? 'P' : 'N');
+      return `<div class="rpt-topic is-${kind}">
+        <span class="rpt-tag">${kind === 'keep' ? '지킬 것' : '고칠 것'}</span><h3>${esc(t.name)}</h3>
+        <p class="rpt-num">${kind === 'keep' ? `칭찬 ${Math.round(t.pos / t.mentions * 100)}%` : `불만 ${Math.round(t.neg / t.mentions * 100)}%`} <small>· 언급 ${num(t.mentions)}건 (칭찬 ${num(t.pos)} / 불만 ${num(t.neg)})</small></p>
+        ${kind === 'fix' && action?.prob ? `<p><b>문제</b>${esc(action.prob)}</p>` : ''}
+        ${kind === 'fix' && action?.why ? `<p><b>원인</b>${esc(action.why)}</p>` : ''}
+        ${kind === 'fix' && action?.fix?.length ? `<p><b>유저 제안</b>${action.fix.map(esc).join(' · ')}</p>` : ''}
+        ${q ? `<blockquote>“${esc(q.slice(0, 120))}${q.length > 120 ? '…' : ''}”</blockquote>` : ''}</div>`;
+    };
+    const deep = window.ReviewPages?.deepLines(evidence.deep) || [];
+    const cohorts = evidence.cohorts.filter(x => x.n > 0);
+    const fun = (evidence.fun || []).slice(0, 3);
+    return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(game)} 리뷰 진단 보고서</title>
+<link rel="stylesheet" href="${location.origin}/static/review-dashboard.css">
+<style>
+@page { size:A4; margin:10mm; }
+body { margin:0; background:#F2F4F6; font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR",sans-serif; }
+.rpt { width:186mm; min-height:273mm; margin:16px auto; padding:10mm; box-sizing:border-box; background:#fff; color:#333D4B; font-size:12px; line-height:1.55; }
+.rpt-bar { width:186mm; margin:16px auto 0; display:flex; justify-content:flex-end; }
+.rpt-bar button { border:0; border-radius:8px; padding:9px 14px; background:#191F28; color:#fff; font:inherit; font-size:13px; cursor:pointer; }
+.rpt-kicker { font-size:11px; color:#6B7684; font-weight:600; }
+.rpt h1 { margin:4px 0 2px; font-size:22px; letter-spacing:-.03em; color:#191F28; }
+.rpt-meta { font-size:11px; color:#8B95A1; }
+.rpt-summary { margin:8px 0 0; padding:8px 10px; border-radius:8px; background:#F7F9FB; }
+.rpt h2 { margin:10px 0 4px; font-size:13px; color:#191F28; }
+.rpt .rd-map { width:100%; height:auto; }
+.rpt-two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.rpt-topic { border:1px solid #E5E8EB; border-radius:10px; padding:10px 12px; }
+.rpt-topic.is-fix { background:#FFF4F5; border-color:#F8C3C8; } .rpt-topic.is-keep { background:#EEF4FE; border-color:#C8DCF8; }
+.rpt-tag { font-size:10px; font-weight:800; color:#fff; background:#3182F6; border-radius:999px; padding:1px 7px; }
+.is-fix .rpt-tag { background:#F04452; }
+.rpt-topic h3 { margin:4px 0 0; font-size:16px; color:#191F28; }
+.rpt-num { margin:2px 0 6px; font-weight:800; font-size:14px; } .rpt-num small { font-weight:500; font-size:11px; color:#6B7684; }
+.rpt-topic p { margin:3px 0; } .rpt-topic p b { color:#191F28; margin-right:6px; }
+.rpt blockquote { margin:6px 0 0; padding-left:8px; border-left:2px solid #C5CDD8; color:#4E5968; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.rpt-lines { margin:0; padding:0; list-style:none; display:grid; gap:4px; }
+.rpt-lines li { display:grid; grid-template-columns:84px 1fr; gap:8px; }
+.rpt-lines span { font-weight:700; color:#6B7684; }
+.rpt-lines b { color:#C9303D; }
+.rpt-mini { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.rpt-mini div { display:flex; justify-content:space-between; gap:8px; border-bottom:1px solid #EEF1F4; padding:2px 0; }
+.rpt-foot { margin-top:12px; padding-top:8px; border-top:1px solid #E5E8EB; font-size:10px; color:#8B95A1; }
+@media print { body { background:#fff; } .rpt { margin:0; width:auto; min-height:0; padding:0; font-size:11px; } .rpt-bar { display:none; } .rpt, .rpt-two, .rpt-mini { break-inside:avoid; } }
+</style></head><body>
+<div class="rpt-bar"><button onclick="print()">인쇄 / PDF로 저장</button></div>
+<div class="page active rpt" data-page="overview">
+  <div class="rpt-kicker">${esc(game)} · Steam 리뷰 진단 보고서${data.generated_at ? ` · ${esc(data.generated_at)}` : ''}</div>
+  <h1>${verdictHTML()}</h1>
+  <div class="rpt-meta">${esc(period)} · AI 분석 ${num(counts.analyzed)}건 / 수집 ${num(counts.collected)}건</div>
+  ${data.summary ? `<p class="rpt-summary">${esc(data.summary)}</p>` : ''}
+  <h2>주제 우선순위 지도</h2>${mapSVG(700, 280)}
+  <div class="rpt-two">${topicBox(s, 'keep')}${topicBox(c, 'fix')}</div>
+  ${deep.length ? `<h2>심층 분석에서 찾은 것</h2><ul class="rpt-lines">${deep.map(([k, t]) => `<li><span>${k}</span><p style="margin:0">${t}</p></li>`).join('')}</ul>` : ''}
+  <h2>플레이 시간과 재미</h2>
+  <div class="rpt-mini"><section>${cohorts.map(x => `<div><span>${esc(x.label)} 비추천</span><b>${x.small ? `표본 적음 (${num(x.negative)}/${num(x.n)})` : pct(x.negative_rate)}</b></div>`).join('')}</section>
+    <section>${fun.map(f => `<div><span>${esc(f.name)} · ${esc(f.desc)}</span><b>${pct(f.share)}</b></div>`).join('')}</section></div>
+  <p class="rpt-foot">최신순으로 모은 Steam 리뷰입니다. 전체 유저의 무작위 표본이 아니므로 "전체 유저의 몇 %"로 읽지 않습니다. 주제·감성은 AI 분류이며 한 리뷰가 여러 주제에 들어갈 수 있습니다. 지킬 것·고칠 것은 조사를 시작할 곳이며 개선 효과를 뜻하지 않습니다.</p>
+</div></body></html>`;
+  }
+  function report() {
+    const html = reportHTML();
+    const w = html && window.open('', '_blank');
+    if (!w) return;
+    w.document.open(); w.document.write(html); w.document.close();
+  }
+
+  return {render, report, reportHTML};
 })();

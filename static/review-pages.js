@@ -205,6 +205,30 @@ window.ReviewPages = (() => {
     box.onclick = e => { const b = e.target.closest('[data-cause]'); if (b) { deepTheme = b.dataset.cause; drawCauses(deep); } };
     drawCauses(deep); drawChurn(deep); drawAgreed(deep); drawWants(deep);
   }
+  // 카드 머리의 한 줄 인사이트. 한 장 보고서도 같은 문장을 쓴다.
+  const churnGap = t => (t.early_share ?? 0) - (t.later_share ?? 0);
+  const agreeGap = t => (t.vote_share || 0) - (t.count_share || 0);
+  const churnPick = deep => [...deep.churn.topics].filter(t => t.early >= 2).sort((a, b) => churnGap(b) - churnGap(a))[0];
+  const agreePick = deep => [...deep.agreed.topics].sort((a, b) => agreeGap(b) - agreeGap(a))[0];
+  const lines = {
+    cause: (deep, theme) => {
+      const c = deep.causes.find(x => x.theme === theme), top = c?.terms[0];
+      return top ? `<b>${esc(c.theme)}</b> 불만에서 가장 많이 나온 말은 <b>'${esc(top.word)}'</b>입니다 (${num(top.count)}건).` : '';
+    },
+    churn: deep => {
+      const p = churnPick(deep), h = deep.early_hours;
+      if (!deep.churn.early_n) return '';
+      return p && churnGap(p) > 5 ? `${h}시간 전에 떠난 사람은 <b>'${esc(p.name)}'</b>을(를) 더 많이 말합니다 (${pct(p.early_share)} vs ${pct(p.later_share ?? 0)}).`
+        : `${h}시간 전후로 비추천 이유가 크게 다르지 않습니다.`;
+    },
+    agreed: deep => {
+      const p = agreePick(deep);
+      if (!deep.agreed.total_votes) return '';
+      return p && agreeGap(p) > 5 ? `<b>'${esc(p.name)}'</b> 불만은 건수로는 ${pct(p.count_share)}지만, 다른 유저의 공감은 ${pct(p.vote_share)}를 받았습니다.`
+        : '공감은 불만 건수와 비슷하게 나뉘어 있습니다.';
+    },
+    wants: deep => deep.wants[0] ? `가장 많이 나온 요청은 <b>“${esc(deep.wants[0].text)}”</b>입니다 (${num(deep.wants[0].count)}건).` : '',
+  };
   const noComplaints = '<p class="rp-empty">불만 리뷰의 AI 메모(complaints_v3.jsonl)가 없습니다. 분석을 다시 실행하면 채워집니다.</p>';
   const head = (n, title, insight) => `<span class="rp-deep-no">${n}</span><h2>${title}</h2>${insight ? `<p class="rp-insight">${insight}</p>` : ''}`;
   const hbar = (label, sub, value, max, text, cls = '') => `<div class="rp-hrow ${cls}"><span class="rp-hlabel"><b>${label}</b>${sub ? `<small>${sub}</small>` : ''}</span><span class="rp-htrack"><i style="width:${max ? value / max * 100 : 0}%"></i></span><span class="rp-hval">${text}</span></div>`;
@@ -216,7 +240,7 @@ window.ReviewPages = (() => {
     const tabs = `<div class="rp-chips">${deep.causes.map(x => `<button class="rp-chip" data-cause="${esc(x.theme)}" aria-pressed="${x.theme === deepTheme}">${esc(x.theme)}</button>`).join('')}</div>`;
     if (!deep.has_complaints || !c) { el.innerHTML = head('①', '불만 세부 원인') + noComplaints; return; }
     const top = c.terms[0], max = top?.count || 1;
-    el.innerHTML = head('①', '불만 세부 원인', top ? `<b>${esc(c.theme)}</b> 불만에서 가장 많이 나온 말은 <b>'${esc(top.word)}'</b>입니다 (${num(top.count)}건).` : '')
+    el.innerHTML = head('①', '불만 세부 원인', lines.cause(deep, deepTheme))
       + tabs
       + (c.terms.length ? `<div class="rp-hbars">${c.terms.map((t, i) => hbar(esc(t.word), `“${esc(t.example)}”`, t.count, max, `${num(t.count)}건`, i ? '' : 'is-top')).join('')}</div>`
         : '<p class="rp-empty">여러 리뷰가 함께 쓴 말이 없습니다.</p>')
@@ -228,12 +252,9 @@ window.ReviewPages = (() => {
     const el = document.getElementById('rpChurn');
     const {early_n, later_n, topics} = deep.churn, h = deep.early_hours;
     if (!early_n) { el.innerHTML = head('②', '초반 이탈 원인') + `<p class="rp-empty">${h}시간 전에 비추천한 리뷰가 없습니다.</p>`; return; }
-    const gap = t => (t.early_share ?? 0) - (t.later_share ?? 0);
-    const pick = [...topics].filter(t => t.early >= 2).sort((a, b) => gap(b) - gap(a))[0];
+    const gap = churnGap, pick = churnPick(deep);
     const max = Math.max(...topics.flatMap(t => [t.early_share || 0, t.later_share || 0]), 1);
-    el.innerHTML = head('②', '초반 이탈 원인', pick && gap(pick) > 5
-        ? `${h}시간 전에 떠난 사람은 <b>'${esc(pick.name)}'</b>을(를) 더 많이 말합니다 (${pct(pick.early_share)} vs ${pct(pick.later_share ?? 0)}).`
-        : `${h}시간 전후로 비추천 이유가 크게 다르지 않습니다.`)
+    el.innerHTML = head('②', '초반 이탈 원인', lines.churn(deep))
       + `<div class="rp-legend"><span class="early">${h}시간 전 비추천 ${num(early_n)}건</span><span class="later">${h}시간 뒤 비추천 ${num(later_n)}건</span></div>`
       + `<div class="rp-pairs">${topics.map(t => `<div class="rp-pair ${t === pick && gap(pick) > 5 ? 'is-top' : ''}"><b>${esc(t.name)}</b>
           <span class="rp-ptrack early"><i style="width:${(t.early_share || 0) / max * 100}%"></i><em>${pct(t.early_share ?? 0)}</em></span>
@@ -246,13 +267,10 @@ window.ReviewPages = (() => {
     const el = document.getElementById('rpAgreed');
     const {topics, total_votes, reviews} = deep.agreed;
     if (!total_votes) { el.innerHTML = head('③', '공감 많은 불만') + '<p class="rp-empty">불만 리뷰에 "도움됨"이 눌린 기록이 없습니다.</p>'; return; }
-    const gap = t => (t.vote_share || 0) - (t.count_share || 0);
-    const pick = [...topics].sort((a, b) => gap(b) - gap(a))[0];
+    const gap = agreeGap, pick = agreePick(deep);
     const max = Math.max(...topics.flatMap(t => [t.vote_share || 0, t.count_share || 0]), 1);
     const quote = reviews[0];
-    el.innerHTML = head('③', '공감 많은 불만', pick && gap(pick) > 5
-        ? `<b>'${esc(pick.name)}'</b> 불만은 건수로는 ${pct(pick.count_share)}지만, 다른 유저의 공감은 ${pct(pick.vote_share)}를 받았습니다.`
-        : '공감은 불만 건수와 비슷하게 나뉘어 있습니다.')
+    el.innerHTML = head('③', '공감 많은 불만', lines.agreed(deep))
       + `<div class="rp-legend"><span class="later">불만 건수 비율</span><span class="agree">공감(도움됨) 비율</span></div>`
       + `<div class="rp-pairs">${topics.map(t => `<div class="rp-pair ${t === pick && gap(pick) > 5 ? 'is-top' : ''}"><b>${esc(t.name)}</b>
           <span class="rp-ptrack later"><i style="width:${(t.count_share || 0) / max * 100}%"></i><em>${pct(t.count_share)}</em></span>
@@ -265,11 +283,19 @@ window.ReviewPages = (() => {
     const el = document.getElementById('rpWants');
     if (!deep.has_complaints) { el.innerHTML = head('④', '유저가 원하는 것') + noComplaints; return; }
     const list = deep.wants;
-    el.innerHTML = head('④', '유저가 원하는 것', list[0] ? `가장 많이 나온 요청은 <b>“${esc(list[0].text)}”</b>입니다 (${num(list[0].count)}건).` : '')
+    el.innerHTML = head('④', '유저가 원하는 것', lines.wants(deep))
       + (list.length ? `<ol class="rp-wants">${list.map(w => `<li><span class="rp-want-text">${esc(w.text)}</span><span class="rp-want-meta"><em>${esc(w.theme)}</em>${num(w.count)}건 · 공감 ${num(w.votes)}</span></li>`).join('')}</ol>`
         : '<p class="rp-empty">구체적인 요청 문장이 없습니다.</p>')
       + '<p class="rp-note">불만 리뷰에서 "~해 주세요", "~했으면" 같은 구체적인 요청만 모았습니다. "버그 수정"처럼 막연한 말은 뺐습니다.</p>';
   }
 
-  return {renderReviews, renderSample, renderDeep};
+  // 한 장 보고서용: 심층 분석 네 줄 (비어 있는 줄은 뺌)
+  function deepLines(deep) {
+    if (!deep) return [];
+    const theme = deep.causes.find(c => c.terms.length)?.theme;
+    return [['불만 세부 원인', deep.has_complaints ? lines.cause(deep, theme) : ''], ['초반 이탈', lines.churn(deep)],
+            ['공감', lines.agreed(deep)], ['유저 요청', deep.has_complaints ? lines.wants(deep) : '']].filter(([, t]) => t);
+  }
+
+  return {renderReviews, renderSample, renderDeep, deepLines};
 })();
