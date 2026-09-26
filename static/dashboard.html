@@ -1613,8 +1613,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927a">
-<script src="/static/review-dashboard.js?v=20260927a"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927d">
+<script src="/static/review-dashboard.js?v=20260927d"></script>
+<link rel="stylesheet" href="/static/review-pages.css?v=20260927d">
+<script src="/static/review-pages.js?v=20260927d"></script>
 </head>
 <body>
 <div class="app">
@@ -1632,9 +1634,9 @@ body.no-analysis #ovBody { display: none; }
 
     <div class="nav-group">
       <div class="nav-label">리뷰 분석 파이프라인</div>
-      <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)">대시보드</a>
-      <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)">리뷰 탐색</a>
-      <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)">표본 설계</a>
+      <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)">진단 요약</a>
+      <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)">리뷰 원문</a>
+      <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)">수집 설계</a>
     </div>
 
     <div class="sidebar-bottom">
@@ -1709,83 +1711,18 @@ body.no-analysis #ovBody { display: none; }
     <!-- 2) REVIEWS                                                        -->
     <!-- ================================================================ -->
     <section class="page" data-page="reviews">
-      <h1 class="title">리뷰 목록</h1>
-      <p class="subtitle">AI가 분석한 리뷰를 검색하고 필터로 찾아보세요</p>
-
-      <div class="card" style="margin-bottom:16px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-        <input id="searchKw" class="input" placeholder="키워드/내용 검색…" style="flex:1; min-width:200px" />
-        <select id="filterSentiment" class="select">
-          <option value="">전체 감성</option>
-          <option value="POSITIVE">긍정</option>
-          <option value="NEGATIVE">부정</option>
-          <option value="MIXED">혼합</option>
-          <option value="NEUTRAL">중립</option>
-        </select>
-        <select id="filterVoted" class="select">
-          <option value="">추천/비추천 전체</option>
-          <option value="1">👍 추천</option>
-          <option value="0">👎 비추천</option>
-        </select>
-        <span class="tiny mono" id="reviewCount">—</span>
-      </div>
-
-      <div class="card" style="padding:0">
-        <div class="table-wrap" style="border:none">
-          <div class="table-scroll">
-            <table>
-              <thead><tr>
-                <th style="width:50px">ID</th>
-                <th style="width:50px">투표</th>
-                <th style="width:90px">감성</th>
-                <th style="width:120px">AI 신뢰도</th>
-                <th style="width:60px">보정값</th>
-                <th>핵심 문구</th>
-                <th style="width:70px; text-align:right">플레이</th>
-              </tr></thead>
-              <tbody id="reviewTable"><tr><td colspan="7" style="text-align:center; padding:32px">로딩 중…</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <h1 class="title">리뷰 원문</h1>
+      <p class="subtitle">AI가 분석한 리뷰를 반응·주제·평가로 걸러 봅니다</p>
+      <div id="rpReviews" class="rp"></div>
     </section>
 
     <!-- ================================================================ -->
-    <!-- 3) SAMPLE DESIGN    <!-- 5) SAMPLE DESIGN                                                  -->
+    <!-- 3) SAMPLE DESIGN                                                  -->
     <!-- ================================================================ -->
     <section class="page" data-page="sample">
-      <h1 class="title">분석 규모</h1>
-      <p class="subtitle">몇 건을 분석해야 믿을 수 있는가? (95% 확신 기준)</p>
-
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title">스팀 한국어 리뷰 현황</div>
-        <div class="sd-row">
-          <div class="sd-block"><div class="label">총 리뷰 수</div><div class="value mono"><span id="sdPopTotal">—</span>건</div><div class="note">Steam 공식 통계</div></div>
-          <div class="sd-block"><div class="label">추천</div><div class="value mono" style="color:var(--color-success-green)"><span id="sdPopPos">—</span>건</div><div class="note"><span id="sdPopPosRate">—</span>%</div></div>
-          <div class="sd-block"><div class="label">비추천</div><div class="value mono" style="color:var(--color-error-red)"><span id="sdPopNeg">—</span>건</div><div class="note"><span id="sdPopNegRate">—</span>%</div></div>
-          <div class="sd-block"><div class="label">스팀 종합 평가</div><div style="font-size:13px; color:var(--color-success-green)" id="sdPopScore">—</div></div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title">믿을 수 있는 결과를 위해 필요한 리뷰 수</div>
-        <div class="sd-row">
-          <div class="sd-block"><div class="label">결과 오차 ±3%</div><div class="value mono"><span id="sdReq3">—</span>건</div></div>
-          <div class="sd-block"><div class="label">결과 오차 ±5% ⭐</div><div class="value mono acc"><span id="sdReq5">—</span>건</div><div class="note">일반 기준</div></div>
-          <div class="sd-block"><div class="label">결과 오차 ±7%</div><div class="value mono"><span id="sdReq7">—</span>건</div></div>
-          <div class="sd-block"><div class="label">결과 오차 ±10%</div><div class="value mono"><span id="sdReq10">—</span>건</div></div>
-        </div>
-        <div class="tiny" style="margin-top:12px">전체 리뷰가 많을수록 적은 수만 분석해도 충분히 정확한 결과를 얻을 수 있습니다</div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">이번 분석의 적정성</div>
-        <div class="sd-row">
-          <div class="sd-block"><div class="label">수집한 리뷰</div><div class="value mono"><span id="sdCol">—</span>건</div><div class="note">추천 <span id="sdColPos">—</span> / 비추천 <span id="sdColNeg">—</span></div></div>
-          <div class="sd-block"><div class="label">실제 분석한 리뷰</div><div class="value mono"><span id="sdAna">—</span>건</div><div class="note">짧은 리뷰 제외 후</div></div>
-          <div class="sd-block"><div class="label">결과 오차 (95% 확신)</div><div class="value mono acc">±<span id="sdErr">—</span>%</div><div class="note" id="sdErrStatus">—</div></div>
-          <div class="sd-block"><div class="label">비추천 추가 수집량</div><div class="value mono" style="color:var(--color-error-red)">+<span id="sdBias">—</span>%</div><div class="note">일부러 더 수집 → 보정으로 해결</div></div>
-        </div>
-      </div>
+      <h1 class="title">수집 설계</h1>
+      <p class="subtitle">어떤 리뷰를 몇 건 모아 분석했는지</p>
+      <div id="rpSample" class="rp"></div>
     </section>
 
     <!-- ================================================================ -->
@@ -2517,84 +2454,9 @@ function setBar(posId, negId, posPct, negPct, posLabel, negLabel) {
 
 function escapeHtml(s) { return (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-/* ============ Reviews ============ */
-function renderReviews() {
-  ['searchKw','filterSentiment','filterVoted'].forEach(id => {
-    document.getElementById(id).addEventListener('input', renderReviewTable);
-    document.getElementById(id).addEventListener('change', renderReviewTable);
-  });
-  renderReviewTable();
-}
-
-function renderReviewTable() {
-  const kw = (document.getElementById('searchKw').value || '').toLowerCase();
-  const fs = document.getElementById('filterSentiment').value;
-  const fv = document.getElementById('filterVoted').value;
-  const all = DATA?.reviews || [];
-  const filtered = all.filter(r => {
-    if (fs && r.sentiment !== fs) return false;
-    if (fv && String(r.voted_up) !== fv) return false;
-    if (kw && !((r.content + ' ' + (r.key_phrase || '')).toLowerCase().includes(kw))) return false;
-    return true;
-  });
-  document.getElementById('reviewCount').textContent = filtered.length + ' / ' + all.length + '건';
-  const tb = document.getElementById('reviewTable');
-  if (!filtered.length) {
-    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px" class="muted">조건에 맞는 리뷰가 없습니다.</td></tr>';
-    return;
-  }
-  const senCls = { POSITIVE: 'pos', NEGATIVE: 'neg', MIXED: 'warn', NEUTRAL: 'mute' };
-  const senKr = { POSITIVE: '긍정', NEGATIVE: '부정', MIXED: '혼합', NEUTRAL: '중립' };
-  tb.innerHTML = filtered.slice(0, 300).map(r => {
-    const conf = r.confidence ? Math.round(r.confidence * 100) : 85;
-    const warningBadge = r.needs_verification
-      ? `<span class="tag neg" style="font-size:11px; margin-left:6px; border-radius:4px" title="신뢰도 75% 미만으로 분석되어 수동 검증 권장">⚠️ 주의 필요</span>`
-      : '';
-    const confHtml = `<div style="display:flex; align-items:center; gap:4px">
-      <span class="mono">${conf}%</span>
-      ${warningBadge}
-    </div>`;
-
-    return `
-    <tr>
-      <td class="mono tiny">${r.id}</td>
-      <td>${r.voted_up == 1 ? '👍' : '👎'}</td>
-      <td><span class="tag ${senCls[r.sentiment] || 'mute'}">${senKr[r.sentiment] || r.sentiment}</span></td>
-      <td>${confHtml}</td>
-      <td class="mono tiny">×${(r.weight || 1).toFixed(2)}</td>
-      <td class="truncate" title="${escapeHtml(r.content)}">${r.key_phrase || r.content?.substring(0, 60) || '—'}</td>
-      <td class="mono tiny" style="text-align:right">${r.playtime_h}h</td>
-    </tr>`;
-  }).join('');
-}
-
-/* ============ Sample Design ============ */
-function renderSample() {
-  const sd = DATA.sample_design_full || {};
-  const pop = sd.population || {};
-  const rs = sd.required_sample_sizes || {};
-  const cs = sd.current_sample || {};
-
-  set('sdPopTotal', (pop.total || 0).toLocaleString());
-  set('sdPopPos', (pop.positive || 0).toLocaleString());
-  set('sdPopNeg', (pop.negative || 0).toLocaleString());
-  set('sdPopPosRate', ((pop.pos_rate || 0) * 100).toFixed(1));
-  set('sdPopNegRate', ((pop.neg_rate || 0) * 100).toFixed(1));
-  set('sdPopScore', pop.score || '—');
-  set('sdReq3', rs.e_3pct || '—');
-  set('sdReq5', rs.e_5pct || '—');
-  set('sdReq7', rs.e_7pct || '—');
-  set('sdReq10', rs.e_10pct || '—');
-  set('sdCol', cs.collected || '—');
-  set('sdColPos', cs.pos_collected || '—');
-  set('sdColNeg', cs.neg_collected || '—');
-  set('sdAna', cs.analyzed || '—');
-  set('sdErr', cs.margin_of_error_analyzed_pct || '—');
-  const errOk = (cs.margin_of_error_analyzed_pct || 99) <= 5;
-  const errEl = document.getElementById('sdErrStatus');
-  if (errEl) { errEl.textContent = errOk ? '✅ ±5%p 충족' : '❌ ±5%p 미달'; errEl.style.color = errOk ? 'var(--color-success-green)' : 'var(--color-error-red)'; }
-  set('sdBias', Math.abs(cs.bias_neg_pct_overrepresented || 0).toFixed(1));
-}
+/* ============ Reviews / Sample (static/review-pages.js) ============ */
+function renderReviews() { ReviewPages.renderReviews(DATA); }
+function renderSample() { ReviewPages.renderSample(DATA); }
 
 /* ============ API Lab → AI 분석 ============ */
 function renderApiLab() {

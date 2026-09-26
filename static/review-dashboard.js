@@ -96,10 +96,16 @@ window.ReviewDashboard = (() => {
         </section>
         <aside class="rd-focus" id="rdDetail" aria-live="polite" aria-label="선택한 주제의 근거"></aside>
       </div>
+      <div class="rd-lower">
       <section class="rd-when" aria-labelledby="rdWhenTitle">
         <div class="rd-when-head"><h2 id="rdWhenTitle">플레이 시간별 비추천율</h2><p>수집 리뷰 ${num(counts.collected)}건 · 작성 당시 플레이 시간 기준 · 점선은 전체 ${pct(evidence.sample_negative_rate)}</p></div>
         <div id="rdCohortChart"></div>
       </section>
+      <section class="rd-when rd-fun" aria-labelledby="rdFunTitle">
+        <div class="rd-when-head"><h2 id="rdFunTitle">플레이어가 즐긴 것</h2><p>긍정·혼합 리뷰 ${num(evidence.fun_denominator)}건 · 한 리뷰에 여러 개 가능</p></div>
+        <div id="rdFunChart"></div>
+      </section>
+      </div>
       <dialog class="rd-dialog rd-method-dialog" id="rdMethodDialog" aria-labelledby="rdMethodTitle"><div class="rd-dialog-head"><div><h2 id="rdMethodTitle">분석 기준</h2><p>${num(counts.collected)}건 수집 · ${num(counts.analyzed)}건 AI 분석</p></div><button class="rd-btn" data-action="close-method" aria-label="분석 기준 닫기">닫기 ×</button></div><div class="rd-method-grid">
         <p><b>우선순위 지도</b><br>가로축은 주제를 언급한 AI 분석 리뷰 수(칭찬+불만), 세로축은 그중 불만 비율입니다. 원 크기도 언급 수입니다. 세로 점선은 전체 주제의 언급 수 중앙값, 가로 점선은 불만 50%입니다. 오른쪽 위 칸은 많이 언급되면서 불만이 더 많은 주제입니다.</p>
         <p><b>칭찬·불만 막대</b><br>막대 길이는 해당 주제를 칭찬하거나 불만으로 언급한 AI 분석 리뷰 수입니다. 양쪽이 같은 눈금을 씁니다. 칭찬이 더 많은 주제는 위에서 칭찬순, 불만이 더 많은 주제는 아래 구역에서 불만순으로 놓입니다.</p>
@@ -123,7 +129,7 @@ window.ReviewDashboard = (() => {
       let timer;
       addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(() => { if (view === 'map' && document.getElementById('rdTopicChart')) renderChart(); }, 150); });
     }
-    renderChart(); renderDetail(); renderCohorts();
+    renderChart(); renderDetail(); renderCohorts(); renderFun();
   }
 
   function renderChart() {
@@ -286,7 +292,7 @@ window.ReviewDashboard = (() => {
         <div class="rd-split-bar"><i class="neg" style="width:${negShare}%"></i><i class="pos" style="width:${100 - negShare}%"></i></div>
       </div>
       ${when}
-      ${action?.prob ? `<div class="rd-focus-block rd-ai"><h3>AI 요약</h3><p>${esc(action.prob)}</p></div>` : ''}
+      ${action?.prob ? `<div class="rd-focus-block rd-ai"><h3>AI 요약</h3><p>${esc(action.prob)}</p>${action.why || action.fix?.length ? `<details class="rd-why"><summary>원인과 개선 제안 보기</summary>${action.why ? `<p><b>리뷰가 말하는 원인</b>${esc(action.why)}</p>` : ''}${action.fix?.length ? `<p><b>리뷰에서 나온 제안</b></p><ul>${action.fix.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}<p class="rd-note">AI가 리뷰를 요약한 내용입니다. 원문으로 확인한 뒤 기획에 반영하세요.</p></details>` : ''}</div>` : ''}
       ${quote ? `<figure class="rd-quote"><figcaption>실제 리뷰 · ${quote.recommended ? '게임 추천' : '게임 비추천'}${quote.hours == null ? '' : ` · ${num(Math.round(quote.hours))}시간`}</figcaption><blockquote>“${esc(quote.content)}${quote.truncated ? '…' : ''}”</blockquote></figure>` : ''}
       <div class="rd-focus-actions">
         ${t.neg ? `<button class="rd-btn ${lead === 'N' ? 'primary' : ''}" data-action="evidence" data-sentiment="N">불만 리뷰 ${num(t.neg)}건</button>` : ''}
@@ -309,6 +315,18 @@ window.ReviewDashboard = (() => {
         </span>
         <span class="rd-cohort-val">${c.small ? `<small>표본 적음 (${num(c.negative)}/${num(c.n)}건)</small>` : pct(c.negative_rate)}</span>
       </div>`).join('')}</div>`;
+  }
+
+  // 재미 유형: 가장 많이 언급된 것만 진한 파랑, 나머지는 옅게. 막대 길이 = 긍정·혼합 리뷰 중 비율.
+  function renderFun() {
+    const target = document.getElementById('rdFunChart');
+    const rows = (evidence.fun || []).slice(0, 6);
+    if (!rows.length) { target.innerHTML = '<div class="rd-empty">재미 유형이 분류된 리뷰가 없습니다.</div>'; return; }
+    const max = Math.max(...rows.map(f => f.share || 0), 1);
+    target.innerHTML = `<div class="rd-funs">${rows.map((f, i) => `<div class="rd-fun-row ${i ? '' : 'is-top'}" title="${esc(f.desc)} · ${num(f.count)} / ${num(evidence.fun_denominator)}건">
+        <span class="rd-fun-name"><b>${esc(f.name)}</b><small>${esc(f.desc || '')}</small></span>
+        <span class="rd-fun-track"><i style="width:${clamp(f.share / max * 100)}%"></i></span>
+        <span class="rd-fun-val">${pct(f.share)}</span></div>`).join('')}</div>`;
   }
 
   function onClick(event) {

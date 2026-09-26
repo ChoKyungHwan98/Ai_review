@@ -158,6 +158,11 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 .rd-ai { background:#fff; border:1px solid var(--rd-line); border-radius:10px; padding:10px 12px; }
 .rd-ai h3 { margin-bottom:4px; color:#1B64DA; }
 .rd-ai p { margin:0; font-size:13px; line-height:1.6; color:var(--rd-text); }
+.rd-why { margin-top:8px; border-top:1px solid var(--rd-grid); padding-top:8px; font-size:13px; line-height:1.6; }
+.rd-why summary { cursor:pointer; color:#1B64DA; font-weight:600; font-size:12px; }
+.rd-why p { margin:8px 0 0; }
+.rd-why b { display:block; font-size:12px; color:var(--rd-sub); }
+.rd-why ul { margin:4px 0 0; padding-left:18px; }
 .rd-quote { margin:0; border-left:3px solid var(--rd-neg); padding:2px 0 2px 12px; }
 .rd-focus:not(.is-concern):not(.is-disliked) .rd-quote { border-left-color:var(--rd-pos); }
 .rd-quote figcaption { font-size:12px; color:var(--rd-muted); margin-bottom:4px; }
@@ -165,12 +170,22 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 .rd-focus-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:auto; }
 
 /* ---------- 플레이 시간별 비추천율 ---------- */
-.rd-when { background:var(--rd-surface); border:1px solid var(--rd-line); border-radius:16px; padding:18px 22px; margin-bottom:16px; }
+.rd-lower { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:16px; margin-bottom:16px; align-items:start; }
+.rd-when { background:var(--rd-surface); border:1px solid var(--rd-line); border-radius:16px; padding:18px 22px; min-width:0; }
+.rd-funs { display:grid; gap:10px; }
+.rd-fun-row { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 64px; gap:12px; align-items:center; }
+.rd-fun-name b { display:block; font-size:14px; font-weight:650; color:var(--rd-text); }
+.rd-fun-name small { display:block; font-size:12px; color:var(--rd-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rd-fun-track { height:12px; background:var(--rd-grid); border-radius:0 4px 4px 0; }
+.rd-fun-track i { display:block; height:100%; background:var(--rd-pos-mute); border-radius:0 4px 4px 0; }
+.rd-fun-row.is-top .rd-fun-track i { background:var(--rd-pos); }
+.rd-fun-row.is-top .rd-fun-val { color:var(--rd-pos-ink); }
+.rd-fun-val { font-size:15px; font-weight:700; color:var(--rd-ink); text-align:right; white-space:nowrap; }
 .rd-when-head { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
 .rd-when-head h2 { font-size:18px; font-weight:700; letter-spacing:-.02em; color:var(--rd-ink); }
 .rd-when-head p { margin:0; font-size:12px; color:var(--rd-muted); }
 .rd-cohorts { display:grid; gap:6px; }
-.rd-cohort { display:grid; grid-template-columns:110px minmax(0,1fr) 150px; align-items:center; gap:12px; min-height:40px; }
+.rd-cohort { display:grid; grid-template-columns:110px minmax(0,1fr) 128px; align-items:center; gap:12px; min-height:40px; }
 .rd-cohort-label b { font-size:14px; font-weight:600; color:var(--rd-text); }
 .rd-cohort-label small { display:block; font-size:12px; color:var(--rd-muted); }
 .rd-cohort-track { position:relative; height:14px; background:var(--rd-grid); border-radius:0 4px 4px 0; }
@@ -202,7 +217,7 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
   .rd-hero { grid-template-columns:minmax(0,1fr) 300px; }
 }
 @media (max-width:1080px) {
-  .rd-hero { grid-template-columns:1fr; }
+  .rd-hero, .rd-lower { grid-template-columns:1fr; }
   .rd-focus { border-left:0; border-top:1px solid var(--rd-line); }
 }
 @media (max-width:900px) {
