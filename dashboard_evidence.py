@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
-import decisions
+import analysis_design
 
 BUCKETS = ((0, 2, "2시간 미만"), (2, 20, "2~20시간"),
            (20, 100, "20~100시간"), (100, float("inf"), "100시간 이상"))
@@ -91,10 +91,9 @@ def _load_sources(directory, stamps):
     return reviews, analyzed, design, skipped, complaints
 
 
-def topic_members(analyzed, alias=None):
-    """주제별 칭찬·불만 리뷰 번호. alias는 사람이 다듬은 주제(합치기·이름 바꾸기·숨기기)."""
+def topic_members(analyzed):
+    """AI가 붙인 주제별 칭찬·불만 리뷰 번호."""
     members = {}
-    alias = alias or {}
     for rid, item in analyzed.items():
         for pair in item.get("t") or []:
             if not isinstance(pair, (list, tuple)) or len(pair) != 2:
@@ -102,12 +101,16 @@ def topic_members(analyzed, alias=None):
             name, sentiment = pair
             if not isinstance(name, str) or name == "기타" or sentiment not in ("P", "N"):
                 continue
-            name = decisions.resolve(name, alias)
-            if name is None:
-                continue
             group = members.setdefault(name, {"P": set(), "N": set()})
             group[sentiment].add(rid)
     return members
+
+
+def merged_topics(analyzed):
+    """AI 주제에 자동 합치기 규칙을 적용한다. (주제별 리뷰, alias, 합친 기록, AI가 낸 주제 수)"""
+    raw = topic_members(analyzed)
+    alias, merges = analysis_design.auto_merge(raw)
+    return analysis_design.merge_members(raw, alias), alias, merges, len(raw)
 
 
 def excerpt(row, app_id, limit=260):
@@ -130,8 +133,7 @@ def build_evidence(directory, app_id):
     if source is None:
         return None
     reviews, analyzed, design, skipped, complaints = source
-    alias = decisions.load(directory)["alias"]
-    members = topic_members(analyzed, alias)
+    members, alias, merges, n_ai_topics = merged_topics(analyzed)
     n = len(reviews)
     up = sum(is_positive(r) for r in reviews.values())
     base = up / n if n else None
@@ -179,6 +181,7 @@ def build_evidence(directory, app_id):
             "mood": {key: mood[key] for key in ("P", "M", "N", "U")},
             "themes": sorted(themes, key=lambda t: (-t["mentions"], t["name"])),
             "cohorts": cohorts,
+            "merges": merges, "n_ai_topics": n_ai_topics,
             "deep": build_deep(reviews, analyzed, members, complaints, app_id, alias),
             "fun_denominator": len(liked),
             "fun": [{"name": f, "desc": FUN[f], "count": c, "share": round(c / len(liked) * 100, 1)}
@@ -220,7 +223,7 @@ def build_deep(reviews, analyzed, members, complaints, app_id, alias=None):
     for item in complaints:
         rid = str(item["id"])
         for p in item.get("p") or []:
-            name = decisions.resolve(p.get("t"), alias or {}) if isinstance(p, dict) and p.get("t") else None
+            name = analysis_design.resolve(p.get("t"), alias or {}) if isinstance(p, dict) and p.get("t") else None
             if name:
                 parts.setdefault(name, []).append((rid, str(p.get("prob") or ""), str(p.get("why") or ""), str(p.get("fix") or "")))
     focus = sorted((name for name, g in members.items() if g["N"]),
@@ -247,7 +250,7 @@ def build_deep(reviews, analyzed, members, complaints, app_id, alias=None):
         hours = review_hours(row)
         if is_positive(row) or hours is None:
             continue
-        names = {decisions.resolve(n, alias or {}) for n, s in (item.get("t") or []) if s == "N" and n != "기타"} - {None}
+        names = {analysis_design.resolve(n, alias or {}) for n, s in (item.get("t") or []) if s == "N" and n != "기타"}
         if hours < EARLY_HOURS:
             early_n += 1
             early.update(names)
@@ -295,7 +298,7 @@ def evidence_page(directory, app_id, theme, sentiment="N", page=1):
     if source is None:
         return None
     reviews, analyzed = source[0], source[1]
-    group = topic_members(analyzed, decisions.load(directory)["alias"]).get(theme)
+    group = merged_topics(analyzed)[0].get(theme)
     if group is None:
         return None
     ids = group[sentiment] if sentiment in ("P", "N") else group["P"] | group["N"]

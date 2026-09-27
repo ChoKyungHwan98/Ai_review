@@ -88,7 +88,6 @@ window.ReviewDashboard = (() => {
           <div class="rd-chart-head">
             <h2 id="rdTopicsTitle"></h2>
             <p id="rdTopicsNote"></p>
-            <button class="rd-btn rd-edit-btn" data-action="topics">주제 다듬기</button>
             <div class="rd-toggle rd-view-toggle" aria-label="차트 보기"><button data-action="view" data-view="map">우선순위 지도</button><button data-action="view" data-view="bars">칭찬·불만 막대</button></div>
           </div>
           <div id="rdTopicChart"></div>
@@ -109,13 +108,12 @@ window.ReviewDashboard = (() => {
         <div id="rdFunChart"></div>
       </section>
       </div>
-      <dialog class="rd-dialog rd-topic-dialog" id="rdTopicDialog" aria-labelledby="rdTopicDialogTitle"><div class="rd-dialog-head"><div><h2 id="rdTopicDialogTitle">주제 다듬기</h2><p>AI가 나눈 주제를 합치거나 이름을 바꾸거나 숨깁니다. AI를 다시 부르지 않고 바로 다시 셉니다.</p></div><button class="rd-btn" data-action="close-topics" aria-label="주제 다듬기 닫기">닫기 ×</button></div><div id="rdTopicEditor"></div></dialog>
       <dialog class="rd-dialog rd-method-dialog" id="rdMethodDialog" aria-labelledby="rdMethodTitle"><div class="rd-dialog-head"><div><h2 id="rdMethodTitle">분석 기준</h2><p>${num(counts.collected)}건 수집 · ${num(counts.analyzed)}건 AI 분석</p></div><button class="rd-btn" data-action="close-method" aria-label="분석 기준 닫기">닫기 ×</button></div><div class="rd-method-grid">
         <p><b>우선순위 지도</b><br>가로축은 주제를 언급한 AI 분석 리뷰 수(칭찬+불만), 세로축은 그중 불만 비율입니다. 원 크기도 언급 수입니다. 세로 점선은 전체 주제의 언급 수 중앙값, 가로 점선은 불만 50%입니다. 오른쪽 위 칸은 많이 언급되면서 불만이 더 많은 주제입니다.</p>
         <p><b>칭찬·불만 막대</b><br>막대 길이는 해당 주제를 칭찬하거나 불만으로 언급한 AI 분석 리뷰 수입니다. 양쪽이 같은 눈금을 씁니다. 칭찬이 더 많은 주제는 위에서 칭찬순, 불만이 더 많은 주제는 아래 구역에서 불만순으로 놓입니다.</p>
         <p><b>지킬 것 · 고칠 것</b><br>지킬 것은 칭찬이 더 많은 주제 중 칭찬 리뷰가 가장 많은 주제, 고칠 것은 불만이 더 많은 주제 중 불만 리뷰가 가장 많은 주제입니다. 조사를 시작할 곳이지 개선 효과나 우선순위를 증명하지 않습니다.</p>
         <p><b>수집 범위</b><br>최신순으로 수집한 리뷰입니다. 추천·비추천 비율을 맞춰도 전체 유저나 전체 기간의 무작위 표본이 되지는 않습니다. 리뷰는 자발적으로 작성한 의견입니다.</p>
-        <p><b>표본과 AI 분류</b><br>주제 수치는 AI가 원문을 분류한 결과입니다. 짧은 리뷰 등 ${num(counts.collected - counts.analyzed)}건은 주제 분석에 포함되지 않습니다. 플레이 시간별 비추천율은 수집 리뷰 전체의 Steam 추천 여부로 계산합니다.${counts.skipped_analysis ? ` 읽을 수 없거나 원문이 없는 분석 ${num(counts.skipped_analysis)}건 제외.` : ''}</p>
+        <p><b>표본과 AI 분류</b><br>주제 수치는 AI가 원문을 분류한 결과입니다. 짧은 리뷰 등 ${num(counts.collected - counts.analyzed)}건은 주제 분석에 포함되지 않습니다. 플레이 시간별 비추천율은 수집 리뷰 전체의 Steam 추천 여부로 계산합니다.${counts.skipped_analysis ? ` 읽을 수 없거나 원문이 없는 분석 ${num(counts.skipped_analysis)}건 제외.` : ''}${evidence.merges?.length ? ` AI가 나눈 주제 중 같은 리뷰에 80% 이상 함께 붙은 ${num(evidence.merges.length)}개는 규칙으로 합쳤습니다(분석 설계 참고).` : ''}</p>
       </div></dialog>
       <dialog class="rd-dialog" id="rdEvidenceDialog" aria-labelledby="rdDialogTitle"><div class="rd-dialog-head"><div><h2 id="rdDialogTitle">리뷰 근거</h2><p id="rdDialogMeta"></p></div><button class="rd-btn" data-action="close-dialog" aria-label="리뷰 근거 닫기">닫기 ×</button></div><div class="rd-toggle" aria-label="주제 감성 선택"><button data-action="evidence-filter" data-sentiment="N">불만</button><button data-action="evidence-filter" data-sentiment="P">칭찬</button><button data-action="evidence-filter" data-sentiment="all">전체</button></div><div id="rdEvidenceBody" aria-live="polite"></div></dialog>`;
     root.onclick = onClick;
@@ -315,7 +313,6 @@ window.ReviewDashboard = (() => {
       ${when}
       ${action?.prob ? `<div class="rd-focus-block rd-ai"><h3>AI 요약</h3><p>${esc(action.prob)}</p>${action.why || action.fix?.length ? `<details class="rd-why"><summary>원인과 개선 제안 보기</summary>${action.why ? `<p><b>리뷰가 말하는 원인</b>${esc(action.why)}</p>` : ''}${action.fix?.length ? `<p><b>리뷰에서 나온 제안</b></p><ul>${action.fix.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}<p class="rd-note">AI가 리뷰를 요약한 내용입니다. 원문으로 확인한 뒤 기획에 반영하세요.</p></details>` : ''}</div>` : ''}
       ${quote ? `<figure class="rd-quote"><figcaption>실제 리뷰 · ${quote.recommended ? '게임 추천' : '게임 비추천'}${quote.hours == null ? '' : ` · ${num(Math.round(quote.hours))}시간`}</figcaption><blockquote>“${esc(quote.content)}${quote.truncated ? '…' : ''}”</blockquote></figure>` : ''}
-      ${verdictBlock(t)}
       <div class="rd-focus-actions">
         ${t.neg ? `<button class="rd-btn ${lead === 'N' ? 'primary' : ''}" data-action="evidence" data-sentiment="N">불만 리뷰 ${num(t.neg)}건</button>` : ''}
         ${t.pos ? `<button class="rd-btn ${lead === 'P' ? 'primary' : ''}" data-action="evidence" data-sentiment="P">칭찬 리뷰 ${num(t.pos)}건</button>` : ''}
@@ -371,59 +368,8 @@ window.ReviewDashboard = (() => {
     else if (action === 'evidence-filter') { dialogSentiment=button.dataset.sentiment; dialogPage=1; loadEvidence(); }
     else if (action === 'evidence-page') { dialogPage=Number(button.dataset.page); loadEvidence(); }
     else if (action === 'retry-evidence') loadEvidence();
-    else if (action === 'topics') openTopics();
-    else if (action === 'close-topics') document.getElementById('rdTopicDialog').close();
-    else if (action === 'topic-edit') editTopic(button);
-    else if (action === 'verdict') saveVerdict(button.dataset.choice === data.decisions?.verdicts?.[selected]?.choice ? '' : button.dataset.choice);
   }
   function closeDialog() { document.getElementById('rdEvidenceDialog').close(); }
-  /* ---------- 사람의 결정: 내 결론 · 주제 다듬기 ---------- */
-  const CHOICES = {fix: '고친다', watch: '지켜본다', ignore: '무시한다'};
-  function verdictBlock(t) {
-    const v = data.decisions?.verdicts?.[t.name] || {};
-    return `<div class="rd-focus-block rd-verdict"><h3>내 결론 <small>${v.at ? `${esc(v.at)} 저장` : '사람이 정합니다'}</small></h3>
-      <div class="rd-verdict-btns">${Object.entries(CHOICES).map(([k, label]) => `<button class="is-${k}" data-action="verdict" data-choice="${k}" aria-pressed="${v.choice === k}">${label}</button>`).join('')}</div>
-      <textarea id="rdVerdictMemo" rows="2" maxlength="300" placeholder="메모 (예: 다음 패치에서 거점 렉부터)">${esc(v.memo || '')}</textarea></div>`;
-  }
-  async function post(url, body) {
-    const r = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({app_id: Number(appId), ...body})});
-    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || r.statusText); }
-    return r.json();
-  }
-  async function saveVerdict(choice) {
-    try {
-      const res = await post('/dashboard/verdict', {theme: selected, choice, memo: document.getElementById('rdVerdictMemo')?.value || ''});
-      data.decisions = {...(data.decisions || {}), verdicts: res.verdicts};
-      renderDetail();
-    } catch (error) { alert(`결론을 저장하지 못했습니다: ${error.message}`); }
-  }
-  function openTopics() {
-    const box = document.getElementById('rdTopicEditor');
-    const topics = [...evidence.themes].sort((a, b) => b.mentions - a.mentions);
-    const alias = data.decisions?.alias || {};
-    const options = topics.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join('');
-    box.innerHTML = `<table class="rd-topic-table"><thead><tr><th>주제</th><th>언급</th><th>이름 바꾸기</th><th>다른 주제에 합치기</th><th></th></tr></thead><tbody>
-      ${topics.map(t => `<tr data-topic="${esc(t.name)}"><th>${esc(t.name)}</th><td>${num(t.mentions)}건</td>
-        <td><span class="rd-inline"><input maxlength="20" placeholder="새 이름" aria-label="${esc(t.name)} 새 이름"><button class="rd-btn" data-action="topic-edit" data-op="rename">바꾸기</button></span></td>
-        <td><span class="rd-inline"><select aria-label="${esc(t.name)} 합칠 주제"><option value="">선택</option>${options.replace(`<option value="${esc(t.name)}">${esc(t.name)}</option>`, '')}</select><button class="rd-btn" data-action="topic-edit" data-op="merge">합치기</button></span></td>
-        <td><button class="rd-btn" data-action="topic-edit" data-op="hide">숨기기</button></td></tr>`).join('')}
-      </tbody></table>
-      ${Object.keys(alias).length ? `<h3 class="rd-edits-title">바꾼 내용</h3><ul class="rd-edits">${Object.entries(alias).map(([from, to]) => `<li><span>${esc(from)} → ${to == null ? '<em>숨김</em>' : esc(to)}</span><button class="rd-text-btn" data-action="topic-edit" data-op="restore" data-source="${esc(from)}">되돌리기</button></li>`).join('')}</ul>` : ''}`;
-    const dialog = document.getElementById('rdTopicDialog');
-    if (!dialog.open) dialog.showModal();
-  }
-  async function editTopic(button) {
-    const row = button.closest('tr');
-    const op = button.dataset.op;
-    const source = button.dataset.source || row?.dataset.topic;
-    const target = op === 'rename' ? row.querySelector('input').value.trim() : op === 'merge' ? row.querySelector('select').value : null;
-    if ((op === 'rename' || op === 'merge') && !target) { alert(op === 'rename' ? '새 이름을 적으세요.' : '합칠 주제를 고르세요.'); return; }
-    try {
-      await post('/dashboard/topics', {action: op, source, target});
-      await window.load(appId);          // 저장된 분류로 모든 화면을 다시 센다
-      openTopics();
-    } catch (error) { alert(`주제를 바꾸지 못했습니다: ${error.message}`); }
-  }
 
   function closeMethod() { document.getElementById('rdMethodDialog').close(); }
   async function loadEvidence() {
@@ -464,12 +410,10 @@ window.ReviewDashboard = (() => {
         ${kind === 'fix' && action?.prob ? `<p><b>문제</b>${esc(action.prob)}</p>` : ''}
         ${kind === 'fix' && action?.why ? `<p><b>원인</b>${esc(action.why)}</p>` : ''}
         ${kind === 'fix' && action?.fix?.length ? `<p><b>유저 제안</b>${action.fix.map(esc).join(' · ')}</p>` : ''}
-        ${q ? `<blockquote>“${esc(q.slice(0, 120))}${q.length > 120 ? '…' : ''}”</blockquote>` : ''}
-        ${verdictOf(t) ? `<p class="rpt-verdict"><b>내 결론</b>${verdictOf(t)}</p>` : ''}</div>`;
+        ${q ? `<blockquote>“${esc(q.slice(0, 120))}${q.length > 120 ? '…' : ''}”</blockquote>` : ''}</div>`;
     };
     const deep = window.ReviewPages?.deepLines(evidence.deep) || [];
-    const verdictOf = t => { const v = data.decisions?.verdicts?.[t.name]; return v?.choice ? `${CHOICES[v.choice]}${v.memo ? ` · ${esc(v.memo)}` : ''}` : ''; };
-    const design = (data.design_log || []).filter(r => ['무엇을', '얼마나', '주제 나누기', '결론'].includes(r.step));
+    const design = (data.design_log || []).filter(r => ['무엇을', '얼마나', '주제 합치기', '결론'].includes(r.step));
     return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(game)} 리뷰 진단 보고서</title>
 <link rel="stylesheet" href="${location.origin}/static/review-dashboard.css">
@@ -500,7 +444,6 @@ body { margin:0; background:#F2F4F6; font-family:system-ui,-apple-system,"Segoe 
 .rpt-lines b { color:#C9303D; }
 .rpt h2 small { font-weight:500; color:#8B95A1; font-size:11px; margin-left:4px; }
 .rpt-design li { grid-template-columns:110px 1fr; }
-.rpt-verdict { margin-top:6px !important; padding-top:6px; border-top:1px dashed #C5CDD8; }
 .rpt-foot { margin-top:12px; padding-top:8px; border-top:1px solid #E5E8EB; font-size:10px; color:#8B95A1; }
 @media print { body { background:#fff; } .rpt { margin:0; width:auto; min-height:0; padding:0; font-size:11px; } .rpt-bar { display:none; } .rpt, .rpt-two, .rpt-mini { break-inside:avoid; } }
 </style></head><body>

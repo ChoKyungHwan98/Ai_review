@@ -114,6 +114,8 @@
 
 /* 분석 설계서 */
 .page[data-page="sample"] > .subtitle { max-width:720px; line-height:1.6; }
+.rp-design-lead { margin:-6px 0 10px; font-size:13px; color:var(--rp-sub); line-height:1.6; }
+.rp-design-lead b { color:var(--rp-ink); }
 .rp-steps { margin:0; padding:0; list-style:none; display:grid; }
 .rp-steps > li { display:grid; grid-template-columns:96px 84px minmax(0,1fr); gap:12px; align-items:start; padding:10px 0; border-bottom:1px solid var(--rp-grid); }
 .rp-steps > li:last-child { border-bottom:0; }

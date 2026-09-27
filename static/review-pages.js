@@ -175,11 +175,12 @@ window.ReviewPages = (() => {
     const whoClass = w => w.startsWith('사람') ? 'human' : w.startsWith('AI') ? 'ai' : 'rule';
     return `<section class="rp-card rp-design">
         <h2>분석 설계서</h2>
+        <p class="rp-design-lead">리뷰를 어떻게 가공할지는 기획자가 <b>규칙</b>으로 설계했습니다. 실행할 때 <b>사람</b>은 무엇을·얼마나만 고르고, <b>AI</b>는 주제를 제안하고 분류하며, 나머지는 규칙이 자동으로 처리합니다.</p>
         <ol class="rp-steps">${rows.map(r => `<li class="${whoClass(r.who)}">
           <span class="rp-step-name">${esc(r.step)}</span>
           <span class="rp-who ${whoClass(r.who)}">${esc(r.who)}</span>
           <span class="rp-step-text">${esc(r.text)}${r.details?.length ? `<ul>${r.details.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}</span></li>`).join('')}</ol>
-        <p class="rp-note">AI는 정보를 모으고 제안합니다. 무엇을, 얼마나, 어떤 기준으로 볼지와 결론은 사람이 정합니다.</p>
+        <p class="rp-note">지킬 것·고칠 것은 조사를 시작할 곳입니다. 원문을 확인하고 기획에 반영하는 판단은 사람의 몫입니다.</p>
       </section>`;
   }
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dashboard_evidence import build_evidence, evidence_page, review_hours
-import decisions
+import analysis_design
 
 
 class DashboardEvidenceTests(unittest.TestCase):
@@ -110,40 +110,55 @@ class DashboardEvidenceTests(unittest.TestCase):
         self.assertEqual(deep["wants"], [])
         self.assertTrue(all(c["terms"] == [] for c in deep["causes"]))
 
-    def test_topic_edits_recount_without_ai_and_can_be_undone(self):
-        names = ["저장", "건축"]
-        decisions.edit_topic(self.folder, "merge", "건축", "저장", names)
+    def test_topics_ai_split_are_merged_by_rule(self):
+        # '세이브'는 '저장'과 같은 리뷰·같은 불만에만 붙는다 → 규칙으로 합친다
+        self.rows.append({"recommendationid": "5", "content": "세이브 날아감", "voted_up": "0",
+                          "playtime_at_review_min": "30", "playtime_forever_min": "30", "votes_up": "1"})
+        self.analyses = [
+            {"id": "1", "s": "N", "t": [["저장", "N"], ["세이브", "N"], ["건축", "P"]]},
+            {"id": "2", "s": "N", "t": [["저장", "N"], ["세이브", "N"]]},
+            {"id": "5", "s": "N", "t": [["저장", "N"], ["세이브", "N"]]},
+            {"id": "3", "s": "N", "t": [["저장", "N"]]},
+            {"id": "4", "s": "P", "t": [["건축", "P"], ["건 축", "P"]]},
+        ]
+        self.write()
         e = build_evidence(self.folder, 42)
-        self.assertEqual([t["name"] for t in e["themes"]], ["저장"])
-        storage = e["themes"][0]
-        self.assertEqual((storage["mentions"], storage["pos"], storage["neg"]), (3, 2, 2))
-        self.assertEqual(evidence_page(self.folder, 42, "저장", "P")["total"], 2)
-        decisions.edit_topic(self.folder, "restore", "건축", names=names)
-        decisions.edit_topic(self.folder, "hide", "건축", names=names)
-        self.assertEqual([t["name"] for t in build_evidence(self.folder, 42)["themes"]], ["저장"])
-        decisions.edit_topic(self.folder, "restore", "건축", names=names)
-        decisions.set_verdict(self.folder, "저장", "fix", "세이브 먼저")
-        decisions.edit_topic(self.folder, "rename", "저장", "세이브", names=names)
-        e = build_evidence(self.folder, 42)
-        self.assertEqual(sorted(t["name"] for t in e["themes"]), ["건축", "세이브"])
-        saved = decisions.load(self.folder)
-        self.assertEqual(saved["verdicts"]["세이브"]["choice"], "fix")
-        self.assertEqual(len(saved["log"]), 6)
-        with self.assertRaises(ValueError):
-            decisions.edit_topic(self.folder, "rename", "건축", "세이브", names)
-        with self.assertRaises(ValueError):
-            decisions.edit_topic(self.folder, "merge", "건축", "없는 주제", names)
+        self.assertEqual(sorted(t["name"] for t in e["themes"]), ["건축", "저장"])
+        storage = next(t for t in e["themes"] if t["name"] == "저장")
+        self.assertEqual((storage["mentions"], storage["neg"]), (4, 4))
+        self.assertEqual(e["n_ai_topics"], 4)
+        self.assertEqual({(m["from"], m["to"], m["overlap"]) for m in e["merges"]},
+                         {("세이브", "저장", 100), ("건 축", "건축", None)})
+        self.assertIsNone(evidence_page(self.folder, 42, "세이브"))
+        self.assertEqual(evidence_page(self.folder, 42, "저장", "N")["total"], 4)
+
+    def test_topics_that_only_share_some_reviews_stay_apart(self):
+        members = {"렉": {"P": set(), "N": {"1", "2", "3", "4", "5"}},
+                   "최적화": {"P": {"6"}, "N": {"1", "2", "3", "9"}},
+                   "사운드": {"P": {"1", "2"}, "N": set()}}
+        alias, merges = analysis_design.auto_merge(members)
+        self.assertEqual(alias, {})            # 최적화 불만 3/4 = 75%, 사운드는 3건 미만
+        members["최적화"] = {"P": {"1", "2", "6"}, "N": {"1", "2", "3"}}
+        alias, merges = analysis_design.auto_merge(members)
+        self.assertEqual(alias, {})            # 같은 리뷰라도 칭찬으로 붙은 것은 겹침으로 세지 않는다
+        members["최적화"] = {"P": set(), "N": {"1", "2", "3", "4"}}
+        alias, merges = analysis_design.auto_merge(members)
+        self.assertEqual(alias, {"최적화": "렉"})
+        self.assertEqual(merges[0]["overlap"], 100)
 
     def test_design_log_names_who_decided_each_step(self):
-        saved = decisions.set_verdict(self.folder, "저장", "fix", "")
-        rows = decisions.design_log(saved, {"params": {"language": "koreana", "since": "2026-07-13", "sort": "recent",
-                                                       "target_error_pct": 5}, "design": {"n_total": 400}},
-                                    {"collected": 380, "analyzed": 300}, {"model": "m"}, 12, "팰월드")
+        themes = [{"name": "저장", "pos": 0, "neg": 2}, {"name": "건축", "pos": 2, "neg": 1}]
+        rows = analysis_design.design_log({"params": {"language": "koreana", "since": "2026-07-13", "sort": "recent",
+                                                      "target_error_pct": 5}, "design": {"n_total": 400}},
+                                          {"collected": 380, "analyzed": 300}, {"model": "m"}, 12,
+                                          [{"from": "세이브", "to": "저장", "overlap": 92, "reason": ""}], themes, "팰월드")
         by_step = {r["step"]: r for r in rows}
         self.assertEqual(by_step["무엇을"]["text"], "팰월드 · 한국어 · 2026.07.13 이후 · 최신순")
         self.assertEqual(by_step["얼마나"]["text"], "400건 계획 (목표 오차 ±5%) → 380건 수집")
-        self.assertEqual(by_step["주제 나누기"]["who"], "AI")
-        self.assertEqual(by_step["결론"]["details"], ["저장 → 고친다"])
+        self.assertEqual([by_step[k]["who"] for k in ("무엇을", "얼마나", "분석 모델", "주제 제안", "주제 합치기", "결론")],
+                         ["사람", "사람", "사람", "AI", "규칙", "규칙"])
+        self.assertEqual(by_step["주제 합치기"]["details"], ["세이브 → 저장 (겹침 92%)"])
+        self.assertEqual(by_step["결론"]["text"], "지킬 것 = 건축 (칭찬 2건) · 고칠 것 = 저장 (불만 2건)")
 
     def test_empty_and_missing_sources_are_explicit(self):
         self.analyses = []
