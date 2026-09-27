@@ -692,12 +692,19 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 ::selection { background: #BFD7FF; color: #0F172A; }
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
-/* ── 분석 시작 창: 설정과 진행 ───────────────────────────── */
-.run-modal { position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; padding:24px 16px; background:rgba(20,27,38,.45); }
-.run-dialog { width:100%; max-width:560px; max-height:calc(100vh - 48px); overflow-y:auto; box-sizing:border-box; margin:auto; padding:28px 28px 24px; border-radius:16px; background:#fff; color:#333D4B; box-shadow:0 12px 32px rgba(20,27,38,.18); }
+/* ── 분석 시작 화면: 설정과 진행 ─────────────────────────────
+   팝업이 아니라 도구 화면 전체를 쓴다. 넓은 화면에서는 왼쪽에 조건, 오른쪽에 수집량과 시작 버튼. */
+.run-modal { position:fixed; inset:0; z-index:9999; flex-direction:column; overflow-y:auto; box-sizing:border-box; padding:40px 60px 48px; background:linear-gradient(135deg, #F2F4F6 0%, #E8F3FF 100%); scrollbar-gutter:stable; }
+.run-dialog { width:100%; max-width:1120px; box-sizing:border-box; margin:0 auto; color:#333D4B; }
 .run-title { margin:0 0 6px; font-size:24px; font-weight:700; letter-spacing:-.02em; color:#191F28; }
 .run-lead { margin:0 0 24px; font-size:14px; line-height:1.6; color:#4E5968; }
-.run-field { margin:0 0 24px; }
+.run-field { margin:0 0 16px; padding:20px 22px; border:1px solid #E5E8EB; border-radius:16px; background:#fff; }
+#pipelineSetupForm { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); column-gap:24px; align-items:start; }
+#pipelineSetupForm > .run-title, #pipelineSetupForm > .run-lead { grid-column:1 / -1; }
+#pipelineSetupForm > #precisionBlock { grid-column:2; grid-row:3 / span 3; }
+#pipelineSetupForm > .run-check { grid-column:2; grid-row:6; padding:0 4px; }
+#pipelineSetupForm > .run-actions { grid-column:2; grid-row:7; }
+#pipelineProgressView { max-width:720px; margin:0 auto; padding:28px 28px 24px; border:1px solid #E5E8EB; border-radius:16px; background:#fff; }
 .run-label { display:block; margin:0 0 8px; font-size:14px; font-weight:700; color:#191F28; }
 .run-label small { margin-left:6px; font-size:12px; font-weight:500; color:#4E5968; }
 .run-help { margin:8px 0 0; font-size:13px; line-height:1.55; color:#4E5968; }
@@ -758,8 +765,13 @@ body.no-analysis #ovBody { display: none; }
 .run-note.is-error { padding:12px 14px; border-radius:10px; background:#FFF0F1; color:#A1121F; }
 @keyframes run-spin { to { transform:rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .run-steps .is-now .run-step-mark { animation:none; border-color:var(--color-primary); } .run-total i, .run-step-bar i { transition:none; } }
+@media (max-width: 960px) {
+  .run-modal { padding:24px 16px 32px; }
+  #pipelineSetupForm { display:block; }
+}
 @media (max-width: 520px) {
-  .run-dialog { padding:22px 18px 18px; }
+  .run-field { padding:16px; }
+  #pipelineProgressView { padding:22px 18px 18px; }
   .run-scope { grid-template-columns:1fr; }
   .run-scope > div + div { margin-top:12px; }
   .run-model-row { flex-direction:column; }
@@ -1587,7 +1599,7 @@ async function openNewAnalysisModal() {
   // OpenRouter 모델 목록 조회 및 드롭다운 주입
   await loadModalModels();
   
-  document.getElementById('pipelineSetupForm').style.display = 'block';
+  document.getElementById('pipelineSetupForm').style.display = '';  // 빈 값: CSS의 2열 배치를 쓴다
   document.getElementById('pipelineProgressView').style.display = 'none';
 }
 
@@ -1674,7 +1686,7 @@ async function startNewAnalysis(appId, s5, s3, isIncremental = false) {
   
   recalculateEstimatedCostOnModelChange();
   
-  document.getElementById('pipelineSetupForm').style.display = 'block';
+  document.getElementById('pipelineSetupForm').style.display = '';  // 빈 값: CSS의 2열 배치를 쓴다
   document.getElementById('pipelineProgressView').style.display = 'none';
 }
 
