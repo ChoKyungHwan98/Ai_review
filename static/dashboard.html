@@ -280,7 +280,6 @@ body {
 .search-card-text b { display: block; font-size: 15px; color: var(--color-text-title); }
 .search-card-text span { font-size: 13px; color: var(--color-text-sub); }
 .search-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
-.current-game-badge { padding: 4px 12px; background: #fff; border: 1px solid var(--color-border); border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--color-text-title); }
 @media (max-width: 640px) { .search-card { flex-wrap: wrap; } .search-card img { display: none; } .search-card-actions { width: 100%; justify-content: flex-end; } }
 main { max-width: var(--page-max); margin: 0 auto; padding: 16px 60px 48px; width: 100%; }
 section.page { display: none; }
@@ -768,10 +767,10 @@ body.no-analysis #ovBody { display: none; }
   .run-seg button { font-size:13px; padding:10px 4px; }
 }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927k">
-<script src="/static/review-dashboard.js?v=20260927k"></script>
-<link rel="stylesheet" href="/static/review-pages.css?v=20260927k">
-<script src="/static/review-pages.js?v=20260927k"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927m">
+<script src="/static/review-dashboard.js?v=20260927m"></script>
+<link rel="stylesheet" href="/static/review-pages.css?v=20260927m">
+<script src="/static/review-pages.js?v=20260927m"></script>
 </head>
 <body>
 <div class="app">
@@ -829,10 +828,7 @@ body.no-analysis #ovBody { display: none; }
 
       <!-- Row 2: Current Game Indicator -->
       <div class="current-game-row">
-        <span style="font-size:12px; color:var(--color-text-sub); font-weight:500;">현재 분석 중</span>
-        <div id="currentGameBadge" class="current-game-badge"><span id="currentGameName">—</span></div>
-        <div class="current-game-line"></div>
-        <div class="rd-page-actions rd-top-actions" id="rdPageActions"></div>
+        <span>분석 중인 게임</span><b id="currentGameName">—</b>
       </div>
     </header>
 
@@ -843,12 +839,10 @@ body.no-analysis #ovBody { display: none; }
     <!-- ================================================================ -->
     <section class="page active" data-page="overview">
       <div class="rd-page-header">
-        <div class="rd-page-art" id="rdPageArt" aria-hidden="true"></div>
-        <div class="rd-page-copy">
-          <h1 class="title" id="overviewTitle">리뷰 진단</h1>
-          <p class="subtitle ov-coverage" id="ovCoverage"></p>
-          <p class="rd-summary" id="ovSummary"></p>
-        </div>
+        <div class="rd-page-copy"><h1 class="title" id="overviewTitle">리뷰 진단</h1></div>
+        <div class="rd-page-actions" id="rdPageActions"></div>
+        <p class="ov-coverage" id="ovCoverage"></p>
+        <p class="rd-summary" id="ovSummary"></p>
       </div>
 
       <!-- 분석 전·옛 방식일 때만 보이는 안내 -->
@@ -1189,7 +1183,6 @@ async function startAnalysis(appId, gameName) {
 function setNoAnalysisState(on, title, body, cta) {
   document.body.classList.toggle('no-analysis', !!on);
   if (!on) return;
-  document.getElementById('rdPageArt')?.replaceChildren();
   document.getElementById('rdPageActions')?.replaceChildren();
   document.getElementById('ovSummary')?.replaceChildren();
   const titleEl = document.getElementById('execTitle');

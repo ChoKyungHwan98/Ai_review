@@ -6,6 +6,14 @@ window.ReviewDashboard = (() => {
   const pct = x => x == null ? '—' : `${Number(x).toFixed(1)}%`;
   const clamp = x => Math.max(0, Math.min(100, Number(x) || 0));
   const COLLAPSED_ROWS = 10, MAX_CONCERN_ROWS = 4;
+  const ICONS = {
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    report: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+    download: '<path d="M12 3v12M7 10l5 5 5-5M4 19h16"/>',
+    review: '<path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'
+  };
+  const icon = name => `<svg class="rd-icon" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
   let data, evidence, appId, root, selected, expanded = false, view = 'map', resizeBound = false;
   let dialogTheme, dialogSentiment, dialogPage, request, restoreFocus;
 
@@ -60,10 +68,7 @@ window.ReviewDashboard = (() => {
     data = V; evidence = V.evidence; appId = id;
     root = document.getElementById('ovBody');
     root.className = 'rd';
-    const art = document.getElementById('rdPageArt');
-    art.innerHTML = V.game?.header_image
-      ? `<img src="${esc(V.game.header_image)}" alt="" onerror="this.remove()" />` : '';
-    document.getElementById('rdPageActions').innerHTML = `<button class="rd-btn" type="button" onclick="startNewAnalysis(${Number(id)},null,null,true)">추가 수집</button><button class="rd-btn" type="button" onclick="ReviewDashboard.report()">한 장 보고서</button><a class="rd-btn" href="/api/reviews/download?app_id=${Number(id)}" download>원문 내려받기</a><a class="rd-btn primary" href="/api/analysis/download?app_id=${Number(id)}" download>분석 결과 내려받기</a>`;
+    document.getElementById('rdPageActions').innerHTML = `<button class="rd-btn" type="button" onclick="startNewAnalysis(${Number(id)},null,null,true)">${icon('plus')}추가 수집</button><a class="rd-btn" href="/api/reviews/download?app_id=${Number(id)}" download>${icon('download')}원문</a><a class="rd-btn" href="/api/analysis/download?app_id=${Number(id)}" download>${icon('download')}분석 결과</a><button class="rd-btn primary" type="button" onclick="ReviewDashboard.report()">${icon('report')}한 장 보고서</button>`;
     if (!evidence) {
       document.getElementById('overviewTitle').textContent = `${V.game?.name || '게임'} 리뷰 진단`;
       document.getElementById('ovCoverage').textContent = '';
@@ -75,38 +80,37 @@ window.ReviewDashboard = (() => {
     const period = evidence.period ? `${evidence.period.start.replaceAll('-','.')} – ${evidence.period.end.replaceAll('-','.')}` : '기간 정보 없음';
     document.getElementById('overviewTitle').innerHTML = verdictHTML();
     const summary = document.getElementById('ovSummary');
-    if (summary) summary.innerHTML = V.summary ? `<b>${V.summary_source === 'rule' ? '요약' : 'AI 요약'}</b>${esc(V.summary)}` : '';
-    document.getElementById('ovCoverage').innerHTML = `<span class="rd-game-name">${esc(V.game?.name || '게임')} 리뷰 진단</span><span>${esc(language)} Steam 리뷰</span><span>${esc(period)}</span><span>AI 분석 <b>${num(counts.analyzed)}건</b> / 수집 ${num(counts.collected)}건</span>`;
+    if (summary) summary.innerHTML = V.summary ? `<b>${V.summary_source === 'rule' ? '요약' : 'AI 요약'}</b><span>${esc(V.summary)}</span>` : '';
+    document.getElementById('ovCoverage').innerHTML = `<span>${esc(V.game?.name || '게임')}</span><span>${esc(language)} Steam 리뷰</span><span>${esc(period)}</span><span>AI 분석 ${num(counts.analyzed)}건 / 수집 ${num(counts.collected)}건</span>`;
 
     const params = new URLSearchParams(location.search);
     selected = themeByName(params.get('topic'))?.name || concern()?.name || strength()?.name || evidence.themes[0]?.name;
     expanded = false;
     view = params.get('view') === 'bars' ? 'bars' : 'map';
     root.innerHTML = `
-      <div class="rd-hero">
-        <section class="rd-chart-card" aria-labelledby="rdTopicsTitle">
-          <div class="rd-chart-head">
-            <h2 id="rdTopicsTitle"></h2>
-            <p id="rdTopicsNote"></p>
-            <div class="rd-toggle rd-view-toggle" aria-label="차트 보기"><button data-action="view" data-view="map">우선순위 지도</button><button data-action="view" data-view="bars">칭찬·불만 막대</button></div>
-          </div>
-          <div id="rdTopicChart"></div>
-          <div class="rd-chart-foot">
-            <span>AI 분석 리뷰 ${num(counts.analyzed)}건 기준 · 한 리뷰가 여러 주제에 들어갈 수 있음</span>
-            <button class="rd-text-btn" data-action="method">분석 기준</button>
-          </div>
+      <div class="rd-bench">
+        <section class="rd-pane rd-pane-chart" aria-labelledby="rdTopicsTitle">
+          <header class="rd-pane-head">
+            <div><h2 id="rdTopicsTitle"></h2><p id="rdTopicsNote"></p></div>
+            <div class="rd-toggle" aria-label="차트 보기"><button data-action="view" data-view="map">우선순위 지도</button><button data-action="view" data-view="bars">칭찬·불만 막대</button></div>
+          </header>
+          <div class="rd-pane-body" id="rdTopicChart"></div>
+          <footer class="rd-pane-foot">
+            <span>한 리뷰가 여러 주제에 들어갈 수 있습니다</span>
+            <button class="rd-text-btn" data-action="method">${icon('info')}분석 기준</button>
+          </footer>
         </section>
-        <aside class="rd-focus" id="rdDetail" aria-live="polite" aria-label="선택한 주제의 근거"></aside>
+        <aside class="rd-pane rd-focus" id="rdDetail" aria-live="polite" aria-label="선택한 주제의 근거"></aside>
       </div>
-      <div class="rd-lower">
-      <section class="rd-when" aria-labelledby="rdWhenTitle">
-        <div class="rd-when-head"><h2 id="rdWhenTitle">플레이 시간별 비추천율</h2><p>수집 리뷰 ${num(counts.collected)}건 · 작성 당시 플레이 시간 기준 · 점선은 전체 ${pct(evidence.sample_negative_rate)}</p></div>
-        <div id="rdCohortChart"></div>
-      </section>
-      <section class="rd-when rd-fun" aria-labelledby="rdFunTitle">
-        <div class="rd-when-head"><h2 id="rdFunTitle">플레이어가 즐긴 것</h2><p>긍정·혼합 리뷰 ${num(evidence.fun_denominator)}건 · 한 리뷰에 여러 개 가능</p></div>
-        <div id="rdFunChart"></div>
-      </section>
+      <div class="rd-bench rd-bench-lower">
+        <section class="rd-pane" aria-labelledby="rdWhenTitle">
+          <header class="rd-pane-head"><div><h2 id="rdWhenTitle">플레이 시간별 비추천율</h2><p>수집 리뷰 ${num(counts.collected)}건 · 작성 당시 플레이 시간 · 점선은 전체 ${pct(evidence.sample_negative_rate)}</p></div></header>
+          <div class="rd-pane-body" id="rdCohortChart"></div>
+        </section>
+        <section class="rd-pane" aria-labelledby="rdFunTitle">
+          <header class="rd-pane-head"><div><h2 id="rdFunTitle">플레이어가 즐긴 것</h2><p>긍정·혼합 리뷰 ${num(evidence.fun_denominator)}건 · 한 리뷰에 여러 개 가능</p></div></header>
+          <div class="rd-pane-body" id="rdFunChart"></div>
+        </section>
       </div>
       <dialog class="rd-dialog rd-method-dialog" id="rdMethodDialog" aria-labelledby="rdMethodTitle"><div class="rd-dialog-head"><div><h2 id="rdMethodTitle">분석 기준</h2><p>${num(counts.collected)}건 수집 · ${num(counts.analyzed)}건 AI 분석</p></div><button class="rd-btn" data-action="close-method" aria-label="분석 기준 닫기">닫기 ×</button></div><div class="rd-method-grid">
         <p><b>우선순위 지도</b><br>가로축은 주제를 언급한 AI 분석 리뷰 수(칭찬+불만), 세로축은 그중 불만 비율입니다. 원 크기도 언급 수입니다. 세로 점선은 전체 주제의 언급 수 중앙값, 가로 점선은 불만 50%입니다. 오른쪽 위 칸은 많이 언급되면서 불만이 더 많은 주제입니다.</p>
@@ -136,7 +140,7 @@ window.ReviewDashboard = (() => {
 
   function renderChart() {
     const title = {map:'주제 우선순위 지도', bars:'주제별 칭찬과 불만'}[view];
-    const note = {map:'', bars:'리뷰 수 · 주제를 누르면 근거가 나옵니다'}[view];
+    const note = {map:`AI 분석 리뷰 ${num(evidence.counts.analyzed)}건 · 원을 누르면 근거가 나옵니다`, bars:`AI 분석 리뷰 ${num(evidence.counts.analyzed)}건 · 주제를 누르면 근거가 나옵니다`}[view];
     document.getElementById('rdTopicsTitle').textContent = title;
     document.getElementById('rdTopicsNote').textContent = note;
     root.querySelectorAll('[data-action="view"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
@@ -147,7 +151,12 @@ window.ReviewDashboard = (() => {
   let mapObserver;
   function renderMap() {
     const target = document.getElementById('rdTopicChart');
-    const W = Math.max(300, target.clientWidth || 800), H = W < 480 ? 320 : Math.round(Math.min(520, Math.max(380, W * .5)));
+    // 높이: 첫 화면 안에 차트 전체가 들어오게(설계 원칙 1). 큰 화면에서는 남는 높이를 채우되 640px까지.
+    const W = Math.max(300, target.clientWidth || 800);
+    const scroller = document.querySelector('.main-wrap');
+    const top = target.getBoundingClientRect().top + (scroller?.scrollTop || 0);
+    const room = innerHeight - top - 76;
+    const H = W < 480 ? 320 : Math.round(Math.max(300, Math.min(640, room, W * .62)));
     target.innerHTML = mapSVG(W, H) || '<div class="rd-empty">분류된 주제가 아직 없습니다.</div>';
     target.dataset.mapWidth = W;
     // 처음 그릴 때 화면이 아직 숨겨져 있으면 폭을 모른다. 실제 폭이 정해지면 그 폭에 맞춰 다시 그린다.
@@ -175,7 +184,7 @@ window.ReviewDashboard = (() => {
     const xm = x(median), ym = y(.5);
     const share = t => t.neg / t.mentions;
     const radius = t => 5 + 19 * Math.sqrt(t.mentions / maxM);
-    const fills = {concern:'var(--rd-neg)', watch:'var(--rd-neg)', disliked:'var(--rd-neg-mid)', strength:'var(--rd-pos)', praised:'var(--rd-pos-mute)'};
+    const fills = {concern:'var(--rd-neg)', watch:'var(--rd-neg)', disliked:'var(--rd-dot-neg)', strength:'var(--rd-pos)', praised:'var(--rd-dot)'};
     const dots = topics.map(t => ({t, r: role(t), cx: x(t.mentions), cy: y(share(t)), rad: radius(t)}));
     // 라벨: 중요한 주제부터 빈 자리에 놓고, 자리가 없으면 생략(마우스를 올리면 이름이 보임)
     const textW = (str, size) => [...str].reduce((w, ch) => w + (/[\u3131-\uD79D]/.test(ch) ? size : size * .6), 0);
@@ -220,9 +229,7 @@ window.ReviewDashboard = (() => {
     });
     const tick = (tx, ty, str, anchor = 'end') => `<text class="rd-map-tick" x="${tx}" y="${ty}" text-anchor="${anchor}">${str}</text>`;
     return `<svg class="rd-map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="group" aria-label="주제 우선순위 지도">
-      <rect x="${xm}" y="${T}" width="${W - R - xm}" height="${ym - T}" class="rd-q rd-q-fix"/>
-      <rect x="${xm}" y="${ym}" width="${W - R - xm}" height="${H - B - ym}" class="rd-q rd-q-keep"/>
-      <rect x="${L}" y="${T}" width="${xm - L}" height="${ym - T}" class="rd-q rd-q-watch"/>
+      <rect x="${xm}" y="${T}" width="${W - R - xm}" height="${ym - T}" class="rd-q-fix"/>
       <line x1="${L}" x2="${W - R}" y1="${ym}" y2="${ym}" class="rd-map-mid"/>
       <line x1="${xm}" x2="${xm}" y1="${T}" y2="${H - B}" class="rd-map-mid"/>
       <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" class="rd-map-axis"/>
@@ -290,33 +297,34 @@ window.ReviewDashboard = (() => {
     const cells = (t.cells || []).map((c, i) => ({...c, label: evidence.cohorts[i]?.label || ''}));
     const reliable = cells.filter(c => c.denominator >= 30 && c.rate != null);
     const cellMax = Math.max(1, ...reliable.map(c => c.rate));
-    const when = t.neg && cells.length ? `<div class="rd-focus-block">
+    const when = t.neg && cells.length ? `<section class="rd-sec">
         <h3>이 불만이 나오는 플레이 구간</h3>
         <div class="rd-cols" role="img" aria-label="${cells.map(c => `${c.label} ${c.denominator ? pct(c.rate) : '자료 없음'}`).join(', ')}">
           ${cells.map(c => { const small = c.denominator < 30; const h = small || c.rate == null ? 0 : Math.max(4, c.rate / cellMax * 100);
             return `<div class="rd-col ${small ? 'is-small' : ''}" title="${esc(c.label)} · ${num(c.count)} / ${num(c.denominator)}건${small ? ' · 표본 적음' : ''}"><span class="rd-col-val">${small ? '표본 적음' : pct(c.rate)}</span><span class="rd-col-track"><i style="height:${h}%"></i></span><span class="rd-col-label">${esc(c.label)}</span></div>`; }).join('')}
         </div>
         <p class="rd-note">구간별 AI 분석 리뷰 중 이 주제 불만 비율 · 30건 미만 구간은 표시하지 않음</p>
-      </div>` : '';
-    target.className = `rd-focus is-${r}`;
+      </section>` : '';
+    target.className = `rd-pane rd-focus is-${r}`;
     target.innerHTML = `
-      <div class="rd-focus-head">
-        <span class="rd-focus-kicker">선택한 주제 <em>${label}</em></span>
-        <h2>${esc(t.name)}</h2>
-        ${definition ? `<p>${esc(definition)}</p>` : ''}
-      </div>
-      <div class="rd-split" role="img" aria-label="불만 ${t.neg}건, 칭찬 ${t.pos}건">
-        <div class="rd-split-labels"><span class="neg"><b>${num(t.neg)}</b> 불만 ${Math.round(negShare)}%</span><span class="pos">칭찬 ${Math.round(100 - negShare)}% <b>${num(t.pos)}</b></span></div>
-        <div class="rd-split-bar"><i class="neg" style="width:${negShare}%"></i><i class="pos" style="width:${100 - negShare}%"></i></div>
-        ${t.neg && t.negative_recommended != null ? `<p class="rd-note">불만을 쓴 ${num(t.neg)}건 중 <b>${num(t.negative_recommended)}건</b>은 그래도 게임을 추천했습니다${t.negative_recommended / t.neg >= .5 ? ' — 떠나게 만들 정도의 불만은 아닐 수 있습니다' : ' — 비추천으로 이어진 불만이 많습니다'}.</p>` : ''}
-      </div>
+      <header class="rd-pane-head">
+        <div><h2>${esc(t.name)}</h2><p><b class="rd-role">${label}</b>${definition ? ` · ${esc(definition)}` : ''}</p></div>
+      </header>
+      <section class="rd-sec">
+        <h3>칭찬과 불만</h3>
+        <div class="rd-split" role="img" aria-label="불만 ${t.neg}건, 칭찬 ${t.pos}건">
+          <div class="rd-split-labels"><span class="neg">불만 <b>${num(t.neg)}</b> ${Math.round(negShare)}%</span><span class="pos">칭찬 <b>${num(t.pos)}</b> ${Math.round(100 - negShare)}%</span></div>
+          <div class="rd-split-bar"><i class="neg" style="width:${negShare}%"></i><i class="pos" style="width:${100 - negShare}%"></i></div>
+        </div>
+        ${t.neg && t.negative_recommended != null ? `<p class="rd-note">불만을 쓴 ${num(t.neg)}건 중 ${num(t.negative_recommended)}건은 그래도 게임을 추천했습니다${t.negative_recommended / t.neg >= .5 ? '. 떠나게 만들 정도의 불만은 아닐 수 있습니다.' : '. 비추천으로 이어진 불만이 많습니다.'}</p>` : ''}
+      </section>
       ${when}
-      ${action?.prob ? `<div class="rd-focus-block rd-ai"><h3>AI 요약</h3><p>${esc(action.prob)}</p>${action.why || action.fix?.length ? `<details class="rd-why"><summary>원인과 개선 제안 보기</summary>${action.why ? `<p><b>리뷰가 말하는 원인</b>${esc(action.why)}</p>` : ''}${action.fix?.length ? `<p><b>리뷰에서 나온 제안</b></p><ul>${action.fix.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}<p class="rd-note">AI가 리뷰를 요약한 내용입니다. 원문으로 확인한 뒤 기획에 반영하세요.</p></details>` : ''}</div>` : ''}
-      ${quote ? `<figure class="rd-quote"><figcaption>실제 리뷰 · ${quote.recommended ? '게임 추천' : '게임 비추천'}${quote.hours == null ? '' : ` · ${num(Math.round(quote.hours))}시간`}</figcaption><blockquote>“${esc(quote.content)}${quote.truncated ? '…' : ''}”</blockquote></figure>` : ''}
-      <div class="rd-focus-actions">
-        ${t.neg ? `<button class="rd-btn ${lead === 'N' ? 'primary' : ''}" data-action="evidence" data-sentiment="N">불만 리뷰 ${num(t.neg)}건</button>` : ''}
-        ${t.pos ? `<button class="rd-btn ${lead === 'P' ? 'primary' : ''}" data-action="evidence" data-sentiment="P">칭찬 리뷰 ${num(t.pos)}건</button>` : ''}
-      </div>`;
+      ${action?.prob ? `<section class="rd-sec"><h3>AI 요약</h3><p class="rd-body">${esc(action.prob)}</p>${action.why || action.fix?.length ? `<details class="rd-why"><summary>원인과 개선 제안</summary>${action.why ? `<p><b>리뷰가 말하는 원인</b>${esc(action.why)}</p>` : ''}${action.fix?.length ? `<p><b>리뷰에서 나온 제안</b></p><ul>${action.fix.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}<p class="rd-note">AI가 리뷰를 요약한 내용입니다. 원문으로 확인한 뒤 기획에 반영하세요.</p></details>` : ''}</section>` : ''}
+      ${quote ? `<section class="rd-sec"><h3>대표 리뷰 <small>${quote.recommended ? '게임 추천' : '게임 비추천'}${quote.hours == null ? '' : ` · ${num(Math.round(quote.hours))}시간 플레이`}</small></h3><blockquote class="rd-quote">${esc(quote.content)}${quote.truncated ? '…' : ''}</blockquote></section>` : ''}
+      <footer class="rd-pane-foot rd-focus-actions">
+        ${t.neg ? `<button class="rd-btn ${lead === 'N' ? 'primary' : ''}" data-action="evidence" data-sentiment="N">${icon('review')}불만 리뷰 ${num(t.neg)}건</button>` : ''}
+        ${t.pos ? `<button class="rd-btn ${lead === 'P' ? 'primary' : ''}" data-action="evidence" data-sentiment="P">${icon('review')}칭찬 리뷰 ${num(t.pos)}건</button>` : ''}
+      </footer>`;
   }
 
   function renderCohorts() {
