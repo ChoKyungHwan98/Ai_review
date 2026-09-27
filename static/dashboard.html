@@ -771,6 +771,17 @@ body.no-analysis #ovBody { display: none; }
 <script src="/static/review-dashboard.js?v=20260927m"></script>
 <link rel="stylesheet" href="/static/review-pages.css?v=20260927m">
 <script src="/static/review-pages.js?v=20260927m"></script>
+<style>
+/* 공용 글꼴. 설치된 Pretendard가 있으면 그걸 쓰고, 없으면 스튜디오에 넣어 둔 파일을 쓴다(SIL OFL 1.1). */
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: local('Pretendard Variable'), url('/static/fonts/PretendardVariable.woff2') format('woff2-variations'), url('/static/fonts/PretendardVariable.woff2') format('woff2');
+}
+
+</style>
 </head>
 <body>
 <div class="app">
