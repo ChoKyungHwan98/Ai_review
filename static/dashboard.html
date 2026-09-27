@@ -727,6 +727,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 ::selection { background: #BFD7FF; color: #0F172A; }
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
+.scope-row { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin-bottom:20px; }
+.scope-row label { display:block; font-size:14px; color:var(--color-text-title); font-weight:600; margin-bottom:8px; }
+.scope-row .select, .scope-row .input { width:100%; padding:12px 16px; box-sizing:border-box; }
+.scope-row .input { margin-top:8px; }
+.scope-row p { grid-column:1 / -1; margin:0; font-size:12px; color:var(--color-text-sub); line-height:1.5; }
 </style>
 <link rel="stylesheet" href="/static/review-dashboard.css?v=20260927g">
 <script src="/static/review-dashboard.js?v=20260927g"></script>
@@ -873,6 +878,24 @@ body.no-analysis #ovBody { display: none; }
             <option value="tchinese">중국어 번체</option><option value="all">모든 언어</option>
           </select>
           <p style="font-size:12px; color:var(--color-text-sub); margin:7px 0 0">선택한 언어의 리뷰를 수집합니다. 모든 언어는 원문 그대로 분석합니다.</p>
+        </div>
+        <div class="scope-row">
+          <div>
+            <label for="modalPeriod">수집 기간</label>
+            <select id="modalPeriod" class="select" onchange="onModalPeriodChange()">
+              <option value="">전체 기간</option><option value="30">최근 30일</option>
+              <option value="90">최근 90일</option><option value="365">최근 1년</option>
+              <option value="date">날짜 지정</option>
+            </select>
+            <input id="modalSince" class="input" type="date" hidden />
+          </div>
+          <div>
+            <label for="modalSort">정렬</label>
+            <select id="modalSort" class="select">
+              <option value="recent">최신순</option><option value="helpful">공감순 (도움됨이 많은 리뷰부터)</option>
+            </select>
+          </div>
+          <p>업데이트 효과를 보려면 업데이트 날짜 이후만, 유저들이 동의한 의견을 보려면 공감순을 고르세요. 공감순은 최근 1년까지만 기간을 걸 수 있습니다.</p>
         </div>
         
         <!-- 실시간 모집단 통계 구역 -->
@@ -1252,6 +1275,21 @@ async function searchGame() {
 document.getElementById('searchInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') searchGame();
 });
+
+/* 수집 기간: '최근 N일'은 날짜로 바꿔 보낸다. 서버는 이 날짜 이후 리뷰만 모은다. */
+function onModalPeriodChange() {
+  const custom = document.getElementById('modalPeriod').value === 'date';
+  const input = document.getElementById('modalSince');
+  input.hidden = !custom;
+  input.max = new Date().toISOString().slice(0, 10);
+}
+function modalSinceDate() {
+  const v = document.getElementById('modalPeriod').value;
+  if (!v) return null;
+  if (v === 'date') return document.getElementById('modalSince').value || null;
+  const d = new Date(Date.now() - Number(v) * 86400000);
+  return d.toISOString().slice(0, 10);
+}
 
 async function startAnalysis(appId, gameName) {
   if (searchDropdown) { searchDropdown.remove(); searchDropdown = null; }
@@ -1752,6 +1790,9 @@ async function executePipelineRun() {
   
   const model = document.getElementById('modalModel').value;
   const incremental = document.getElementById('modalIncremental').checked;
+  const since = modalSinceDate();
+  const sort = document.getElementById('modalSort').value;
+  if (document.getElementById('modalPeriod').value === 'date' && !since) { alert('수집 시작 날짜를 고르세요.'); return; }
   const language = document.getElementById('modalLanguage').value;
   const budget = Number(document.getElementById('modalBudget').value);
   if (!(appId > 0) || !modalStats || modalStats.app_id !== appId || modalStats.language !== language) {
@@ -1780,7 +1821,9 @@ async function executePipelineRun() {
         target_error_pct: targetErrorPct,
         custom_sample_size: customSampleSize,
         incremental: incremental,
-        model: model
+        model: model,
+        since: since,
+        sort: sort
       })
     });
     

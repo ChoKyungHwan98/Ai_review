@@ -17,6 +17,7 @@ import json
 import math
 import os
 import time
+from datetime import datetime, timezone
 import httpx
 
 from config import cfg
@@ -30,6 +31,12 @@ def get_z95(): return cfg.Z_95
 def get_out_csv(): return cfg.REVIEWS_CSV
 def get_out_json(): return cfg.SAMPLE_JSON
 def get_url(): return cfg.STEAM_API_URL
+def get_sort(): return "helpful" if getattr(cfg, "COLLECT_SORT", "recent") == "helpful" else "recent"
+def get_since_ts():
+    since = getattr(cfg, "COLLECT_SINCE", None)
+    if not since:
+        return None
+    return int(datetime.strptime(since, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp())
 
 # ─── 1단계: 모집단 조회 ───────────────────────────────────────────────
 
@@ -126,13 +133,17 @@ def collect_reviews(review_type, target, existing_ids):
     """review_type='positive' 또는 'negative'로 target건 수집."""
     collected = []
     cursor = "*"
+    since_ts = get_since_ts()
+    params = {"json": 1, "filter": "recent", "language": get_lang(),
+              "review_type": review_type, "purchase_type": "all",
+              "num_per_page": 100, "filter_offtopic_activity": 0}
+    if get_sort() == "helpful":
+        # 공감순은 Steam의 'all' 정렬이다. 기간은 최대 365일까지만 걸 수 있다.
+        params["filter"] = "all"
+        if since_ts:
+            params["day_range"] = max(1, min(365, math.ceil((time.time() - since_ts) / 86400)))
     while len(collected) < target:
-        r = httpx.get(get_url().format(appid=get_app_id()), params={
-            "json": 1, "filter": "recent", "language": get_lang(),
-            "review_type": review_type, "purchase_type": "all",
-            "num_per_page": 100, "cursor": cursor,
-            "filter_offtopic_activity": 0,
-        }, timeout=30.0)
+        r = httpx.get(get_url().format(appid=get_app_id()), params={**params, "cursor": cursor}, timeout=30.0)
         r.raise_for_status()
         data = r.json()
         reviews = data.get("reviews", [])
@@ -140,8 +151,12 @@ def collect_reviews(review_type, target, existing_ids):
             print(f"  [{review_type}] 더 이상 리뷰 없음. 중단.")
             break
         new_count = 0
+        older = 0
         for rv in reviews:
             rid = str(rv.get("recommendationid"))
+            if since_ts and int(rv.get("timestamp_created") or 0) < since_ts:
+                older += 1
+                continue
             if rid in existing_ids:
                 continue
             existing_ids.add(rid)
@@ -163,6 +178,9 @@ def collect_reviews(review_type, target, existing_ids):
             if len(collected) >= target:
                 break
         print(f"  [{review_type}] {len(collected)}/{target} (이번 페이지 +{new_count})")
+        if since_ts and get_sort() == "recent" and older == len(reviews):
+            print(f"  [{review_type}] {cfg.COLLECT_SINCE} 이전 리뷰에 도달. 중단.")
+            break
         next_cursor = data.get("cursor")
         if not next_cursor or next_cursor == cursor:
             break
@@ -244,6 +262,8 @@ def main():
             "confidence_level": 0.95,
             "language": get_lang(),
             "app_id": get_app_id(),
+            "since": getattr(cfg, "COLLECT_SINCE", None),
+            "sort": get_sort(),
         },
     }
     with open(get_out_json(), "w", encoding="utf-8") as f:

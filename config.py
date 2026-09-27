@@ -50,6 +50,8 @@ class Config:
     Z_95: float = 1.96
     MIN_REVIEW_LEN: int = int(os.getenv("MIN_REVIEW_LEN", "8"))
     CUSTOM_SAMPLE_SIZE: int = None
+    COLLECT_SINCE: str = None      # YYYY-MM-DD. 이 날짜 이후 리뷰만 모은다 (None이면 전체 기간)
+    COLLECT_SORT: str = "recent"   # recent 최신순 · helpful 공감순
 
     # ── 파일 경로 ───────────────────────────────────────────
     PROGRAM_DIR: str = str(PROGRAM_DIR)

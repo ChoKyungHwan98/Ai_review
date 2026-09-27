@@ -365,6 +365,8 @@ class PipelineRunRequest(BaseModel):
     model: Optional[str] = None                # 화면에서 고른 분석 모델
     custom_sample_size: Optional[int] = None
     incremental: bool = False
+    since: Optional[str] = None                # YYYY-MM-DD. 이 날짜 이후 리뷰만
+    sort: str = "recent"                       # recent 최신순 · helpful 공감순
 
 @app.post("/pipeline/run", summary="파이프라인 실행", include_in_schema=False)
 def trigger_pipeline(request: PipelineRunRequest, background_tasks: BackgroundTasks):
@@ -372,6 +374,15 @@ def trigger_pipeline(request: PipelineRunRequest, background_tasks: BackgroundTa
         raise HTTPException(status_code=422, detail="게임 번호 또는 리뷰 언어를 확인하세요")
     if not 0 < request.budget <= 100:
         raise HTTPException(status_code=422, detail="분석 예산은 0달러보다 크고 100달러 이하여야 합니다")
+    if request.sort not in ("recent", "helpful"):
+        raise HTTPException(status_code=422, detail="정렬은 최신순 또는 공감순만 고를 수 있습니다")
+    if request.since:
+        try:
+            since_day = datetime.strptime(request.since, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=422, detail="수집 시작 날짜 형식은 YYYY-MM-DD입니다")
+        if since_day > datetime.now():
+            raise HTTPException(status_code=422, detail="수집 시작 날짜가 오늘보다 늦습니다")
     from model_catalog import get_model
     try:
         model = get_model(request.model or cfg.MODEL)
@@ -385,6 +396,7 @@ def trigger_pipeline(request: PipelineRunRequest, background_tasks: BackgroundTa
             app_id=request.app_id, lang=request.lang, budget=request.budget,
             target_error_pct=request.target_error_pct, model=model["id"],
             custom_sample_size=request.custom_sample_size, incremental=request.incremental,
+            since=request.since, sort=request.sort,
         )
         if result.get("status") != "done" or (result.get("steps", {}).get("insights") or {}).get("status") != "done":
             return

@@ -124,6 +124,7 @@ def step_collect(result: PipelineResult):
     # 2) 기존 수집 파일 유효성 검사
     existing_count = 0
     existing_language = None
+    existing_scope = None
     if os.path.exists(cfg.REVIEWS_CSV):
         import csv
         try:
@@ -134,7 +135,9 @@ def step_collect(result: PipelineResult):
     if os.path.exists(cfg.SAMPLE_JSON):
         try:
             with open(cfg.SAMPLE_JSON, "r", encoding="utf-8") as stream:
-                existing_language = (json.load(stream).get("params") or {}).get("language")
+                existing_params = json.load(stream).get("params") or {}
+                existing_language = existing_params.get("language")
+                existing_scope = (existing_params.get("since"), existing_params.get("sort") or "recent")
         except (OSError, ValueError):
             pass
     incremental_mode = getattr(result, "incremental", False)
@@ -142,7 +145,10 @@ def step_collect(result: PipelineResult):
         raise ValueError("다른 언어의 기존 리뷰에는 이어서 수집할 수 없습니다. 새 분석으로 시작하세요")
 
     # 3) 기존 수집량이 목표량의 90% 이상인 경우 수집 단계를 건너뜀 (장애 재개 용도)
-    if existing_count >= target_size * 0.9 and existing_language == cfg.LANG and not incremental_mode:
+    same_scope = existing_scope == (cfg.COLLECT_SINCE, cfg.COLLECT_SORT or "recent")
+    if incremental_mode and existing_count and not same_scope:
+        raise ValueError("기간이나 정렬이 다른 기존 리뷰에는 이어서 수집할 수 없습니다. 새 분석으로 시작하세요")
+    if existing_count >= target_size * 0.9 and existing_language == cfg.LANG and same_scope and not incremental_mode:
         print(f"  ✅ 유효한 기존 리뷰 파일 존재 ({existing_count}건, 목표 {target_size}건 충족) — 수집 스킵")
         result.record("collect", "skipped", {"existing_reviews": existing_count, "target_reviews": target_size})
         return
@@ -293,14 +299,14 @@ def step_insights(result: PipelineResult):
 _PIPELINE_LOCK = threading.Lock()
 
 
-def run_pipeline(app_id: int = None, lang: str = None, budget: float = None, target_error_pct: float = None, custom_sample_size: int = None, incremental: bool = False, model: str = None) -> dict:
+def run_pipeline(app_id: int = None, lang: str = None, budget: float = None, target_error_pct: float = None, custom_sample_size: int = None, incremental: bool = False, model: str = None, since: str = None, sort: str = "recent") -> dict:
     # The analyzer and usage counters share process-wide configuration.
     with _PIPELINE_LOCK:
         return _run_pipeline_unlocked(app_id, lang, budget, target_error_pct,
-                                      custom_sample_size, incremental, model)
+                                      custom_sample_size, incremental, model, since, sort)
 
 
-def _run_pipeline_unlocked(app_id: int = None, lang: str = None, budget: float = None, target_error_pct: float = None, custom_sample_size: int = None, incremental: bool = False, model: str = None) -> dict:
+def _run_pipeline_unlocked(app_id: int = None, lang: str = None, budget: float = None, target_error_pct: float = None, custom_sample_size: int = None, incremental: bool = False, model: str = None, since: str = None, sort: str = "recent") -> dict:
     """전체 파이프라인 실행
 
     Args:
@@ -329,6 +335,8 @@ def _run_pipeline_unlocked(app_id: int = None, lang: str = None, budget: float =
         cfg.CUSTOM_SAMPLE_SIZE = custom_sample_size
     else:
         cfg.CUSTOM_SAMPLE_SIZE = None  # Reset if not explicitly requested
+    cfg.COLLECT_SINCE = since or None
+    cfg.COLLECT_SORT = "helpful" if sort == "helpful" else "recent"
 
     result = PipelineResult()
     result.incremental = incremental
