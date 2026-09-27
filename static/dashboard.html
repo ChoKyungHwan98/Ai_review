@@ -693,8 +693,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 body:not(.no-analysis) #ovEmpty { display: none; }
 body.no-analysis #ovBody { display: none; }
 /* ── 분석 시작 화면: 설정과 진행 ─────────────────────────────
-   팝업이 아니라 도구 화면 전체를 쓴다. 넓은 화면에서는 왼쪽에 조건, 오른쪽에 수집량과 시작 버튼. */
-.run-modal { position:fixed; inset:0; z-index:9999; flex-direction:column; overflow-y:auto; box-sizing:border-box; padding:40px 60px 48px; background:linear-gradient(135deg, #F2F4F6 0%, #E8F3FF 100%); scrollbar-gutter:stable; }
+   팝업이 아니라 본문 영역(사이드바 오른쪽)을 채우는 페이지다. 사이드바는 그대로 보이고,
+   여백·배경은 다른 페이지 본문(main)과 같다. 넓은 화면에서는 왼쪽에 조건, 오른쪽에 수집량과 시작 버튼. */
+.run-modal { position:fixed; top:0; right:0; bottom:0; left:var(--studio-sidebar-width); z-index:9999; flex-direction:column; overflow-y:auto; box-sizing:border-box; padding:28px 40px 52px; background:var(--studio-canvas); scrollbar-gutter:stable; }
 .run-dialog { width:100%; max-width:1120px; box-sizing:border-box; margin:0 auto; color:#333D4B; }
 .run-title { margin:0 0 6px; font-size:24px; font-weight:700; letter-spacing:-.02em; color:#191F28; }
 .run-lead { margin:0 0 24px; font-size:14px; line-height:1.6; color:#4E5968; }
@@ -766,8 +767,11 @@ body.no-analysis #ovBody { display: none; }
 @keyframes run-spin { to { transform:rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .run-steps .is-now .run-step-mark { animation:none; border-color:var(--color-primary); } .run-total i, .run-step-bar i { transition:none; } }
 @media (max-width: 960px) {
-  .run-modal { padding:24px 16px 32px; }
+  .run-modal { padding:24px 24px 32px; }
   #pipelineSetupForm { display:block; }
+}
+@media (max-width: 640px) {
+  .run-modal { left:0; padding:20px 16px 32px; }
 }
 @media (max-width: 520px) {
   .run-field { padding:16px; }
