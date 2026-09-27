@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dashboard_evidence import build_evidence, evidence_page, review_hours
+import decisions
 
 
 class DashboardEvidenceTests(unittest.TestCase):
@@ -108,6 +109,41 @@ class DashboardEvidenceTests(unittest.TestCase):
         self.assertFalse(deep["has_complaints"])
         self.assertEqual(deep["wants"], [])
         self.assertTrue(all(c["terms"] == [] for c in deep["causes"]))
+
+    def test_topic_edits_recount_without_ai_and_can_be_undone(self):
+        names = ["저장", "건축"]
+        decisions.edit_topic(self.folder, "merge", "건축", "저장", names)
+        e = build_evidence(self.folder, 42)
+        self.assertEqual([t["name"] for t in e["themes"]], ["저장"])
+        storage = e["themes"][0]
+        self.assertEqual((storage["mentions"], storage["pos"], storage["neg"]), (3, 2, 2))
+        self.assertEqual(evidence_page(self.folder, 42, "저장", "P")["total"], 2)
+        decisions.edit_topic(self.folder, "restore", "건축", names=names)
+        decisions.edit_topic(self.folder, "hide", "건축", names=names)
+        self.assertEqual([t["name"] for t in build_evidence(self.folder, 42)["themes"]], ["저장"])
+        decisions.edit_topic(self.folder, "restore", "건축", names=names)
+        decisions.set_verdict(self.folder, "저장", "fix", "세이브 먼저")
+        decisions.edit_topic(self.folder, "rename", "저장", "세이브", names=names)
+        e = build_evidence(self.folder, 42)
+        self.assertEqual(sorted(t["name"] for t in e["themes"]), ["건축", "세이브"])
+        saved = decisions.load(self.folder)
+        self.assertEqual(saved["verdicts"]["세이브"]["choice"], "fix")
+        self.assertEqual(len(saved["log"]), 6)
+        with self.assertRaises(ValueError):
+            decisions.edit_topic(self.folder, "rename", "건축", "세이브", names)
+        with self.assertRaises(ValueError):
+            decisions.edit_topic(self.folder, "merge", "건축", "없는 주제", names)
+
+    def test_design_log_names_who_decided_each_step(self):
+        saved = decisions.set_verdict(self.folder, "저장", "fix", "")
+        rows = decisions.design_log(saved, {"params": {"language": "koreana", "since": "2026-07-13", "sort": "recent",
+                                                       "target_error_pct": 5}, "design": {"n_total": 400}},
+                                    {"collected": 380, "analyzed": 300}, {"model": "m"}, 12, "팰월드")
+        by_step = {r["step"]: r for r in rows}
+        self.assertEqual(by_step["무엇을"]["text"], "팰월드 · 한국어 · 2026.07.13 이후 · 최신순")
+        self.assertEqual(by_step["얼마나"]["text"], "400건 계획 (목표 오차 ±5%) → 380건 수집")
+        self.assertEqual(by_step["주제 나누기"]["who"], "AI")
+        self.assertEqual(by_step["결론"]["details"], ["저장 → 고친다"])
 
     def test_empty_and_missing_sources_are_explicit(self):
         self.analyses = []

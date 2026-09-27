@@ -16,12 +16,16 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 from datetime import datetime
+from typing import Optional
+
 from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from config import cfg
 from dashboard_evidence import build_evidence, evidence_page
+import decisions
 
 
 app = FastAPI(
@@ -330,7 +334,85 @@ def dashboard_data_v5(app_id: int = None):
     if analysis_path:
         with open(analysis_path, "r", encoding="utf-8-sig", newline="") as stream:
             data["reviews"] = list(csv.DictReader(stream))
+    apply_decisions(data, os.path.dirname(path))
     return data
+
+
+def apply_decisions(data, folder):
+    """사람이 다듬은 주제 이름을 설명·할 일·리뷰 태그에도 똑같이 적용하고, 분석 설계서를 붙인다."""
+    saved = decisions.load(folder)
+    alias = saved["alias"]
+    n_ai_topics = sum(1 for t in data.get("themes") or [] if t.get("name") != "기타")
+    if alias:
+        themes = {}
+        for t in data.get("themes") or []:
+            name = decisions.resolve(t.get("name"), alias)
+            if name and name not in themes:
+                themes[name] = {**t, "name": name}
+        data["themes"] = list(themes.values())
+        actions = {}
+        for a in data.get("actions") or []:
+            name = decisions.resolve(a.get("theme"), alias)
+            if name and name not in actions:
+                actions[name] = {**a, "theme": name}
+        data["actions"] = list(actions.values())
+        for row in data.get("reviews") or []:
+            tags = []
+            for tag in str(row.get("keywords") or "").split("|"):
+                name, _, area = tag.partition("@")
+                name = decisions.resolve(name.strip(), alias) if name.strip() else None
+                if name and not any(t.startswith(name + "@") for t in tags):
+                    tags.append(f"{name}@{area}")
+            row["keywords"] = "|".join(tags)
+    data["decisions"] = {"alias": alias, "verdicts": saved["verdicts"], "log": saved["log"][-30:]}
+    data["design_log"] = decisions.design_log(saved, data.get("sample_design_full"),
+                                              (data.get("evidence") or {}).get("counts"),
+                                              data.get("usage"), n_ai_topics, (data.get("game") or {}).get("name", ""))
+
+
+class TopicEditRequest(BaseModel):
+    app_id: int
+    action: str                 # merge · rename · hide · restore
+    source: str
+    target: Optional[str] = None
+
+
+class VerdictRequest(BaseModel):
+    app_id: int
+    theme: str
+    choice: str = ""            # fix · watch · ignore · "" (지우기)
+    memo: str = ""
+
+
+def _decision_folder(app_id):
+    path = _game_file(app_id, "insights_v5.json")
+    if not path or not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="분석 결과가 없는 게임입니다")
+    return os.path.dirname(path)
+
+
+@app.post("/dashboard/topics", include_in_schema=False)
+def edit_topics(request: TopicEditRequest):
+    """주제 다듬기. AI를 다시 부르지 않고 저장된 분류를 다시 센다."""
+    folder = _decision_folder(request.app_id)
+    evidence = build_evidence(folder, request.app_id) or {}
+    alias = decisions.load(folder)["alias"]
+    names = [t["name"] for t in evidence.get("themes") or []] + list(alias)
+    try:
+        saved = decisions.edit_topic(folder, request.action, request.source, request.target, names)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"alias": saved["alias"]}
+
+
+@app.post("/dashboard/verdict", include_in_schema=False)
+def save_verdict(request: VerdictRequest):
+    folder = _decision_folder(request.app_id)
+    try:
+        saved = decisions.set_verdict(folder, request.theme, request.choice, request.memo)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"verdicts": saved["verdicts"]}
 
 
 @app.get("/dashboard/evidence", include_in_schema=False)
@@ -351,11 +433,9 @@ def dashboard_topic_evidence(app_id: int = Query(..., gt=0), theme: str = Query(
 #  분석 파이프라인 실행 및 상태 조회
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-from pydantic import BaseModel
 from fastapi import BackgroundTasks
 from pipeline import run_pipeline
 
-from typing import Optional
 
 class PipelineRunRequest(BaseModel):
     app_id: int

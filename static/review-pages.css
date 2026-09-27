@@ -112,6 +112,19 @@
 .rp-use-list i.use-0 { background:#1B64DA; } .rp-use-list i.use-1 { background:#3182F6; } .rp-use-list i.use-2 { background:#86B6EF; } .rp-use-list i.use-3 { background:#C8DCF8; }
 .rp-use-list b { color:var(--rp-ink); }
 
+/* 분석 설계서 */
+.page[data-page="sample"] > .subtitle { max-width:720px; line-height:1.6; }
+.rp-steps { margin:0; padding:0; list-style:none; display:grid; }
+.rp-steps > li { display:grid; grid-template-columns:96px 84px minmax(0,1fr); gap:12px; align-items:start; padding:10px 0; border-bottom:1px solid var(--rp-grid); }
+.rp-steps > li:last-child { border-bottom:0; }
+.rp-step-name { font-size:13px; font-weight:700; color:var(--rp-sub); padding-top:2px; }
+.rp-who { justify-self:start; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px; }
+.rp-who.human { background:var(--rp-pos); color:#fff; }
+.rp-who.ai { background:#191F28; color:#fff; }
+.rp-who.rule { background:var(--rp-grid); color:var(--rp-sub); }
+.rp-step-text { font-size:14px; line-height:1.6; color:var(--rp-ink); }
+.rp-step-text ul { margin:4px 0 0; padding-left:18px; font-size:13px; color:var(--rp-sub); }
+
 /* ---------- 심층 분석 ---------- */
 .page[data-page="deep"] > .title { margin:0 0 4px; font-size:28px; font-weight:750; letter-spacing:-.03em; color:#191F28; }
 .page[data-page="deep"] > .subtitle { margin:0 0 16px; font-size:13px; color:#6B7684; }
@@ -165,5 +178,7 @@
   .rp-flow { grid-template-columns:1fr; }
   .rp-arrow { transform:rotate(90deg); justify-self:center; }
   .rp-bal-row { grid-template-columns:1fr; gap:4px; }
+  .rp-steps > li { grid-template-columns:1fr auto; }
+  .rp-step-text { grid-column:1 / -1; }
   .rp-card { padding:14px 12px; }
 }

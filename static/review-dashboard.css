@@ -60,7 +60,8 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 .rd-chart-head h2 { font-size:18px; font-weight:700; letter-spacing:-.02em; color:var(--rd-ink); }
 .rd-chart-head p { margin:0; font-size:12px; color:var(--rd-muted); }
 .rd-chart-head p:empty { display:none; }
-.rd-view-toggle { margin-left:auto; }
+.rd-view-toggle { margin-left:0; }
+.rd-edit-btn { margin-left:auto; padding:6px 10px; font-size:12px; }
 .rd-view-toggle button { font-size:12px; padding:6px 10px; }
 
 /* 우선순위 지도 */
@@ -200,6 +201,31 @@ body.no-analysis .page[data-page="overview"] .rd-page-header { display:none; }
 .rd-cohort-val small { font-size:12px; font-weight:500; color:var(--rd-muted); }
 .rd-cohort.is-small .rd-cohort-track { background:repeating-linear-gradient(135deg,#F2F4F6 0 4px,#E5E8EB 4px 6px); }
 .rd-cohort.is-small .rd-cohort-label b { color:var(--rd-sub); }
+
+/* 내 결론 (사람이 정함) */
+.rd-verdict h3 small { font-weight:500; color:var(--rd-muted); margin-left:6px; }
+.rd-verdict-btns { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.rd-verdict-btns button { border:1px solid var(--rd-line); border-radius:8px; background:#fff; padding:8px 0; font-size:13px; font-weight:650; color:var(--rd-text); }
+.rd-verdict-btns button:hover { border-color:#AEB8C6; }
+.rd-verdict-btns .is-fix[aria-pressed="true"] { background:var(--rd-neg); border-color:var(--rd-neg); color:#fff; }
+.rd-verdict-btns .is-watch[aria-pressed="true"] { background:#191F28; border-color:#191F28; color:#fff; }
+.rd-verdict-btns .is-ignore[aria-pressed="true"] { background:#AEB8C6; border-color:#AEB8C6; color:#fff; }
+.rd-verdict textarea { width:100%; box-sizing:border-box; margin-top:6px; border:1px solid var(--rd-line); border-radius:8px; padding:8px 10px; font:inherit; font-size:13px; resize:vertical; }
+
+/* 주제 다듬기 */
+.rd-topic-dialog { width:min(900px,calc(100vw - 32px)); }
+#rdTopicEditor { overflow-x:auto; }
+.rd-topic-table { width:100%; border-collapse:collapse; font-size:13px; }
+.rd-topic-table th, .rd-topic-table td { padding:8px 6px; border-bottom:1px solid var(--rd-grid); text-align:left; white-space:nowrap; }
+.rd-topic-table thead th { font-size:12px; color:var(--rd-sub); font-weight:600; }
+.rd-topic-table tbody th { font-weight:700; color:var(--rd-ink); }
+.rd-inline { display:inline-flex; gap:4px; }
+.rd-inline input, .rd-inline select { width:120px; border:1px solid var(--rd-line); border-radius:8px; padding:6px 8px; font:inherit; font-size:13px; }
+.rd-topic-table .rd-btn { padding:6px 10px; font-size:12px; }
+.rd-edits-title { margin:16px 0 6px; font-size:14px; }
+.rd-edits { margin:0; padding:0; list-style:none; display:grid; gap:4px; }
+.rd-edits li { display:flex; justify-content:space-between; padding:6px 10px; border-radius:8px; background:var(--rd-soft); font-size:13px; }
+.rd-edits em { font-style:normal; color:var(--rd-muted); }
 
 /* ---------- 대화상자 ---------- */
 .rd-dialog { width:min(760px,calc(100vw - 32px)); max-height:85vh; border:1px solid #dfe5ed; border-radius:14px; padding:24px; color:#344257; box-shadow:0 20px 80px #15233330; }

@@ -132,14 +132,16 @@ window.ReviewPages = (() => {
         <span class="rp-bal-label"><b>${label}</b><small>${sub}</small></span>
         <span class="rp-bal-bar"><i class="up" style="width:${100 - negRate}%"><span>추천 ${pct(100 - negRate)}</span></i><i class="down" style="width:${negRate}%"></i></span>
         <span class="rp-bal-val">비추천 <b>${pct(negRate)}</b></span></div>`;
+    const sortLabel = params.sort === 'helpful' ? '공감순' : '최신순';
+    const since = params.since ? params.since.replaceAll('-', '.') : '';
     const lang = ({koreana:'한국어', english:'영어', japanese:'일본어', schinese:'중국어 간체', all:'전체 언어'})[params.language || data?.evidence?.language] || '';
-    box.innerHTML = `
+    box.innerHTML = designLogHTML(data?.design_log) + `
       <section class="rp-card">
         <h2>리뷰는 이렇게 좁혀졌습니다</h2>
         <div class="rp-flow">
-          <div class="rp-step"><small>Steam ${esc(lang)} 리뷰 전체</small><b>${pop.total ? `${num(pop.total)}건` : '—'}</b>${pop.score ? `<span>${esc(pop.score)}</span>` : ''}</div>
+          <div class="rp-step"><small>Steam ${esc(lang)} 리뷰 전체${since ? ' (전체 기간)' : ''}</small><b>${pop.total ? `${num(pop.total)}건` : '—'}</b>${pop.score ? `<span>${esc(pop.score)}</span>` : ''}</div>
           <div class="rp-arrow" aria-hidden="true">→</div>
-          <div class="rp-step"><small>최신순으로 수집</small><b>${num(collected)}건</b>${pop.total ? `<span>전체의 ${pct(collected / pop.total * 100)}</span>` : ''}</div>
+          <div class="rp-step"><small>${sortLabel}으로 수집${since ? ` · ${since} 이후` : ''}</small><b>${num(collected)}건</b>${pop.total ? `<span>전체의 ${pct(collected / pop.total * 100)}</span>` : ''}</div>
           <div class="rp-arrow" aria-hidden="true">→</div>
           <div class="rp-step is-main"><small>AI가 분석</small><b>${num(analyzed)}건</b>${analyzed != null ? `<span>수집의 ${pct(analyzed / collected * 100)}</span>` : ''}</div>
         </div>
@@ -158,13 +160,27 @@ window.ReviewPages = (() => {
       <section class="rp-card rp-caveat">
         <h2>이 숫자를 읽을 때</h2>
         <ul>
-          <li><b>최신순으로 모은 리뷰입니다.</b> 전체 유저를 무작위로 뽑은 표본이 아니므로 "전체 유저의 몇 %"로 읽으면 안 됩니다.</li>
+          <li><b>${sortLabel}으로 모은 리뷰입니다${since ? ` (${since} 이후)` : ''}.</b> 전체 유저를 무작위로 뽑은 표본이 아니므로 "전체 유저의 몇 %"로 읽으면 안 됩니다.</li>
           ${design.n_total ? `<li><b>처음 계획은 ${num(design.n_total)}건</b>(추천 ${num(design.n_pos)} / 비추천 ${num(design.n_neg)})이었습니다.${design.reason ? ` ${esc(design.reason)}.` : ''}</li>` : ''}
           ${params.min_neg ? `<li>불만을 볼 수 있도록 비추천을 최소 <b>${num(params.min_neg)}건</b> 모으도록 설정했습니다.</li>` : ''}
           ${sd.actual?.error_pct ? `<li class="rp-muted">참고: 무작위 표본이었다면 오차는 약 ±${sd.actual.error_pct}%p 수준입니다.</li>` : ''}
         </ul>
       </section>
       ${qualityHTML(data?.quality_report)}${usageHTML(data?.usage)}`;
+  }
+
+  // 분석 설계서: 단계마다 누가 정했는지(사람 · AI · 규칙)와 무엇을 정했는지
+  function designLogHTML(rows) {
+    if (!rows?.length) return '';
+    const whoClass = w => w.startsWith('사람') ? 'human' : w.startsWith('AI') ? 'ai' : 'rule';
+    return `<section class="rp-card rp-design">
+        <h2>분석 설계서</h2>
+        <ol class="rp-steps">${rows.map(r => `<li class="${whoClass(r.who)}">
+          <span class="rp-step-name">${esc(r.step)}</span>
+          <span class="rp-who ${whoClass(r.who)}">${esc(r.who)}</span>
+          <span class="rp-step-text">${esc(r.text)}${r.details?.length ? `<ul>${r.details.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}</span></li>`).join('')}</ol>
+        <p class="rp-note">AI는 정보를 모으고 제안합니다. 무엇을, 얼마나, 어떤 기준으로 볼지와 결론은 사람이 정합니다.</p>
+      </section>`;
   }
 
   // AI 사용량: 단계별 호출 수와 토큰. 비용은 설정한 단가로 계산한 추정치다.

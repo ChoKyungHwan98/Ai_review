@@ -88,6 +88,7 @@ window.ReviewDashboard = (() => {
           <div class="rd-chart-head">
             <h2 id="rdTopicsTitle"></h2>
             <p id="rdTopicsNote"></p>
+            <button class="rd-btn rd-edit-btn" data-action="topics">주제 다듬기</button>
             <div class="rd-toggle rd-view-toggle" aria-label="차트 보기"><button data-action="view" data-view="map">우선순위 지도</button><button data-action="view" data-view="bars">칭찬·불만 막대</button></div>
           </div>
           <div id="rdTopicChart"></div>
@@ -108,6 +109,7 @@ window.ReviewDashboard = (() => {
         <div id="rdFunChart"></div>
       </section>
       </div>
+      <dialog class="rd-dialog rd-topic-dialog" id="rdTopicDialog" aria-labelledby="rdTopicDialogTitle"><div class="rd-dialog-head"><div><h2 id="rdTopicDialogTitle">주제 다듬기</h2><p>AI가 나눈 주제를 합치거나 이름을 바꾸거나 숨깁니다. AI를 다시 부르지 않고 바로 다시 셉니다.</p></div><button class="rd-btn" data-action="close-topics" aria-label="주제 다듬기 닫기">닫기 ×</button></div><div id="rdTopicEditor"></div></dialog>
       <dialog class="rd-dialog rd-method-dialog" id="rdMethodDialog" aria-labelledby="rdMethodTitle"><div class="rd-dialog-head"><div><h2 id="rdMethodTitle">분석 기준</h2><p>${num(counts.collected)}건 수집 · ${num(counts.analyzed)}건 AI 분석</p></div><button class="rd-btn" data-action="close-method" aria-label="분석 기준 닫기">닫기 ×</button></div><div class="rd-method-grid">
         <p><b>우선순위 지도</b><br>가로축은 주제를 언급한 AI 분석 리뷰 수(칭찬+불만), 세로축은 그중 불만 비율입니다. 원 크기도 언급 수입니다. 세로 점선은 전체 주제의 언급 수 중앙값, 가로 점선은 불만 50%입니다. 오른쪽 위 칸은 많이 언급되면서 불만이 더 많은 주제입니다.</p>
         <p><b>칭찬·불만 막대</b><br>막대 길이는 해당 주제를 칭찬하거나 불만으로 언급한 AI 분석 리뷰 수입니다. 양쪽이 같은 눈금을 씁니다. 칭찬이 더 많은 주제는 위에서 칭찬순, 불만이 더 많은 주제는 아래 구역에서 불만순으로 놓입니다.</p>
@@ -144,10 +146,21 @@ window.ReviewDashboard = (() => {
   }
 
   // 우선순위 지도: x = 언급 수, y = 불만 비율, 원 크기 = 언급 수. 점선은 언급 수 중앙값과 불만 50%.
+  let mapObserver;
   function renderMap() {
     const target = document.getElementById('rdTopicChart');
     const W = Math.max(300, target.clientWidth || 800), H = W < 480 ? 320 : Math.round(Math.min(520, Math.max(380, W * .5)));
     target.innerHTML = mapSVG(W, H) || '<div class="rd-empty">분류된 주제가 아직 없습니다.</div>';
+    target.dataset.mapWidth = W;
+    // 처음 그릴 때 화면이 아직 숨겨져 있으면 폭을 모른다. 실제 폭이 정해지면 그 폭에 맞춰 다시 그린다.
+    if (window.ResizeObserver) {
+      mapObserver?.disconnect();
+      mapObserver = new ResizeObserver(() => {
+        const w = target.clientWidth;
+        if (view === 'map' && w && Math.abs(Math.max(300, w) - Number(target.dataset.mapWidth)) > 24) renderMap();
+      });
+      mapObserver.observe(target);
+    }
   }
 
   // 지도 SVG 문자열. 화면과 한 장 보고서가 같은 그림을 쓴다.
@@ -217,7 +230,7 @@ window.ReviewDashboard = (() => {
       <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" class="rd-map-axis"/>
       ${quadLabels}
       ${tick(L - 6, T + 4, '100%')}${tick(L - 6, ym + 4, '50%')}${tick(L - 6, H - B + 4, '0%')}
-      ${tick(L, H - 8, '0', 'start')}${tick(xm, H - 8, `중앙값 ${num(Math.round(median))}건`, 'middle')}${tick(W - R, H - 8, `언급 리뷰 수 → ${num(xMax)}건 · 원 크기도 언급 수`, 'end')}
+      ${tick(L, H - 8, '0', 'start')}${tick(xm, H - 8, `중앙값 ${num(Math.round(median))}건`, 'middle')}${tick(W - R, H - 8, W < 480 ? `${num(xMax)}건` : `언급 리뷰 수 → ${num(xMax)}건 · 원 크기도 언급 수`, 'end')}
       ${[...dots].sort((a,b) => (a.t.name === selected || ['concern','strength','watch'].includes(a.r)) - (b.t.name === selected || ['concern','strength','watch'].includes(b.r)) || b.rad - a.rad).map(d => `<g class="rd-dot is-${d.r}" data-action="select" data-theme="${esc(d.t.name)}" tabindex="0" role="button" aria-pressed="${selected === d.t.name}" aria-label="${esc(d.t.name)}: 언급 ${d.t.mentions}건, 불만 ${Math.round(share(d.t) * 100)}%, 칭찬 ${d.t.pos}건, 불만 ${d.t.neg}건"><title>${esc(d.t.name)} · 언급 ${num(d.t.mentions)}건 · 칭찬 ${num(d.t.pos)} · 불만 ${num(d.t.neg)} (${Math.round(share(d.t) * 100)}%)</title>${d.rad < 12 ? `<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad + 6}" class="rd-dot-hit"/>` : ''}<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad}" fill="${fills[d.r]}" class="rd-dot-mark"/></g>`).join('')}
       <g aria-hidden="true">${labels.join('')}</g>
     </svg>`;
@@ -302,6 +315,7 @@ window.ReviewDashboard = (() => {
       ${when}
       ${action?.prob ? `<div class="rd-focus-block rd-ai"><h3>AI 요약</h3><p>${esc(action.prob)}</p>${action.why || action.fix?.length ? `<details class="rd-why"><summary>원인과 개선 제안 보기</summary>${action.why ? `<p><b>리뷰가 말하는 원인</b>${esc(action.why)}</p>` : ''}${action.fix?.length ? `<p><b>리뷰에서 나온 제안</b></p><ul>${action.fix.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}<p class="rd-note">AI가 리뷰를 요약한 내용입니다. 원문으로 확인한 뒤 기획에 반영하세요.</p></details>` : ''}</div>` : ''}
       ${quote ? `<figure class="rd-quote"><figcaption>실제 리뷰 · ${quote.recommended ? '게임 추천' : '게임 비추천'}${quote.hours == null ? '' : ` · ${num(Math.round(quote.hours))}시간`}</figcaption><blockquote>“${esc(quote.content)}${quote.truncated ? '…' : ''}”</blockquote></figure>` : ''}
+      ${verdictBlock(t)}
       <div class="rd-focus-actions">
         ${t.neg ? `<button class="rd-btn ${lead === 'N' ? 'primary' : ''}" data-action="evidence" data-sentiment="N">불만 리뷰 ${num(t.neg)}건</button>` : ''}
         ${t.pos ? `<button class="rd-btn ${lead === 'P' ? 'primary' : ''}" data-action="evidence" data-sentiment="P">칭찬 리뷰 ${num(t.pos)}건</button>` : ''}
@@ -357,8 +371,60 @@ window.ReviewDashboard = (() => {
     else if (action === 'evidence-filter') { dialogSentiment=button.dataset.sentiment; dialogPage=1; loadEvidence(); }
     else if (action === 'evidence-page') { dialogPage=Number(button.dataset.page); loadEvidence(); }
     else if (action === 'retry-evidence') loadEvidence();
+    else if (action === 'topics') openTopics();
+    else if (action === 'close-topics') document.getElementById('rdTopicDialog').close();
+    else if (action === 'topic-edit') editTopic(button);
+    else if (action === 'verdict') saveVerdict(button.dataset.choice === data.decisions?.verdicts?.[selected]?.choice ? '' : button.dataset.choice);
   }
   function closeDialog() { document.getElementById('rdEvidenceDialog').close(); }
+  /* ---------- 사람의 결정: 내 결론 · 주제 다듬기 ---------- */
+  const CHOICES = {fix: '고친다', watch: '지켜본다', ignore: '무시한다'};
+  function verdictBlock(t) {
+    const v = data.decisions?.verdicts?.[t.name] || {};
+    return `<div class="rd-focus-block rd-verdict"><h3>내 결론 <small>${v.at ? `${esc(v.at)} 저장` : '사람이 정합니다'}</small></h3>
+      <div class="rd-verdict-btns">${Object.entries(CHOICES).map(([k, label]) => `<button class="is-${k}" data-action="verdict" data-choice="${k}" aria-pressed="${v.choice === k}">${label}</button>`).join('')}</div>
+      <textarea id="rdVerdictMemo" rows="2" maxlength="300" placeholder="메모 (예: 다음 패치에서 거점 렉부터)">${esc(v.memo || '')}</textarea></div>`;
+  }
+  async function post(url, body) {
+    const r = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({app_id: Number(appId), ...body})});
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.detail || r.statusText); }
+    return r.json();
+  }
+  async function saveVerdict(choice) {
+    try {
+      const res = await post('/dashboard/verdict', {theme: selected, choice, memo: document.getElementById('rdVerdictMemo')?.value || ''});
+      data.decisions = {...(data.decisions || {}), verdicts: res.verdicts};
+      renderDetail();
+    } catch (error) { alert(`결론을 저장하지 못했습니다: ${error.message}`); }
+  }
+  function openTopics() {
+    const box = document.getElementById('rdTopicEditor');
+    const topics = [...evidence.themes].sort((a, b) => b.mentions - a.mentions);
+    const alias = data.decisions?.alias || {};
+    const options = topics.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join('');
+    box.innerHTML = `<table class="rd-topic-table"><thead><tr><th>주제</th><th>언급</th><th>이름 바꾸기</th><th>다른 주제에 합치기</th><th></th></tr></thead><tbody>
+      ${topics.map(t => `<tr data-topic="${esc(t.name)}"><th>${esc(t.name)}</th><td>${num(t.mentions)}건</td>
+        <td><span class="rd-inline"><input maxlength="20" placeholder="새 이름" aria-label="${esc(t.name)} 새 이름"><button class="rd-btn" data-action="topic-edit" data-op="rename">바꾸기</button></span></td>
+        <td><span class="rd-inline"><select aria-label="${esc(t.name)} 합칠 주제"><option value="">선택</option>${options.replace(`<option value="${esc(t.name)}">${esc(t.name)}</option>`, '')}</select><button class="rd-btn" data-action="topic-edit" data-op="merge">합치기</button></span></td>
+        <td><button class="rd-btn" data-action="topic-edit" data-op="hide">숨기기</button></td></tr>`).join('')}
+      </tbody></table>
+      ${Object.keys(alias).length ? `<h3 class="rd-edits-title">바꾼 내용</h3><ul class="rd-edits">${Object.entries(alias).map(([from, to]) => `<li><span>${esc(from)} → ${to == null ? '<em>숨김</em>' : esc(to)}</span><button class="rd-text-btn" data-action="topic-edit" data-op="restore" data-source="${esc(from)}">되돌리기</button></li>`).join('')}</ul>` : ''}`;
+    const dialog = document.getElementById('rdTopicDialog');
+    if (!dialog.open) dialog.showModal();
+  }
+  async function editTopic(button) {
+    const row = button.closest('tr');
+    const op = button.dataset.op;
+    const source = button.dataset.source || row?.dataset.topic;
+    const target = op === 'rename' ? row.querySelector('input').value.trim() : op === 'merge' ? row.querySelector('select').value : null;
+    if ((op === 'rename' || op === 'merge') && !target) { alert(op === 'rename' ? '새 이름을 적으세요.' : '합칠 주제를 고르세요.'); return; }
+    try {
+      await post('/dashboard/topics', {action: op, source, target});
+      await window.load(appId);          // 저장된 분류로 모든 화면을 다시 센다
+      openTopics();
+    } catch (error) { alert(`주제를 바꾸지 못했습니다: ${error.message}`); }
+  }
+
   function closeMethod() { document.getElementById('rdMethodDialog').close(); }
   async function loadEvidence() {
     request?.abort(); request = new AbortController();
@@ -398,11 +464,12 @@ window.ReviewDashboard = (() => {
         ${kind === 'fix' && action?.prob ? `<p><b>문제</b>${esc(action.prob)}</p>` : ''}
         ${kind === 'fix' && action?.why ? `<p><b>원인</b>${esc(action.why)}</p>` : ''}
         ${kind === 'fix' && action?.fix?.length ? `<p><b>유저 제안</b>${action.fix.map(esc).join(' · ')}</p>` : ''}
-        ${q ? `<blockquote>“${esc(q.slice(0, 120))}${q.length > 120 ? '…' : ''}”</blockquote>` : ''}</div>`;
+        ${q ? `<blockquote>“${esc(q.slice(0, 120))}${q.length > 120 ? '…' : ''}”</blockquote>` : ''}
+        ${verdictOf(t) ? `<p class="rpt-verdict"><b>내 결론</b>${verdictOf(t)}</p>` : ''}</div>`;
     };
     const deep = window.ReviewPages?.deepLines(evidence.deep) || [];
-    const cohorts = evidence.cohorts.filter(x => x.n > 0);
-    const fun = (evidence.fun || []).slice(0, 3);
+    const verdictOf = t => { const v = data.decisions?.verdicts?.[t.name]; return v?.choice ? `${CHOICES[v.choice]}${v.memo ? ` · ${esc(v.memo)}` : ''}` : ''; };
+    const design = (data.design_log || []).filter(r => ['무엇을', '얼마나', '주제 나누기', '결론'].includes(r.step));
     return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(game)} 리뷰 진단 보고서</title>
 <link rel="stylesheet" href="${location.origin}/static/review-dashboard.css">
@@ -431,8 +498,9 @@ body { margin:0; background:#F2F4F6; font-family:system-ui,-apple-system,"Segoe 
 .rpt-lines li { display:grid; grid-template-columns:84px 1fr; gap:8px; }
 .rpt-lines span { font-weight:700; color:#6B7684; }
 .rpt-lines b { color:#C9303D; }
-.rpt-mini { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.rpt-mini div { display:flex; justify-content:space-between; gap:8px; border-bottom:1px solid #EEF1F4; padding:2px 0; }
+.rpt h2 small { font-weight:500; color:#8B95A1; font-size:11px; margin-left:4px; }
+.rpt-design li { grid-template-columns:110px 1fr; }
+.rpt-verdict { margin-top:6px !important; padding-top:6px; border-top:1px dashed #C5CDD8; }
 .rpt-foot { margin-top:12px; padding-top:8px; border-top:1px solid #E5E8EB; font-size:10px; color:#8B95A1; }
 @media print { body { background:#fff; } .rpt { margin:0; width:auto; min-height:0; padding:0; font-size:11px; } .rpt-bar { display:none; } .rpt, .rpt-two, .rpt-mini { break-inside:avoid; } }
 </style></head><body>
@@ -445,9 +513,7 @@ body { margin:0; background:#F2F4F6; font-family:system-ui,-apple-system,"Segoe 
   <h2>주제 우선순위 지도</h2>${mapSVG(700, 280)}
   <div class="rpt-two">${topicBox(s, 'keep')}${topicBox(c, 'fix')}</div>
   ${deep.length ? `<h2>심층 분석에서 찾은 것</h2><ul class="rpt-lines">${deep.map(([k, t]) => `<li><span>${k}</span><p style="margin:0">${t}</p></li>`).join('')}</ul>` : ''}
-  <h2>플레이 시간과 재미</h2>
-  <div class="rpt-mini"><section>${cohorts.map(x => `<div><span>${esc(x.label)} 비추천</span><b>${x.small ? `표본 적음 (${num(x.negative)}/${num(x.n)})` : pct(x.negative_rate)}</b></div>`).join('')}</section>
-    <section>${fun.map(f => `<div><span>${esc(f.name)} · ${esc(f.desc)}</span><b>${pct(f.share)}</b></div>`).join('')}</section></div>
+  ${design.length ? `<h2>분석 설계 <small>누가 정했나</small></h2><ul class="rpt-lines rpt-design">${design.map(r => `<li><span>${esc(r.step)} · ${esc(r.who)}</span><p style="margin:0">${esc(r.text)}${r.details?.length ? ` — ${r.details.slice(0, 3).map(esc).join(' / ')}` : ''}</p></li>`).join('')}</ul>` : ''}
   <p class="rpt-foot">최신순으로 모은 Steam 리뷰입니다. 전체 유저의 무작위 표본이 아니므로 "전체 유저의 몇 %"로 읽지 않습니다. 주제·감성은 AI 분류이며 한 리뷰가 여러 주제에 들어갈 수 있습니다. 지킬 것·고칠 것은 조사를 시작할 곳이며 개선 효과를 뜻하지 않습니다.</p>
 </div></body></html>`;
   }
