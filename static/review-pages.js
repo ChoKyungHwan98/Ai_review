@@ -1,5 +1,6 @@
 /* 리뷰 원문 · 수집 설계 화면. 데이터는 /dashboard/data/v5 응답(DATA)만 쓴다. */
 window.ReviewPages = (() => {
+  const LANG_NAMES = {koreana:'한국어', english:'영어', japanese:'일본어', schinese:'중국어 간체', tchinese:'중국어 번체', russian:'러시아어', spanish:'스페인어', latam:'스페인어(중남미)', brazilian:'포르투갈어(브라질)', german:'독일어', french:'프랑스어', polish:'폴란드어', turkish:'튀르키예어', thai:'태국어', vietnamese:'베트남어', all:'모든 언어', unknown:'언어 미상'};
   const esc = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const num = x => x == null || x === '' ? '—' : Number(x).toLocaleString('ko-KR');
   const pct = x => x == null ? '—' : `${Number(x).toFixed(1)}%`;
@@ -85,6 +86,7 @@ window.ReviewPages = (() => {
         <header>
           <span class="rp-mood ${m.cls}">${m.label}</span>
           <span class="rp-vote ${r._up ? 'up' : 'down'}">${r._up ? '추천' : '비추천'}</span>
+          ${r.language ? `<span class="rp-lang">${esc(LANG_NAMES[r.language] || r.language)}</span>` : ''}
           <span class="rp-hours">${r.playtime_h === '' || r.playtime_h == null ? '플레이 시간 미상' : `${num(Math.round(Number(r.playtime_h)))}시간 플레이`}</span>
           <span class="rp-tags">${r._topics.map(t => `<em class="${t === filter.topic ? 'on' : ''}">${esc(t)}</em>`).join('')}</span>
         </header>
@@ -134,7 +136,8 @@ window.ReviewPages = (() => {
         <span class="rp-bal-val">비추천 <b>${pct(negRate)}</b></span></div>`;
     const sortLabel = params.sort === 'helpful' ? '공감순' : '최신순';
     const since = params.since ? params.since.replaceAll('-', '.') : '';
-    const lang = ({koreana:'한국어', english:'영어', japanese:'일본어', schinese:'중국어 간체', all:'전체 언어'})[params.language || data?.evidence?.language] || '';
+    const lang = LANG_NAMES[params.language || data?.evidence?.language] || '';
+    const langs = data?.evidence?.languages || [];
     box.innerHTML = designLogHTML(data?.design_log) + `
       <section class="rp-card">
         <h2>리뷰는 이렇게 좁혀졌습니다</h2>
@@ -148,6 +151,7 @@ window.ReviewPages = (() => {
         ${analyzed != null ? `<div class="rp-split" role="img" aria-label="수집 ${collected}건 중 AI 분석 ${analyzed}건, 제외 ${skipped}건">
           <i class="done" style="flex:${analyzed} 1 0"><span>AI 분석 ${num(analyzed)}건</span></i><i class="skip" style="flex:${Math.max(skipped, 0)} 1 0"><span>${skipped / collected > .12 ? `짧아서 제외 ${num(skipped)}건` : ''}</span></i></div>
           <p class="rp-note">너무 짧아 주제를 알 수 없는 리뷰는 AI 분석에서 뺐습니다.</p>` : ''}
+        ${langs.length > 1 ? `<p class="rp-note">수집한 리뷰의 언어: ${langs.map(([k, n]) => `${esc(LANG_NAMES[k] || k)} ${num(n)}건`).join(' · ')}</p>` : ''}
       </section>
       <section class="rp-card">
         <h2>추천·비추천 비율 비교</h2>

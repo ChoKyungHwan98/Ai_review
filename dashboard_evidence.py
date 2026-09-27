@@ -177,6 +177,7 @@ def build_evidence(directory, app_id):
                        "skipped_analysis": skipped},
             "period": {"start": day(min(timestamps)), "end": day(max(timestamps))} if timestamps else None,
             "language": (design.get("params") or {}).get("language", "unknown"),
+            "languages": Counter(r.get("language") or "unknown" for r in reviews.values()).most_common(8),
             "sample_negative_rate": round((n - up) / n * 100, 1) if n else None,
             "mood": {key: mood[key] for key in ("P", "M", "N", "U")},
             "themes": sorted(themes, key=lambda t: (-t["mentions"], t["name"])),

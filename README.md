@@ -44,6 +44,8 @@ Steam 리뷰 API
 
 무료 모델과 유료 모델은 같은 출력 계약을 사용합니다. 모델의 JSON 형식 지원 여부와 문맥 길이는 실행 전에 확인하며, 결과 누락 시 해당 묶음만 다시 시도합니다.
 
+분석 시작 창에서 무료와 유료 모델을 버튼으로 나눠 고릅니다. 무료 모델(`:free`)은 OpenRouter 한도(분당 20회, 하루 50회 · 평생 10달러 이상 충전한 계정은 하루 1,000회)에 맞춰 한 번에 하나씩 약 3.3초 간격으로 요청합니다. 하루 한도에 닿으면 멈추고, 같은 설정으로 다시 실행하면 이미 분석한 리뷰는 건너뛰고 이어서 분석합니다. 리뷰 언어는 한국어만 · 모든 언어 · 다른 언어 하나 중에서 고릅니다.
+
 ## 설치
 
 ```powershell
@@ -88,6 +90,7 @@ python build_insights_v5.py
 | `TARGET_ERROR_PCT` | `5` | 목표 오차 범위 |
 | `MIN_NEG_REVIEWS` | `100` | 비추천 리뷰 최소 목표 |
 | `MIN_REVIEW_LEN` | `8` | AI 분석 최소 글자 수 |
+| `FREE_DAILY_REQUESTS` | `1000` | 무료 모델 하루 요청 한도 (10달러 미만 충전 계정은 `50`) |
 
 ## 결과 파일
 
@@ -133,6 +136,9 @@ python build_insights_v5.py
 ├── build_insights_v5.py       # 화면용 집계와 요약
 ├── dashboard_evidence.py      # 근거 원문 조회
 ├── model_catalog.py           # OpenRouter 모델과 가격
+├── openrouter_limits.py       # 무료 모델 요청 속도와 하루 한도
+├── progress.py                # 분석 진행 단계와 건수 (진행 화면용)
+├── analysis_design.py         # 주제 자동 합치기와 분석 설계서
 ├── budget_control.py          # 실행 중 예산 통제
 ├── token_budget.py            # 실행 전 비용 견적
 ├── quality_check.py           # 품질 점검
@@ -144,6 +150,11 @@ python build_insights_v5.py
 
 ## 화면 설계와 Impeccable
 
-대시보드는 결론을 먼저 보여주고, 차트와 실제 리뷰로 근거를 확인하는 구조를 사용합니다. Impeccable 4.3.1은 개발자의 개인 Codex 스킬로 설치되어 UI 점검에 사용합니다. 실행 프로그램의 의존성이 아니므로 저장소에 복제하거나 `requirements.txt`에 추가하지 않습니다.
+대시보드는 결론을 먼저 보여주고, 차트와 실제 리뷰로 근거를 확인하는 구조를 사용합니다. [Impeccable](https://github.com/pbakaus/impeccable)의 검출기로 AI가 만든 화면에 흔한 패턴(옆줄 테두리, 얇은 테두리 + 넓은 그림자, 장식용 줄무늬·광택, 낮은 글자 대비, 이모지 아이콘 등)을 검사합니다. 실행 프로그램의 의존성이 아니므로 저장소에 복제하거나 `requirements.txt`에 추가하지 않습니다.
+
+```bash
+npx impeccable detect static/          # 소스 검사
+npx impeccable detect http://127.0.0.1:8765/dashboard   # 켜진 화면 검사
+```
 
 자세한 설명은 [포트폴리오용 제품 설계서](docs/포트폴리오용_제품_설계서.md), [파이프라인 구조](docs/파이프라인_구조.md), [리뷰 진단 시각화 설계](docs/리뷰진단_시각화_설계.md)를 참고하세요.

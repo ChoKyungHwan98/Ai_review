@@ -28,6 +28,7 @@ if sys.platform == "win32":
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 from config import cfg
+import progress
 from budget_control import activate as activate_budget, clear as clear_budget
 
 
@@ -48,8 +49,10 @@ class PipelineResult:
         }
         if status == "failed":
             self.status = "failed"
-        
-        # Save real-time progress
+        self.save()
+
+    def save(self):
+        """화면이 읽는 진행 기록. 시작하자마자 써야 이전 실행의 '완료'를 읽지 않는다."""
         try:
             out_path = cfg.PIPELINE_RESULT
             with open(out_path, "w", encoding="utf-8") as f:
@@ -340,6 +343,8 @@ def _run_pipeline_unlocked(app_id: int = None, lang: str = None, budget: float =
 
     result = PipelineResult()
     result.incremental = incremental
+    progress.report("collect", 0, None, force=True)   # 이전 실행의 진행 기록을 지운다
+    result.save()
 
     game_name = cfg.get_game_name()
     print("╔" + "═" * 58 + "╗")
@@ -356,6 +361,7 @@ def _run_pipeline_unlocked(app_id: int = None, lang: str = None, budget: float =
         cfg.MODEL_COST_INPUT = model_info["input_cost"]
         cfg.MODEL_COST_OUTPUT = model_info["output_cost"]
         cfg.MODEL_JSON_MODE = model_info["json_schema"]
+        cfg.MODEL_FREE = model_info["free"]   # 무료 모델은 분당 20회 한도에 맞춰 천천히 보낸다
         cfg.MODEL_CONTEXT_LENGTH = model_info["context_length"]
         activate_budget(model_info, cfg.BUDGET_USD)
         # Step 1: 리뷰 수집 (먼저 수행해야 견적 가능)
@@ -370,6 +376,7 @@ def _run_pipeline_unlocked(app_id: int = None, lang: str = None, budget: float =
 
         # Step 2~5: 파이프라인 실행
         step_analyze(result)
+        progress.report("finish", force=True)
         step_quality(result)
         step_verify(result)
         step_insights(result)

@@ -32,6 +32,7 @@ import re
 import random
 import argparse
 import httpx
+import openrouter_limits as limits
 from budget_control import BudgetExceeded, current as current_budget
 from collections import defaultdict
 
@@ -158,7 +159,12 @@ def call_llm(content: str, retries: int = 2) -> dict:
         reservation = guard.reserve(body["messages"], body["max_tokens"]) if guard else None
         usage_recorded = False
         try:
+            limits.wait_turn()
             r = httpx.post(URL, headers=headers, json=body, timeout=60.0)
+            if r.status_code == 429:
+                if limits.daily_limit_hit(r.text):
+                    raise BudgetExceeded(limits.DAILY_MESSAGE)
+                time.sleep(limits.retry_after(r))
             r.raise_for_status()
             data = r.json()
             usage = data.get("usage") or {}

@@ -71,7 +71,7 @@ window.ReviewDashboard = (() => {
       return;
     }
     const counts = evidence.counts;
-    const language = ({koreana:'한국어',english:'영어',all:'전체 언어',japanese:'일본어',schinese:'중국어 간체',unknown:'언어 정보 없음'})[evidence.language] || evidence.language;
+    const language = ({koreana:'한국어',english:'영어',all:'모든 언어',japanese:'일본어',schinese:'중국어 간체',tchinese:'중국어 번체',unknown:'언어 정보 없음'})[evidence.language] || evidence.language;
     const period = evidence.period ? `${evidence.period.start.replaceAll('-','.')} – ${evidence.period.end.replaceAll('-','.')}` : '기간 정보 없음';
     document.getElementById('overviewTitle').innerHTML = verdictHTML();
     const summary = document.getElementById('ovSummary');
@@ -423,28 +423,28 @@ body { margin:0; background:#F2F4F6; font-family:system-ui,-apple-system,"Segoe 
 .rpt { width:186mm; min-height:273mm; margin:16px auto; padding:10mm; box-sizing:border-box; background:#fff; color:#333D4B; font-size:12px; line-height:1.55; }
 .rpt-bar { width:186mm; margin:16px auto 0; display:flex; justify-content:flex-end; }
 .rpt-bar button { border:0; border-radius:8px; padding:9px 14px; background:#191F28; color:#fff; font:inherit; font-size:13px; cursor:pointer; }
-.rpt-kicker { font-size:11px; color:#6B7684; font-weight:600; }
+.rpt-kicker { font-size:11px; color:#4E5968; font-weight:600; }
 .rpt h1 { margin:4px 0 2px; font-size:22px; letter-spacing:-.03em; color:#191F28; }
-.rpt-meta { font-size:11px; color:#8B95A1; }
+.rpt-meta { font-size:11px; color:#5F6977; }
 .rpt-summary { margin:8px 0 0; padding:8px 10px; border-radius:8px; background:#F7F9FB; }
 .rpt h2 { margin:10px 0 4px; font-size:13px; color:#191F28; }
 .rpt .rd-map { width:100%; height:auto; }
 .rpt-two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .rpt-topic { border:1px solid #E5E8EB; border-radius:10px; padding:10px 12px; }
 .rpt-topic.is-fix { background:#FFF4F5; border-color:#F8C3C8; } .rpt-topic.is-keep { background:#EEF4FE; border-color:#C8DCF8; }
-.rpt-tag { font-size:10px; font-weight:800; color:#fff; background:#3182F6; border-radius:999px; padding:1px 7px; }
-.is-fix .rpt-tag { background:#F04452; }
+.rpt-tag { font-size:10px; font-weight:800; color:#fff; background:#1B64DA; border-radius:999px; padding:1px 7px; }
+.is-fix .rpt-tag { background:#B42331; }
 .rpt-topic h3 { margin:4px 0 0; font-size:16px; color:#191F28; }
-.rpt-num { margin:2px 0 6px; font-weight:800; font-size:14px; } .rpt-num small { font-weight:500; font-size:11px; color:#6B7684; }
+.rpt-num { margin:2px 0 6px; font-weight:800; font-size:14px; } .rpt-num small { font-weight:500; font-size:11px; color:#4E5968; }
 .rpt-topic p { margin:3px 0; } .rpt-topic p b { color:#191F28; margin-right:6px; }
-.rpt blockquote { margin:6px 0 0; padding-left:8px; border-left:2px solid #C5CDD8; color:#4E5968; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.rpt blockquote { margin:6px 0 0; padding:6px 8px; border-radius:6px; background:rgba(255,255,255,.7); color:#4E5968; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .rpt-lines { margin:0; padding:0; list-style:none; display:grid; gap:4px; }
 .rpt-lines li { display:grid; grid-template-columns:84px 1fr; gap:8px; }
-.rpt-lines span { font-weight:700; color:#6B7684; }
-.rpt-lines b { color:#C9303D; }
-.rpt h2 small { font-weight:500; color:#8B95A1; font-size:11px; margin-left:4px; }
+.rpt-lines span { font-weight:700; color:#4E5968; }
+.rpt-lines b { color:#B42331; }
+.rpt h2 small { font-weight:500; color:#5F6977; font-size:11px; margin-left:4px; }
 .rpt-design li { grid-template-columns:110px 1fr; }
-.rpt-foot { margin-top:12px; padding-top:8px; border-top:1px solid #E5E8EB; font-size:10px; color:#8B95A1; }
+.rpt-foot { margin-top:12px; padding-top:8px; border-top:1px solid #E5E8EB; font-size:10px; color:#5F6977; }
 @media print { body { background:#fff; } .rpt { margin:0; width:auto; min-height:0; padding:0; font-size:11px; } .rpt-bar { display:none; } .rpt, .rpt-two, .rpt-mini { break-inside:avoid; } }
 </style></head><body>
 <div class="rpt-bar"><button onclick="print()">인쇄 / PDF로 저장</button></div>

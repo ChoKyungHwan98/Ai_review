@@ -31,6 +31,8 @@ from dotenv import load_dotenv
 sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
 from config import cfg
+import progress
+import openrouter_limits as limits
 
 API_KEY = cfg.OPENROUTER_API_KEY
 URL = cfg.OPENROUTER_URL
@@ -100,12 +102,22 @@ async def ask(client, stage, system, user, max_tokens):
     if getattr(cfg, "MODEL_JSON_MODE", False):
         body["response_format"] = {"type": "json_object"}
     last = None
-    for _ in range(2):
+    errors = rate_waits = 0
+    while True:
         guard = current_budget()
         reservation = guard.reserve(messages, max_tokens) if guard else None
         usage_recorded = False
         try:
+            await limits.await_turn()
             r = await client.post(URL, headers=headers, json=body, timeout=120.0)
+            if r.status_code == 429:
+                if limits.daily_limit_hit(r.text):
+                    raise FatalApiError(limits.DAILY_MESSAGE)
+                rate_waits += 1
+                if rate_waits > 3:   # 실패한 429도 하루 한도에 들어가므로 오래 버티지 않는다
+                    raise RuntimeError(f"요청이 너무 많다는 응답(429)이 계속됩니다: {r.text[:120]}")
+                await asyncio.sleep(limits.retry_after(r, 10.0 if limits.is_free() else 5.0))
+                continue
             if r.status_code in (400, 404) and body.pop("response_format", None):
                 raise ValueError("선택한 모델의 JSON 모드가 거부되어 일반 형식으로 재시도합니다")
             if r.status_code in (400, 401, 402, 403, 404):
@@ -113,7 +125,12 @@ async def ask(client, stage, system, user, max_tokens):
             r.raise_for_status()
             data = r.json()
             if "error" in data:
-                raise FatalApiError(str(data["error"])[:200])
+                error = data["error"]
+                if isinstance(error, dict) and error.get("code") == 429:   # 본문에 담겨 오는 한도 초과
+                    if limits.daily_limit_hit(str(error)):
+                        raise FatalApiError(limits.DAILY_MESSAGE)
+                    raise RuntimeError(f"요청 한도 초과: {str(error)[:120]}")
+                raise FatalApiError(str(error)[:200])
             usage = data.get("usage") or {}
             if guard:
                 guard.finish(reservation, usage)
@@ -134,11 +151,13 @@ async def ask(client, stage, system, user, max_tokens):
             raise
         except Exception as e:  # 일시적 오류만 한 번 더 시도한다
             last = e
+            errors += 1
+            if errors >= 2:
+                raise last
             await asyncio.sleep(2.0)
         finally:
             if guard and not usage_recorded:
                 guard.finish(reservation)
-    raise last
 
 
 def compact(items):
@@ -220,6 +239,7 @@ USER_A = """아래는 한 게임의 스팀 리뷰 {n}건입니다. 여러 언어
 
 
 async def find_themes(client, long_rows):
+    progress.report("topics", force=True)
     p = path("themes_v3.json")
     if os.path.exists(p):
         with open(p, "r", encoding="utf-8") as f:
@@ -358,6 +378,7 @@ async def classify(client, long_rows, themes):
     done = read_jsonl(out_path)
     pending = [r for r in long_rows if r["recommendationid"] not in done]
     print(f"[B] 분류 대상 {len(long_rows)}건 / 이미 {len(done)}건 / 남은 {len(pending)}건")
+    progress.report("classify", len(done), len(long_rows), force=True)
     if not pending:
         return done
     pending, copies = same_text_groups(pending)
@@ -372,7 +393,7 @@ async def classify(client, long_rows, themes):
         writer.writeheader()
 
     stats = {"ok": 0, "fail": 0}
-    sem = asyncio.Semaphore(CONCURRENCY)
+    sem = asyncio.Semaphore(limits.concurrency(CONCURRENCY))
 
     def save(src, res):
         tags = clean_tags(res.get("t"), area_of)
@@ -392,6 +413,7 @@ async def classify(client, long_rows, themes):
         writer.writerow(analysis_row(src, res, area_of))
         done[item["id"]] = item
         stats["ok"] += 1
+        progress.report("classify", len(done), len(long_rows))
         for twin in copies.pop(src["recommendationid"], []):
             save(twin, res)
 
@@ -490,12 +512,15 @@ async def dig_complaints(client, long_rows, classified, themes):
     targets = [by_id[i] for i, item in classified.items() if i in by_id and needs_deep(item, by_id[i])]
     pending = [r for r in targets if r["recommendationid"] not in done]
     print(f"[C] 심층 대상 {len(targets)}건 / 이미 {len(done)}건 / 남은 {len(pending)}건")
+    target_ids = {r["recommendationid"] for r in targets}
+    report = lambda force=False: progress.report("deep", len(target_ids & done.keys()), len(targets), force=force)
+    report(force=True)
     if not pending:
         return done
     pending, copies = same_text_groups(pending)
 
     f_out = open(out_path, "a", encoding="utf-8")
-    sem = asyncio.Semaphore(CONCURRENCY)
+    sem = asyncio.Semaphore(limits.concurrency(CONCURRENCY))
 
     def save_results(res, allowed_ids):
         for x in res:
@@ -513,6 +538,7 @@ async def dig_complaints(client, long_rows, classified, themes):
                 f_out.write(json.dumps(item, ensure_ascii=False) + "\n")
                 done[twin] = item
         f_out.flush()
+        report()
 
     async def run(batch):
         async with sem:

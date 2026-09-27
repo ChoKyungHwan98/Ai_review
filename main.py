@@ -24,8 +24,9 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from config import cfg
-from dashboard_evidence import build_evidence, evidence_page
+from dashboard_evidence import build_evidence, evidence_page, load_sources
 import analysis_design
+import progress
 
 
 app = FastAPI(
@@ -262,8 +263,10 @@ def get_openrouter_models():
         models = list_models()
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"모델 목록을 확인할 수 없습니다: {exc}") from exc
+    import openrouter_limits
     return {"models": models, "free_count": sum(m["free"] for m in models),
-            "paid_count": sum(not m["free"] for m in models)}
+            "paid_count": sum(not m["free"] for m in models),
+            "free_limits": {"per_minute": openrouter_limits.FREE_RPM, "per_day": openrouter_limits.FREE_DAILY}}
 
 
 
@@ -334,6 +337,12 @@ def dashboard_data_v5(app_id: int = None):
     if analysis_path:
         with open(analysis_path, "r", encoding="utf-8-sig", newline="") as stream:
             data["reviews"] = list(csv.DictReader(stream))
+    languages = (data.get("evidence") or {}).get("languages") or []
+    if len(languages) > 1:
+        source = load_sources(os.path.dirname(path))
+        by_id = source[0] if source else {}
+        for row in data["reviews"]:
+            row["language"] = (by_id.get(str(row.get("recommendationid"))) or {}).get("language", "")
     apply_design(data)
     return data
 
@@ -542,5 +551,6 @@ def pipeline_last_result(app_id: Optional[int] = None):
         "analyze_target": target,
         "analyze_pct": round(analyzed / target * 100, 1) if target else 0.0,
         "elapsed_sec": elapsed,
+        "progress": progress.read(os.path.dirname(result_path)),   # 단계별 건수
     }
     return data

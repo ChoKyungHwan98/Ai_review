@@ -1,15 +1,15 @@
 /* 리뷰 원문 · 수집 설계 화면. 색과 글자 크기는 진단 요약 화면(review-dashboard.css)과 같은 값을 쓴다. */
 .rp {
-  --rp-ink:#191F28; --rp-text:#333D4B; --rp-sub:#6B7684; --rp-muted:#8B95A1;
+  --rp-ink:#191F28; --rp-text:#333D4B; --rp-sub:#4E5968; --rp-muted:#5F6977;
   --rp-line:#E5E8EB; --rp-grid:#EEF1F4; --rp-soft:#F7F9FB;
   --rp-pos:#3182F6; --rp-pos-ink:#1B64DA; --rp-pos-mute:#B9D3F8; --rp-pos-bg:#EEF4FE;
-  --rp-neg:#F04452; --rp-neg-ink:#C9303D; --rp-neg-mute:#F8C3C8; --rp-neg-bg:#FFF4F5;
+  --rp-neg:#F04452; --rp-neg-ink:#B42331; --rp-neg-mute:#F8C3C8; --rp-neg-bg:#FFF4F5;
   --rp-mix:#8DB8F5; --rp-unk:#C5CDD8;
   color:var(--rp-text); font-size:14px; font-variant-numeric:tabular-nums;
 }
 .rp button { font-family:inherit; cursor:pointer; }
 .page[data-page="reviews"] > .title, .page[data-page="sample"] > .title { margin:0 0 4px; font-size:28px; font-weight:750; letter-spacing:-.03em; color:#191F28; }
-.page[data-page="reviews"] > .subtitle, .page[data-page="sample"] > .subtitle { margin:0 0 16px; font-size:13px; color:#6B7684; }
+.page[data-page="reviews"] > .subtitle, .page[data-page="sample"] > .subtitle { margin:0 0 16px; font-size:13px; color:var(--rp-sub); }
 .rp button:focus-visible, .rp input:focus-visible { outline:2px solid #3182F6; outline-offset:2px; }
 .rp-card { background:#fff; border:1px solid var(--rp-line); border-radius:16px; padding:18px 22px; margin-bottom:16px; }
 .rp-card h2 { margin:0 0 14px; font-size:18px; font-weight:700; letter-spacing:-.02em; color:var(--rp-ink); }
@@ -47,12 +47,10 @@
 .rp-result-head { display:flex; justify-content:space-between; align-items:center; margin:0 0 10px; font-size:13px; color:var(--rp-sub); }
 .rp-result-head b { color:var(--rp-ink); font-size:15px; }
 .rp-list { display:grid; gap:10px; }
-.rp-review { background:#fff; border:1px solid var(--rp-line); border-left:4px solid var(--rp-unk); border-radius:12px; padding:14px 18px; }
-.rp-review.pos { border-left-color:var(--rp-pos); }
-.rp-review.mix { border-left-color:var(--rp-mix); }
-.rp-review.neg { border-left-color:var(--rp-neg); }
+.rp-review { background:#fff; border:1px solid var(--rp-line); border-radius:12px; padding:14px 18px; }
 .rp-review header { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:12px; color:var(--rp-sub); margin-bottom:6px; }
 .rp-mood { font-weight:800; }
+.rp-mood::before { content:""; display:inline-block; width:8px; height:8px; margin-right:6px; border-radius:50%; background:currentColor; vertical-align:1px; }
 .rp-mood.pos { color:var(--rp-pos-ink); } .rp-mood.mix { color:#3B6FB8; } .rp-mood.neg { color:var(--rp-neg-ink); } .rp-mood.unk { color:var(--rp-sub); }
 .rp-vote { border-radius:999px; padding:1px 8px; font-weight:700; }
 .rp-vote.up { background:var(--rp-pos-bg); color:var(--rp-pos-ink); }
@@ -77,7 +75,7 @@
 .rp-split { display:flex; gap:2px; height:28px; margin-top:16px; border-radius:8px; overflow:hidden; }
 .rp-split i { display:flex; align-items:center; padding:0 10px; font-style:normal; font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; }
 .rp-split .done { background:var(--rp-pos); color:#fff; }
-.rp-split .skip { background:repeating-linear-gradient(135deg,#F2F4F6 0 4px,#E5E8EB 4px 7px); color:var(--rp-sub); }
+.rp-split .skip { background:#E5E8EB; color:var(--rp-sub); }
 .rp-bal { display:grid; gap:12px; }
 .rp-bal-row { display:grid; grid-template-columns:120px minmax(0,1fr) 120px; align-items:center; gap:12px; }
 .rp-bal-label b { display:block; font-size:14px; font-weight:650; }
@@ -121,7 +119,7 @@
 .rp-steps > li:last-child { border-bottom:0; }
 .rp-step-name { font-size:13px; font-weight:700; color:var(--rp-sub); padding-top:2px; }
 .rp-who { justify-self:start; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px; }
-.rp-who.human { background:var(--rp-pos); color:#fff; }
+.rp-who.human { background:var(--rp-pos-ink); color:#fff; }
 .rp-who.ai { background:#191F28; color:#fff; }
 .rp-who.rule { background:var(--rp-grid); color:var(--rp-sub); }
 .rp-step-text { font-size:14px; line-height:1.6; color:var(--rp-ink); }
@@ -129,7 +127,7 @@
 
 /* ---------- 심층 분석 ---------- */
 .page[data-page="deep"] > .title { margin:0 0 4px; font-size:28px; font-weight:750; letter-spacing:-.03em; color:#191F28; }
-.page[data-page="deep"] > .subtitle { margin:0 0 16px; font-size:13px; color:#6B7684; }
+.page[data-page="deep"] > .subtitle { margin:0 0 16px; font-size:13px; color:var(--rp-sub); }
 .rp-deep { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; align-items:start; }
 .rp-deep-card { margin:0; }
 .rp-deep-card h2 { display:inline; }
@@ -154,11 +152,11 @@
 .rp-pair.is-top b { color:var(--rp-neg-ink); }
 .rp-ptrack { position:relative; display:flex; align-items:center; gap:6px; height:11px; }
 .rp-ptrack i { display:block; height:100%; border-radius:0 3px 3px 0; min-width:2px; }
-.rp-ptrack em { font-style:normal; font-size:11px; color:var(--rp-sub); white-space:nowrap; }
+.rp-ptrack em { font-style:normal; font-size:12px; color:var(--rp-sub); white-space:nowrap; }
 .rp-ptrack.early i { background:var(--rp-neg-mute); } .rp-pair.is-top .rp-ptrack.early i { background:var(--rp-neg); }
 .rp-ptrack.later i { background:#D5DBE3; }
 .rp-ptrack.agree i { background:#AEB8C6; } .rp-pair.is-top .rp-ptrack.agree i { background:#6B7F99; }
-.rp-quote { margin:14px 0 0; border-left:3px solid var(--rp-neg); padding-left:12px; }
+.rp-quote { margin:14px 0 0; padding:12px 14px; border-radius:10px; background:var(--rp-soft); }
 .rp-quote figcaption { font-size:12px; color:var(--rp-muted); margin-bottom:4px; }
 .rp-quote blockquote { margin:0; font-size:14px; line-height:1.6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
 .rp-wants { margin:0; padding:0; list-style:none; counter-reset:want; display:grid; gap:8px; }

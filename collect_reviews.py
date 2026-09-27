@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 import httpx
 
 from config import cfg
+import progress
 
 # ─── 설정 ──────────────────────────────────────────────────────────────
 def get_app_id(): return cfg.APP_ID
@@ -129,8 +130,8 @@ def decide_sample_size(pop):
 
 # ─── 3단계: 수집 ──────────────────────────────────────────────────────
 
-def collect_reviews(review_type, target, existing_ids):
-    """review_type='positive' 또는 'negative'로 target건 수집."""
+def collect_reviews(review_type, target, existing_ids, base=0, total=None):
+    """review_type='positive' 또는 'negative'로 target건 수집. base·total은 진행 화면용."""
     collected = []
     cursor = "*"
     since_ts = get_since_ts()
@@ -178,6 +179,7 @@ def collect_reviews(review_type, target, existing_ids):
             if len(collected) >= target:
                 break
         print(f"  [{review_type}] {len(collected)}/{target} (이번 페이지 +{new_count})")
+        progress.report("collect", base + len(collected), total or target)
         if since_ts and get_sort() == "recent" and older == len(reviews):
             print(f"  [{review_type}] {cfg.COLLECT_SINCE} 이전 리뷰에 도달. 중단.")
             break
@@ -197,7 +199,7 @@ def main():
     print("=" * 60)
 
     # 1) 모집단 조회
-    print("\n[1] Steam 한국어 모집단 조회…")
+    print("\n[1] Steam 모집단 조회…")
     pop = fetch_population()
     print(f"  전체: {pop['total']:,}건")
     print(f"  긍정: {pop['positive']:,}건 ({pop['pos_rate']*100:.1f}%)")
@@ -221,10 +223,12 @@ def main():
     seen_ids = {str(row["recommendationid"]) for row in existing}
 
     print(f"\n  ── 긍정 리뷰 {design['n_pos']}건 수집 ──")
-    pos_reviews = collect_reviews("positive", design["n_pos"], seen_ids)
+    total = design["n_pos"] + design["n_neg"]
+    progress.report("collect", 0, total, force=True)
+    pos_reviews = collect_reviews("positive", design["n_pos"], seen_ids, 0, total)
 
     print(f"\n  ── 부정 리뷰 {design['n_neg']}건 수집 ──")
-    neg_reviews = collect_reviews("negative", design["n_neg"], seen_ids)
+    neg_reviews = collect_reviews("negative", design["n_neg"], seen_ids, len(pos_reviews), total)
 
     all_reviews = existing + pos_reviews + neg_reviews
 
