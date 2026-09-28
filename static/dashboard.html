@@ -490,15 +490,20 @@ footer { display: none !important; }
 }
 .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
 /* ============ Game Design Studio polish ============ */
-:root { --studio-ink:#1c2430; --studio-canvas:#f6f7f9; --studio-line:#e4e7ec; --studio-accent:#3d6df2; --studio-sidebar-width:260px; }
-body { background: var(--studio-canvas); }
+:root { --studio-ink:#1c2430; --studio-canvas:#f5f6f8; --studio-line:#e4e7ec; --studio-accent:#3d6df2; --studio-sidebar-width:260px; }
+/* 바탕: 순백 대신 옅은 회색에 가장자리에서 번지는 은은한 빛 */
+body { background:
+  radial-gradient(900px 520px at 12% -8%, rgba(255,255,255,.95), rgba(255,255,255,0) 65%),
+  radial-gradient(1100px 620px at 92% -12%, rgba(206,216,255,.42), rgba(206,216,255,0) 62%),
+  radial-gradient(900px 700px at 70% 115%, rgba(236,228,255,.35), rgba(236,228,255,0) 60%),
+  var(--studio-canvas); background-attachment:fixed; }
 .sidebar {
   width:var(--studio-sidebar-width);
   min-width:var(--studio-sidebar-width);
   max-width:var(--studio-sidebar-width);
   flex:0 0 var(--studio-sidebar-width);
   padding:24px 16px;
-  border-right-color:var(--studio-line);
+  border-right-color:rgba(15,23,42,.06);
 }
 .sidebar-brand { margin-bottom:40px; font-size:20px; }
 .nav-group { margin-bottom:24px; }

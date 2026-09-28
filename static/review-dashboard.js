@@ -92,7 +92,7 @@ window.ReviewDashboard = (() => {
         <section class="rd-pane rd-pane-chart" aria-labelledby="rdTopicsTitle">
           <header class="rd-pane-head">
             <div><h2 id="rdTopicsTitle"></h2><p id="rdTopicsNote"></p></div>
-            <div class="rd-toggle" aria-label="차트 보기"><button data-action="view" data-view="map">우선순위 지도</button><button data-action="view" data-view="bars">칭찬·불만 막대</button></div>
+            <div class="rd-toggle" aria-label="차트 보기"><button data-action="view" data-view="map">IPA 매트릭스</button><button data-action="view" data-view="bars">칭찬·불만 막대</button></div>
           </header>
           <div class="rd-pane-body" id="rdTopicChart"></div>
           <footer class="rd-pane-foot">
@@ -113,7 +113,7 @@ window.ReviewDashboard = (() => {
         </section>
       </div>
       <dialog class="rd-dialog rd-method-dialog" id="rdMethodDialog" aria-labelledby="rdMethodTitle"><div class="rd-dialog-head"><div><h2 id="rdMethodTitle">분석 기준</h2><p>${num(counts.collected)}건 수집 · ${num(counts.analyzed)}건 AI 분석</p></div><button class="rd-btn" data-action="close-method" aria-label="분석 기준 닫기">닫기 ×</button></div><div class="rd-method-grid">
-        <p><b>우선순위 지도</b><br>가로축은 주제를 언급한 AI 분석 리뷰 수(칭찬+불만), 세로축은 그중 불만 비율입니다. 원 크기도 언급 수입니다. 세로 점선은 전체 주제의 언급 수 중앙값, 가로 점선은 불만 50%입니다. 오른쪽 위 칸은 많이 언급되면서 불만이 더 많은 주제입니다.</p>
+        <p><b>IPA 매트릭스</b><br>중요도–성과 분석(Importance–Performance Analysis)입니다. 가로축은 주제를 언급한 AI 분석 리뷰 수(칭찬+불만)로 중요도를, 세로축은 그중 불만 비율로 성과의 부족을 나타냅니다. 원 크기도 언급 수입니다. 세로 점선은 전체 주제의 언급 수 중앙값, 가로 점선은 불만 50%입니다. 언급 수가 네 배 이상 차이 나면 가로축을 로그 눈금으로 그려 같은 간격이 같은 배율을 뜻합니다. 네 영역은 중점투자(많이 언급 · 불만 우세), 유지강화(많이 언급 · 칭찬 우세), 점진적 개선(적게 언급 · 불만 우세), 현상유지(적게 언급 · 칭찬 우세)입니다.</p>
         <p><b>칭찬·불만 막대</b><br>막대 길이는 해당 주제를 칭찬하거나 불만으로 언급한 AI 분석 리뷰 수입니다. 양쪽이 같은 눈금을 씁니다. 칭찬이 더 많은 주제는 위에서 칭찬순, 불만이 더 많은 주제는 아래 구역에서 불만순으로 놓입니다.</p>
         <p><b>지킬 것 · 고칠 것</b><br>지킬 것은 칭찬이 더 많은 주제 중 칭찬 리뷰가 가장 많은 주제, 고칠 것은 불만이 더 많은 주제 중 불만 리뷰가 가장 많은 주제입니다. 조사를 시작할 곳이지 개선 효과나 우선순위를 증명하지 않습니다.</p>
         <p><b>수집 범위</b><br>최신순으로 수집한 리뷰입니다. 추천·비추천 비율을 맞춰도 전체 유저나 전체 기간의 무작위 표본이 되지는 않습니다. 리뷰는 자발적으로 작성한 의견입니다.</p>
@@ -139,15 +139,15 @@ window.ReviewDashboard = (() => {
   }
 
   function renderChart() {
-    const title = {map:'주제 우선순위 지도', bars:'주제별 칭찬과 불만'}[view];
-    const note = {map:`AI 분석 리뷰 ${num(evidence.counts.analyzed)}건 · 원을 누르면 근거가 나옵니다`, bars:`AI 분석 리뷰 ${num(evidence.counts.analyzed)}건 · 주제를 누르면 근거가 나옵니다`}[view];
+    const title = {map:'IPA 매트릭스', bars:'주제별 칭찬과 불만'}[view];
+    const note = {map: innerWidth < 560 ? '언급량 × 불만 비율 · 원을 누르면 근거' : `언급량 × 불만 비율 · AI 분석 리뷰 ${num(evidence.counts.analyzed)}건 · 원을 누르면 근거가 나옵니다`, bars:`AI 분석 리뷰 ${num(evidence.counts.analyzed)}건 · 주제를 누르면 근거가 나옵니다`}[view];
     document.getElementById('rdTopicsTitle').textContent = title;
     document.getElementById('rdTopicsNote').textContent = note;
     root.querySelectorAll('[data-action="view"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view)));
     if (view === 'map') renderMap(); else renderTopics();
   }
 
-  // 우선순위 지도: x = 언급 수, y = 불만 비율, 원 크기 = 언급 수. 점선은 언급 수 중앙값과 불만 50%.
+  // IPA 매트릭스: x = 언급 수, y = 불만 비율, 원 크기 = 언급 수. 점선은 언급 수 중앙값과 불만 50%.
   let mapObserver;
   function renderMap() {
     const target = document.getElementById('rdTopicChart');
@@ -170,73 +170,103 @@ window.ReviewDashboard = (() => {
     }
   }
 
-  // 지도 SVG 문자열. 화면과 한 장 보고서가 같은 그림을 쓴다.
+  // IPA 매트릭스 SVG 문자열. 화면과 한 장 보고서가 같은 그림을 쓴다.
+  // 가로 = 언급 수(중요도), 세로 = 불만 비율(성과의 반대). 기준선은 언급 수 중앙값과 불만 50%.
   function mapSVG(W, H) {
     const topics = evidence.themes.filter(t => t.mentions > 0);
     if (!topics.length) return '';
-    const L = 40, R = 12, T = 16, B = 30, pw = W - L - R, ph = H - T - B;
-    const maxM = Math.max(...topics.map(t => t.mentions));
-    const step = maxM > 200 ? 100 : maxM > 60 ? 50 : 10;
-    const xMax = Math.ceil(maxM * 1.18 / step) * step;
-    const sorted = topics.map(t => t.mentions).sort((a,b) => a - b);
+    const mentions = topics.map(t => t.mentions);
+    const maxM = Math.max(...mentions), minM = Math.min(...mentions);
+    // 언급 수가 네 배 이상 벌어지면 로그 눈금. 선형이면 적게 언급된 주제가 왼쪽 끝에 몰린다.
+    const logScale = maxM / minM >= 4;
+    const L = 40, R = 12, T = 16, B = logScale ? (W < 480 ? 40 : 46) : 30, pw = W - L - R, ph = H - T - B;
+    const sorted = [...mentions].sort((a,b) => a - b);
     const median = sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length/2 - 1] + sorted[sorted.length/2]) / 2;
-    const x = v => L + pw * v / xMax, y = v => T + ph * (1 - v);
+    let x, xTicks = [], xMax = 0;
+    if (logScale) {
+      const lo = Math.log(minM / 1.35), span = Math.log(maxM * 1.3) - lo;
+      x = v => L + pw * (Math.log(v) - lo) / span;
+      for (let p = 10 ** Math.floor(Math.log10(minM / 1.35)); p <= maxM * 1.3; p *= 10)
+        for (const m of [1, 2, 5]) if (m * p >= minM / 1.35 && m * p <= maxM * 1.3) xTicks.push(m * p);
+    } else {
+      const step = maxM > 200 ? 100 : maxM > 60 ? 50 : 10;
+      xMax = Math.ceil(maxM * 1.18 / step) * step;
+      x = v => L + pw * v / xMax;
+    }
+    const y = v => T + ph * (1 - v);
     const xm = x(median), ym = y(.5);
     const share = t => t.neg / t.mentions;
-    const radius = t => 5 + 19 * Math.sqrt(t.mentions / maxM);
-    const fills = {concern:'var(--rd-neg)', watch:'var(--rd-neg)', disliked:'var(--rd-dot-neg)', strength:'var(--rd-pos)', praised:'var(--rd-dot)'};
+    const radius = t => 7 + 17 * Math.sqrt(t.mentions / maxM);
     const dots = topics.map(t => ({t, r: role(t), cx: x(t.mentions), cy: y(share(t)), rad: radius(t)}));
+    const hero = r => ['concern','strength','watch'].includes(r);
     // 라벨: 중요한 주제부터 빈 자리에 놓고, 자리가 없으면 생략(마우스를 올리면 이름이 보임)
-    const textW = (str, size) => [...str].reduce((w, ch) => w + (/[\u3131-\uD79D]/.test(ch) ? size : size * .6), 0);
+    const textW = (str, size) => [...str].reduce((w, ch) => w + (/[ㄱ-힝]/.test(ch) ? size : size * .6), 0);
     const boxes = [], labels = [];
     const hits = (b, edge = W - R) => b.x < L || b.x + b.w > edge || b.y < T || b.y + b.h > H - B + 4
       || boxes.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y)
       || dots.some(d => { const nx = Math.max(b.x, Math.min(d.cx, b.x + b.w)), ny = Math.max(b.y, Math.min(d.cy, b.y + b.h)); return Math.hypot(d.cx - nx, d.cy - ny) < d.rad + 1; });
+    // IPA 네 영역. 오른쪽 = 언급 수 중앙값 이상, 위 = 불만 50% 초과
     const quads = [
-      {cls:'is-fix', text:'먼저 고칠 것', size:14, x0:xm, x1:W - R, y0:T, y1:ym},
-      {cls:'is-keep', text:'지킬 강점', size:14, x0:xm, x1:W - R, y0:ym, y1:H - B},
-      {cls:'is-watch', text:'지켜볼 불만', size:13, x0:L, x1:xm, y0:T, y1:ym},
-      {cls:'is-small', text:'작은 강점', size:13, x0:L, x1:xm, y0:ym, y1:H - B}];
+      {cls:'is-fix', text:'중점투자 영역', size:14, right:true, top:true},
+      {cls:'is-keep', text:'유지강화 영역', size:14, right:true, top:false},
+      {cls:'is-watch', text:'점진적 개선 영역', size:13, right:false, top:true},
+      {cls:'is-small', text:'현상유지 영역', size:13, right:false, top:false}].map(q => ({...q,
+        x0: q.right ? xm : L, x1: q.right ? W - R : xm, y0: q.top ? T : ym, y1: q.top ? ym : H - B,
+        n: topics.filter(t => (t.mentions >= median) === q.right && (share(t) > .5) === q.top).length}));
+    // 영역 이름 + 주제 수. 자리가 모자라면 주제 수를 빼고 이름만 놓는다.
     const quadLabels = quads.map(q => {
-      const w = textW(q.text, q.size), h = q.size + 4, pad = 8;
-      const corners = q.cls === 'is-fix' || q.cls === 'is-keep'
-        ? [[q.x1 - pad - w, q.y0 + pad], [q.x1 - pad - w, q.y1 - pad - h], [q.x0 + pad, q.y0 + pad], [q.x0 + pad, q.y1 - pad - h]]
-        : [[q.x0 + pad, q.y0 + pad], [q.x0 + pad, q.y1 - pad - h], [q.x1 - pad - w, q.y0 + pad], [q.x1 - pad - w, q.y1 - pad - h]];
-      const spot = corners.find(([bx, by]) => q.x1 - q.x0 > w + pad * 2 && !hits({x:bx, y:by, w, h})) ;
-      if (!spot) return '';
-      boxes.push({x:spot[0], y:spot[1], w, h});
-      return `<text class="rd-q-label ${q.cls}" x="${spot[0]}" y="${spot[1] + q.size}">${q.text}</text>`;
+      for (const count of [` ${q.n}개`, '']) {
+        const w = textW(q.text, q.size) + textW(count, 13), h = q.size + 4, pad = 8;
+        const mid = (q.y0 + q.y1 - h) / 2;
+        const corners = q.right
+          ? [[q.x1 - pad - w, q.y0 + pad], [q.x1 - pad - w, q.y1 - pad - h], [q.x0 + pad, q.y0 + pad], [q.x0 + pad, q.y1 - pad - h], [q.x1 - pad - w, mid], [q.x0 + pad, mid]]
+          : [[q.x0 + pad, q.y0 + pad], [q.x0 + pad, q.y1 - pad - h], [q.x1 - pad - w, q.y0 + pad], [q.x1 - pad - w, q.y1 - pad - h], [q.x0 + pad, mid], [q.x1 - pad - w, mid]];
+        const spot = corners.find(([bx, by]) => q.x1 - q.x0 > w + pad * 2 && !hits({x:bx, y:by, w, h}));
+        if (!spot) continue;
+        boxes.push({x:spot[0], y:spot[1], w, h});
+        return `<text class="rd-q-label ${q.cls}" x="${spot[0]}" y="${spot[1] + q.size}" font-size="${q.size}">${q.text}${count ? `<tspan class="rd-q-count">${count}</tspan>` : ''}</text>`;
+      }
+      return '';
     }).join('');
-    const order = [...dots].sort((a,b) => (b.r === 'concern' || b.r === 'strength' || b.r === 'watch') - (a.r === 'concern' || a.r === 'strength' || a.r === 'watch')
-      || (b.t.name === selected) - (a.t.name === selected) || b.t.mentions - a.t.mentions);
+    const order = [...dots].sort((a,b) => hero(b.r) - hero(a.r) || (b.t.name === selected) - (a.t.name === selected) || b.t.mentions - a.t.mentions);
     order.forEach(d => {
-      const hero = ['concern','strength','watch'].includes(d.r);
-      const size = hero ? 14 : 13, sub = hero ? `${num(d.t.mentions)}건 · 불만 ${Math.round(share(d.t) * 100)}%` : '';
-      const w = Math.max(textW(d.t.name, size), sub ? textW(sub, 12) : 0), h = hero ? 32 : 17;
-      const g = d.rad + 5;
+      const big = hero(d.r);
+      const size = big ? 14 : 13, sub = big ? `${num(d.t.mentions)}건 · 불만 ${Math.round(share(d.t) * 100)}%` : '';
+      const w = Math.max(textW(d.t.name, size), sub ? textW(sub, 13) : 0), h = big ? 33 : 17;
+      const g = d.rad + (big ? 9 : 5);
       const k = g * .72;
       const spots = [[d.cx + g, d.cy - h / 2, 'start'], [d.cx - g - w, d.cy - h / 2, 'end'], [d.cx - w / 2, d.cy - g - h, 'middle'], [d.cx - w / 2, d.cy + g, 'middle'],
         [d.cx + k, d.cy - k - h, 'start'], [d.cx - k - w, d.cy - k - h, 'end'], [d.cx + k, d.cy + k, 'start'], [d.cx - k - w, d.cy + k, 'end']];
       for (const [bx, by, anchor] of spots) {
         const b = {x: bx, y: by, w, h};
         // 지킬 것·고칠 것 이름은 반드시 보이도록 카드 여백까지 허용
-        if (hits(b, hero ? W + 18 : W - R)) continue;
+        if (hits(b, big ? W + 18 : W - R)) continue;
         boxes.push(b);
         const tx = anchor === 'start' ? bx : anchor === 'end' ? bx + w : bx + w / 2;
-        labels.push(`<text class="rd-dot-label is-${d.r}" data-action="select" data-theme="${esc(d.t.name)}" x="${tx}" y="${by + size - 1}" text-anchor="${anchor}" font-size="${size}">${esc(d.t.name)}</text>${sub ? `<text class="rd-dot-sub" data-action="select" data-theme="${esc(d.t.name)}" x="${tx}" y="${by + size + 14}" text-anchor="${anchor}">${sub}</text>` : ''}`);
+        labels.push(`<text class="rd-dot-label is-${d.r}" data-action="select" data-theme="${esc(d.t.name)}" x="${tx}" y="${by + size - 1}" text-anchor="${anchor}" font-size="${size}">${esc(d.t.name)}</text>${sub ? `<text class="rd-dot-sub" data-action="select" data-theme="${esc(d.t.name)}" x="${tx}" y="${by + size + 15}" text-anchor="${anchor}">${sub}</text>` : ''}`);
         break;
       }
     });
     const tick = (tx, ty, str, anchor = 'end') => `<text class="rd-map-tick" x="${tx}" y="${ty}" text-anchor="${anchor}">${str}</text>`;
-    return `<svg class="rd-map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="group" aria-label="주제 우선순위 지도">
-      <rect x="${xm}" y="${T}" width="${W - R - xm}" height="${ym - T}" class="rd-q-fix"/>
+    const axisName = W < 480 ? (logScale ? '언급 수 · 로그 눈금' : `${num(xMax)}건`) : logScale ? '언급 리뷰 수 → · 로그 눈금 · 원 크기도 언급 수' : `언급 리뷰 수 → ${num(xMax)}건 · 원 크기도 언급 수`;
+    const xGrid = xTicks.map(v => `<line x1="${x(v)}" x2="${x(v)}" y1="${T}" y2="${H - B}" class="rd-map-grid"/>`).join('');
+    const xTickText = xTicks.filter(v => Math.abs(x(v) - xm) > 26).map(v => tick(x(v), H - B + 16, num(v), 'middle')).join('');
+    return `<svg class="rd-map" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="group" aria-label="IPA 매트릭스: 언급 수와 불만 비율">
+      <defs>
+        <linearGradient id="rdQFix" x1="1" y1="0" x2="0" y2="1"><stop offset="0" class="rd-q-stop-fix" stop-opacity=".13"/><stop offset="1" class="rd-q-stop-fix" stop-opacity=".06"/></linearGradient>
+        <linearGradient id="rdQKeep" x1="1" y1="1" x2="0" y2="0"><stop offset="0" class="rd-q-stop-keep" stop-opacity=".12"/><stop offset="1" class="rd-q-stop-keep" stop-opacity=".05"/></linearGradient>
+      </defs>
+      <rect x="${L}" y="${T}" width="${xm - L}" height="${ph}" class="rd-q-rest"/>
+      <rect x="${xm}" y="${T}" width="${W - R - xm}" height="${ym - T}" fill="url(#rdQFix)"/>
+      <rect x="${xm}" y="${ym}" width="${W - R - xm}" height="${H - B - ym}" fill="url(#rdQKeep)"/>
+      ${xGrid}
       <line x1="${L}" x2="${W - R}" y1="${ym}" y2="${ym}" class="rd-map-mid"/>
       <line x1="${xm}" x2="${xm}" y1="${T}" y2="${H - B}" class="rd-map-mid"/>
       <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" class="rd-map-axis"/>
       ${quadLabels}
       ${tick(L - 6, T + 4, '100%')}${tick(L - 6, ym + 4, '50%')}${tick(L - 6, H - B + 4, '0%')}
-      ${tick(L, H - 8, '0', 'start')}${tick(xm, H - 8, `중앙값 ${num(Math.round(median))}건`, 'middle')}${tick(W - R, H - 8, W < 480 ? `${num(xMax)}건` : `언급 리뷰 수 → ${num(xMax)}건 · 원 크기도 언급 수`, 'end')}
-      ${[...dots].sort((a,b) => (a.t.name === selected || ['concern','strength','watch'].includes(a.r)) - (b.t.name === selected || ['concern','strength','watch'].includes(b.r)) || b.rad - a.rad).map(d => `<g class="rd-dot is-${d.r}" data-action="select" data-theme="${esc(d.t.name)}" tabindex="0" role="button" aria-pressed="${selected === d.t.name}" aria-label="${esc(d.t.name)}: 언급 ${d.t.mentions}건, 불만 ${Math.round(share(d.t) * 100)}%, 칭찬 ${d.t.pos}건, 불만 ${d.t.neg}건"><title>${esc(d.t.name)} · 언급 ${num(d.t.mentions)}건 · 칭찬 ${num(d.t.pos)} · 불만 ${num(d.t.neg)} (${Math.round(share(d.t) * 100)}%)</title>${d.rad < 12 ? `<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad + 6}" class="rd-dot-hit"/>` : ''}<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad}" fill="${fills[d.r]}" class="rd-dot-mark"/></g>`).join('')}
+      ${logScale ? xTickText : tick(L, H - 8, '0', 'start')}${tick(xm, H - 8, `중앙값 ${num(Math.round(median))}건`, 'middle')}${tick(W - R, H - 8, axisName, 'end')}
+      ${[...dots].sort((a,b) => (a.t.name === selected || hero(a.r)) - (b.t.name === selected || hero(b.r)) || b.rad - a.rad).map(d => `<g class="rd-dot is-${d.r}" data-action="select" data-theme="${esc(d.t.name)}" tabindex="0" role="button" aria-pressed="${selected === d.t.name}" aria-label="${esc(d.t.name)}: 언급 ${d.t.mentions}건, 불만 ${Math.round(share(d.t) * 100)}%, 칭찬 ${d.t.pos}건, 불만 ${d.t.neg}건"><title>${esc(d.t.name)} · 언급 ${num(d.t.mentions)}건 · 칭찬 ${num(d.t.pos)} · 불만 ${num(d.t.neg)} (${Math.round(share(d.t) * 100)}%)</title>${d.rad < 12 ? `<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad + 6}" class="rd-dot-hit"/>` : ''}${hero(d.r) ? `<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad + 12}" class="rd-dot-halo"/>` : ''}<circle cx="${d.cx}" cy="${d.cy}" r="${d.rad + 6}" class="rd-dot-ring"/><circle cx="${d.cx}" cy="${d.cy}" r="${d.rad}" class="rd-dot-mark"/></g>`).join('')}
       <g aria-hidden="true">${labels.join('')}</g>
     </svg>`;
   }
@@ -301,7 +331,8 @@ window.ReviewDashboard = (() => {
         <h3>이 불만이 나오는 플레이 구간</h3>
         <div class="rd-cols" role="img" aria-label="${cells.map(c => `${c.label} ${c.denominator ? pct(c.rate) : '자료 없음'}`).join(', ')}">
           ${cells.map(c => { const small = c.denominator < 30; const h = small || c.rate == null ? 0 : Math.max(4, c.rate / cellMax * 100);
-            return `<div class="rd-col ${small ? 'is-small' : ''}" title="${esc(c.label)} · ${num(c.count)} / ${num(c.denominator)}건${small ? ' · 표본 적음' : ''}"><span class="rd-col-val">${small ? '표본 적음' : pct(c.rate)}</span><span class="rd-col-track"><i style="height:${h}%"></i></span><span class="rd-col-label">${esc(c.label)}</span></div>`; }).join('')}
+            const top = !small && c.rate != null && c.rate === cellMax;
+            return `<div class="rd-col ${small ? 'is-small' : ''}${top ? ' is-max' : ''}" title="${esc(c.label)} · ${num(c.count)} / ${num(c.denominator)}건${small ? ' · 표본 적음' : ''}"><span class="rd-col-val">${small ? '표본 적음' : pct(c.rate)}</span><span class="rd-col-track"><i style="height:${h}%"></i></span><span class="rd-col-label">${esc(c.label)}</span></div>`; }).join('')}
         </div>
         <p class="rd-note">구간별 AI 분석 리뷰 중 이 주제 불만 비율 · 30건 미만 구간은 표시하지 않음</p>
       </section>` : '';
@@ -319,7 +350,7 @@ window.ReviewDashboard = (() => {
         ${t.neg && t.negative_recommended != null ? `<p class="rd-note">불만을 쓴 ${num(t.neg)}건 중 ${num(t.negative_recommended)}건은 그래도 게임을 추천했습니다${t.negative_recommended / t.neg >= .5 ? '. 떠나게 만들 정도의 불만은 아닐 수 있습니다.' : '. 비추천으로 이어진 불만이 많습니다.'}</p>` : ''}
       </section>
       ${when}
-      ${action?.prob ? `<section class="rd-sec"><h3>AI 요약</h3><p class="rd-body">${esc(action.prob)}</p>${action.why || action.fix?.length ? `<details class="rd-why"><summary>원인과 개선 제안</summary>${action.why ? `<p><b>리뷰가 말하는 원인</b>${esc(action.why)}</p>` : ''}${action.fix?.length ? `<p><b>리뷰에서 나온 제안</b></p><ul>${action.fix.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}<p class="rd-note">AI가 리뷰를 요약한 내용입니다. 원문으로 확인한 뒤 기획에 반영하세요.</p></details>` : ''}</section>` : ''}
+      ${action?.prob ? `<section class="rd-sec"><h3>AI 요약</h3><div class="rd-callout"><p class="rd-body">${esc(action.prob)}</p>${action.why || action.fix?.length ? `<details class="rd-why"><summary>원인과 개선 제안</summary>${action.why ? `<p><b>리뷰가 말하는 원인</b>${esc(action.why)}</p>` : ''}${action.fix?.length ? `<p><b>리뷰에서 나온 제안</b></p><ul>${action.fix.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}<p class="rd-note">AI가 리뷰를 요약한 내용입니다. 원문으로 확인한 뒤 기획에 반영하세요.</p></details>` : ''}</div></section>` : ''}
       ${quote ? `<section class="rd-sec"><h3>대표 리뷰 <small>${quote.recommended ? '게임 추천' : '게임 비추천'}${quote.hours == null ? '' : ` · ${num(Math.round(quote.hours))}시간 플레이`}</small></h3><blockquote class="rd-quote">${esc(quote.content)}${quote.truncated ? '…' : ''}</blockquote></section>` : ''}
       <footer class="rd-pane-foot rd-focus-actions">
         ${t.neg ? `<button class="rd-btn ${lead === 'N' ? 'primary' : ''}" data-action="evidence" data-sentiment="N">${icon('review')}불만 리뷰 ${num(t.neg)}건</button>` : ''}
@@ -461,7 +492,7 @@ body { margin:0; background:#F2F4F6; font-family:system-ui,-apple-system,"Segoe 
   <h1>${verdictHTML()}</h1>
   <div class="rpt-meta">${esc(period)} · AI 분석 ${num(counts.analyzed)}건 / 수집 ${num(counts.collected)}건</div>
   ${data.summary ? `<p class="rpt-summary">${esc(data.summary)}</p>` : ''}
-  <h2>주제 우선순위 지도</h2>${mapSVG(700, 280)}
+  <h2>IPA 매트릭스</h2>${mapSVG(700, 280)}
   <div class="rpt-two">${topicBox(s, 'keep')}${topicBox(c, 'fix')}</div>
   ${deep.length ? `<h2>심층 분석에서 찾은 것</h2><ul class="rpt-lines">${deep.map(([k, t]) => `<li><span>${k}</span><p style="margin:0">${t}</p></li>`).join('')}</ul>` : ''}
   ${design.length ? `<h2>분석 설계 <small>누가 정했나</small></h2><ul class="rpt-lines rpt-design">${design.map(r => `<li><span>${esc(r.step)} · ${esc(r.who)}</span><p style="margin:0">${esc(r.text)}${r.details?.length ? ` — ${r.details.slice(0, 3).map(esc).join(' / ')}` : ''}</p></li>`).join('')}</ul>` : ''}
