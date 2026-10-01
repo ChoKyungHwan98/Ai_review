@@ -1,0 +1,38 @@
+{
+  "closePoints": [
+    {
+      "cx": 824.64,
+      "cy": 522.1176470588235,
+      "mentions": 119,
+      "name": "건축",
+      "neg": 14,
+      "radius": 7
+    },
+    {
+      "cx": 306.4,
+      "cy": 532,
+      "mentions": 40,
+      "name": "오픈월드",
+      "neg": 4,
+      "radius": 7
+    },
+    {
+      "cx": 299.84000000000003,
+      "cy": 530.5641025641025,
+      "mentions": 39,
+      "name": "가격",
+      "neg": 4,
+      "radius": 7
+    },
+    {
+      "cx": 837.76,
+      "cy": 541.7190082644628,
+      "mentions": 121,
+      "name": "팰 디자인",
+      "neg": 10,
+      "radius": 7
+    }
+  ],
+  "maxPositionError": 0,
+  "points": 13
+}

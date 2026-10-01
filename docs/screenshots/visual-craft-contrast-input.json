@@ -1,0 +1,80 @@
+[
+  {
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(96, 104, 117)",
+    "minimum": 4.5,
+    "selector": ".rd-note"
+  },
+  {
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(32, 39, 51)",
+    "minimum": 4.5,
+    "selector": ".rd-pane-head h2"
+  },
+  {
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(165, 47, 61)",
+    "minimum": 4.5,
+    "selector": ".rd-split-labels .neg"
+  },
+  {
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(36, 89, 172)",
+    "minimum": 4.5,
+    "selector": ".rd-split-labels .pos"
+  },
+  {
+    "background": "rgb(245, 246, 248)",
+    "foreground": "rgb(32, 39, 51)",
+    "minimum": 4.5,
+    "selector": ".rd-quote"
+  },
+  {
+    "background": "rgb(245, 246, 248)",
+    "foreground": "rgb(65, 73, 85)",
+    "minimum": 4.5,
+    "selector": ".rp-insight"
+  },
+  {
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(96, 104, 117)",
+    "minimum": 4.5,
+    "selector": ".rp-note"
+  },
+  {
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(32, 39, 51)",
+    "minimum": 4.5,
+    "selector": ".rp-deep-card h2"
+  },
+  {
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(32, 39, 51)",
+    "minimum": 4.5,
+    "selector": ".rp-step-text"
+  },
+  {
+    "background": "rgb(255, 255, 255)",
+    "foreground": "rgb(96, 104, 117)",
+    "minimum": 4.5,
+    "selector": ".rp-note"
+  },
+  {
+    "background": "rgb(245, 246, 248)",
+    "foreground": "rgb(32, 39, 51)",
+    "minimum": 4.5,
+    "selector": ".rp-who.human"
+  },
+  {
+    "background": "rgb(113, 139, 176)",
+    "foreground": "rgb(17, 28, 46)",
+    "minimum": 4.5,
+    "selector": ".rp-bal-bar .up"
+  },
+  {
+    "background": "rgb(245, 246, 248)",
+    "foreground": "rgb(36, 89, 172)",
+    "minimum": 4.5,
+    "selector": ".rp-step.is-main b"
+  }
+]

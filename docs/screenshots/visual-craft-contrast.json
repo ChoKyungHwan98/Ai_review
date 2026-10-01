@@ -1,0 +1,184 @@
+[
+  {
+    "background": "#FFFFFF",
+    "foreground": "#606875",
+    "minimum": 4.5,
+    "selector": ".rd-note",
+    "ratio": 5.623459613787964,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": false
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#FFFFFF",
+    "foreground": "#202733",
+    "minimum": 4.5,
+    "selector": ".rd-pane-head h2",
+    "ratio": 15.006151323037027,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": true
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#FFFFFF",
+    "foreground": "#A52F3D",
+    "minimum": 4.5,
+    "selector": ".rd-split-labels .neg",
+    "ratio": 6.831807724049752,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": false
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#FFFFFF",
+    "foreground": "#2459AC",
+    "minimum": 4.5,
+    "selector": ".rd-split-labels .pos",
+    "ratio": 6.774900469471311,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": false
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#F5F6F8",
+    "foreground": "#202733",
+    "minimum": 4.5,
+    "selector": ".rd-quote",
+    "ratio": 13.877306109201728,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": true
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#F5F6F8",
+    "foreground": "#414955",
+    "minimum": 4.5,
+    "selector": ".rp-insight",
+    "ratio": 8.41084099001985,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": true
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#FFFFFF",
+    "foreground": "#606875",
+    "minimum": 4.5,
+    "selector": ".rp-note",
+    "ratio": 5.623459613787964,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": false
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#FFFFFF",
+    "foreground": "#202733",
+    "minimum": 4.5,
+    "selector": ".rp-deep-card h2",
+    "ratio": 15.006151323037027,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": true
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#FFFFFF",
+    "foreground": "#202733",
+    "minimum": 4.5,
+    "selector": ".rp-step-text",
+    "ratio": 15.006151323037027,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": true
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#FFFFFF",
+    "foreground": "#606875",
+    "minimum": 4.5,
+    "selector": ".rp-note",
+    "ratio": 5.623459613787964,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": false
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#F5F6F8",
+    "foreground": "#202733",
+    "minimum": 4.5,
+    "selector": ".rp-who.human",
+    "ratio": 13.877306109201728,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": true
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#718BB0",
+    "foreground": "#111C2E",
+    "minimum": 4.5,
+    "selector": ".rp-bal-bar .up",
+    "ratio": 4.898463409713762,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": false
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  },
+  {
+    "background": "#F5F6F8",
+    "foreground": "#2459AC",
+    "minimum": 4.5,
+    "selector": ".rp-step.is-main b",
+    "ratio": 6.265255204370426,
+    "threshold_matches": {
+      "4.5:1": true,
+      "3:1": true,
+      "7:1": false
+    },
+    "scope": "Two opaque sRGB colors only; choose the applicable criterion and inspect actual rendered readability.",
+    "pass": true
+  }
+]

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AI 리뷰데이터 분석</title>
+<title>Signal — 리뷰 인텔리전스</title>
 <script>
   if (new URLSearchParams(window.location.search).get('embedded') === 'studio') {
     document.documentElement.classList.add('studio-embedded');
@@ -15,40 +15,40 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <style>
-/* 레퍼런스 원본 색상 그대로 적용 (Dark Theme)                               */
+/* Signal review workspace */
 :root {
-  /* ── Colors (Toss Light Theme) ── */
-  --color-midnight-ink:    #F2F4F6;     /* page bg */
+  /* ── Shared review workspace colors ── */
+  --color-midnight-ink:    var(--ui-canvas, #F7F7F5);     /* page bg */
   --color-deep-graphite:   #FFFFFF;     /* nav/panel bg */
   --color-slate-card:      #FFFFFF;     /* card bg */
-  --color-steel-border:    #E5E8EB;     /* borders */
+  --color-steel-border:    var(--ui-line, #E5E8EB);     /* borders */
   --color-soft-stone:      #D1D6DB;     /* strong borders */
   --color-ghost-fill:      #F9FAFB;     /* ghost surfaces */
-  --color-white-canvas:    #191F28;     /* primary text */
-  --color-silver-whisper:  #333D4B;     /* secondary text */
-  --color-mute-whisper:    #5F6977;     /* muted text */
-  --color-electric-blue:   #1B64DA;     /* accent */
-  --color-electric-blue-2: #1B64DA;
+  --color-white-canvas:    var(--ui-ink, #191B23);     /* primary text */
+  --color-silver-whisper:  var(--ui-text, #414957);     /* secondary text */
+  --color-mute-whisper:    #69717E;     /* muted text */
+  --color-electric-blue:   var(--ui-pos, #554BD2);     /* accent */
+  --color-electric-blue-2: var(--ui-pos, #554BD2);
   --color-success-green:   #007A49;     /* positive */
   --color-error-red:       #D92D3D;     /* negative */
   --color-warn-amber:      #B85C00;
   --color-burgundy:        #D92D3D;
 
-  /* ── Typography — OpenSea Scale (Inter = gtAmerica substitute) ── */
+  /* ── Typography ── */
   --font-sans: "Pretendard Variable", "Pretendard", "Inter", -apple-system,
                system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
 
-  /* Typography Scale (OpenSea exact: caption/body-sm/body/heading-sm/display) */
-  --text-caption: 12px;    --leading-caption: 1.5;
+  /* Typography scale */
+  --text-caption: 13px;    --leading-caption: 1.5;
   --text-body-sm: 14px;    --leading-body-sm: 1.5;
   --text-body: 16px;       --leading-body: 1.5;
   --text-heading-sm: 20px; --leading-heading-sm: 1.25;
   --text-display: 32px;    --leading-display: 1.25;
 
-  /* ── Spacing (OpenSea: base unit 4px, compact density) ── */
+  /* ── Spacing ── */
   --spacing-4: 4px;
   --spacing-8: 8px;
   --spacing-12: 12px;
@@ -58,38 +58,38 @@
   --spacing-32: 32px;
   --spacing-48: 48px;
 
-  /* ── Layout (OpenSea exact) ── */
+  /* ── Layout ── */
   --page-max: 1325px;
   --section-gap: 48px;
   --card-padding: 12px;
   --element-gap: 8px;
 
-  /* ── Border Radius (OpenSea: cards=8, buttons=4, default=4) ── */
-  --radius-cards: 8px;
-  --radius-buttons: 4px;
-  --radius-default: 4px;
+  /* ── Radius ── */
+  --radius-cards: var(--ui-card-radius, 12px);
+  --radius-buttons: var(--ui-control-radius, 8px);
+  --radius-default: var(--ui-control-radius, 8px);
 
-  /* ── Shadows (OpenSea: inset border for dark backgrounds) ── */
+  /* ── Floating layers only ── */
   --shadow-card: 0 4px 16px rgba(0,0,0,0.04);
   --shadow-hover: 0 8px 24px rgba(0,0,0,0.08);
   --shadow-hero: 0 12px 32px rgba(0,0,0,0.1);
 
   /* ── Home(index.html) 톤 일치를 위한 별칭 토큰 ── */
-  --color-bg-app:        #F2F4F6;
+  --color-bg-app:        var(--ui-canvas, #F7F7F5);
   --color-bg-surface:    #FFFFFF;
   --color-bg-card-img:   #1A1C23;
-  --color-text-title:    #191F28;
-  --color-text-body:     #333D4B;
-  --color-text-sub:      #5F6977;
-  --color-primary:       #1B64DA;
-  --color-primary-hover: #1B64DA;
-  --color-border:        #E5E8EB;
-  --color-nav-active:    #F2F4F6;
-  --color-nav-hover:     #FAFAFA;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --color-text-title:    var(--ui-ink, #191B23);
+  --color-text-body:     var(--ui-text, #414957);
+  --color-text-sub:      #69717E;
+  --color-primary:       var(--ui-pos, #554BD2);
+  --color-primary-hover: #4339BA;
+  --color-border:        var(--ui-line, #E2E4E7);
+  --color-nav-active:    #EEEFFA;
+  --color-nav-hover:     #292C3F;
+  --radius-sm: var(--ui-control-radius, 8px);
+  --radius-md: var(--ui-control-radius, 8px);
+  --radius-lg: var(--ui-card-radius, 12px);
+  --radius-xl: var(--ui-card-radius, 12px);
   --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
@@ -103,13 +103,13 @@ body {
   margin: 0; padding: 0;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #F2F4F6 0%, #E8F3FF 100%);
+  background: var(--ui-canvas, #F7F7F5);
   color: var(--color-white-canvas);
   font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   font-size: 14px; line-height: 1.5;  /* index.html과 동일하게 고정 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: normal;  /* OpenSea: normal */
+  letter-spacing: normal;
   word-break: keep-all;
   overflow-wrap: break-word;
   display: flex;
@@ -121,12 +121,12 @@ body {
 .sidebar { flex-shrink: 0; height: 100vh; overflow: hidden; }
 /* Sidebar */
 .sidebar {
-      width: 260px;
-      background-color: var(--color-bg-surface);
-      border-right: 1px solid var(--color-border);
+      width: 214px;
+      background-color: #191B2A;
+      border-right: 0;
       display: flex;
       flex-direction: column;
-      padding: 24px 16px;
+      padding: 26px 18px;
       z-index: 10;
     }
 .sidebar-brand {
@@ -134,60 +134,57 @@ body {
       align-items: center;
       gap: 8px;
       font-size: 20px;
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1.2;
-      color: var(--color-text-title);
-      margin-bottom: 40px;
-      padding: 0 8px;
-      cursor: pointer;
+      color: #F7F7FC;
+      margin-bottom: 42px;
+      letter-spacing:-.05em;
+      text-decoration:none;
     }
+.brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:8px; color:#1B1C2D; background:#D2CFFA; flex:none; }
+.brand-mark svg { width:22px; height:22px; }
+.brand-name small { display:block; margin-top:2px; color:#AEB2C5; font-size:11px; font-weight:650; letter-spacing:.04em; line-height:1.1; }
 .nav-group {
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
 .nav-label {
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 10px;
+      font-weight: 700;
       line-height: 1;
-      color: var(--color-text-sub);
-      margin-bottom: 8px;
-      padding: 0 8px;
+      color: #969CB3;
+      letter-spacing:.16em;
+      margin-bottom: 12px;
+      padding: 0 10px;
     }
 .nav-item {
       display: flex;
       align-items: center;
-      padding: 12px 16px;
-      border-radius: var(--radius-md);
-      color: var(--color-text-title);
-      font-size: 15px;
+      padding: 12px 13px;
+      border-radius: 7px;
+      color: #CACDDB;
+      font-size: 14px;
       font-weight: 500;
       line-height: 1;
       cursor: pointer;
       transition: background-color 0.2s ease, color 0.2s ease;
       text-decoration: none;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
       position: relative;
     }
+.nav-index { display:inline-block; min-width:20px; margin-right:10px; color:#888EA5; font:600 11px var(--font-mono); }
+.nav-project { border:1px solid #414459; color:#E7E8F1; }
+.nav-project .nav-index { color:#B6B9CA; }
 .nav-item:hover { background-color: var(--color-nav-hover); }
 .nav-item.active {
       background-color: var(--color-nav-active);
-      color: var(--color-primary);
-      /* font-weight 변경 없음 → 레이아웃 시프트 방지 */
+      color: #191B2A;
+      font-weight: 700;
     }
-.nav-item.active::before {
-      content: "";
-      position: absolute;
-      left: 4px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 16px;
-      background-color: var(--color-primary);
-      border-radius: 2px;
-    }
+.nav-item.active .nav-index { color:#554BD2; }
 /* Home(index.html)과 동일한 사이드바 하단 */
 .sidebar-bottom {
       margin-top: auto;
-      border-top: 1px solid var(--color-border);
+      border-top: 1px solid #414459;
       padding-top: 16px;
     }
 .bottom-item {
@@ -197,12 +194,12 @@ body {
       padding: 12px 16px;
       font-size: 14px;
       line-height: 1;
-      color: var(--color-text-sub);
+      color: #B4B8CB;
       cursor: pointer;
       border-radius: var(--radius-md);
       transition: background-color 0.2s;
     }
-.bottom-item:hover { background-color: var(--color-nav-hover); color: var(--color-text-title); }
+.bottom-item:hover { background-color: var(--color-nav-hover); color:#fff; }
 /* ── Right Content Area ── */
 .main-wrap {
   flex: 1;
@@ -213,55 +210,53 @@ body {
   scrollbar-gutter: stable;  /* 스크롤바 유무와 관계없이 공간 확보 */
   background: transparent;
 }
-/* ── Topbar (simplified: search + status) — Home 톤 일치: 투명 배경, 그라데이션이 그대로 비치도록 ── */
-.topbar {
-  position: sticky; top: 0; z-index: 50;
-  background: transparent;
-  border-bottom: none;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
+/* ── Topbar (simplified: search + status) ── */
+.topbar { position:sticky; top:0; z-index:50; background:#fff; border-bottom:1px solid #E2E4E7; }
 .topbar-inner {
   max-width: var(--page-max); margin: 0 auto;
-  padding: 24px 60px 12px;
+  padding: 12px 40px;
   display: flex; align-items: center; gap: 16px;
 }
+.topbar-context { display:flex; align-items:center; gap:10px; color:#777F8C; font-size:13px; min-width:0; }
+.topbar-context b { color:#222631; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.topbar-context span { white-space:nowrap; }
+.topbar-context span:first-of-type { color:#C2C6CF; }
 .topbar-right {
   margin-left: auto; display: flex; align-items: center; gap: 12px;
   font-size: 13px; color: var(--color-text-sub);
   white-space: nowrap;
 }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-success-green); display: inline-block; margin-right: 4px; }
-/* ── Search Bar — Home 톤(반투명 흰색 pill) ── */
+/* ── Search Bar ── */
 .search-bar {
-  flex: 1; max-width: 480px;
+  flex:0 1 300px; max-width:300px; margin-left:auto;
   display: flex; align-items: center; gap: 8px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
+  background: #FFFFFF;
+  border: 1px solid #E2E4E7;
+  border-radius: 7px;
+  padding: 5px 8px 5px 12px;
   transition: border-color .15s, background-color .15s, box-shadow .15s;
 }
 .search-bar:focus-within {
   background: #FFFFFF;
   border-color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
+  box-shadow:0 0 0 3px rgba(85,75,210,.10);
 }
 .search-icon { color: var(--color-text-sub); flex-shrink: 0; }
 .search-input {
   flex: 1; border: none; outline: none; background: transparent;
   font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-  font-size: 15px;
+  font-size: 13px;
   color: var(--color-text-title);
 }
 .search-input::placeholder { color: var(--color-text-sub); }
 .search-btn {
   flex-shrink: 0;
   font-family: inherit;
-  font-size: 14px; font-weight: 600;
+  font-size: 13px; font-weight: 600;
   color: #FFFFFF; background: var(--color-text-title);
-  border: none; border-radius: var(--radius-md);
-  padding: 8px 16px; cursor: pointer;
+  border: none; border-radius: 5px;
+  padding: 6px 12px; cursor: pointer;
   transition: background .15s, transform .1s;
 }
 .search-btn:hover { background: #000000; }
@@ -285,13 +280,10 @@ main { max-width: var(--page-max); margin: 0 auto; padding: 16px 60px 48px; widt
 section.page { display: none; }
 section.page.active {
   display: block;
-  animation: pageFadeIn 0.25s ease-out;
+
 }
-@keyframes pageFadeIn {
-  from { opacity: 0; transform: translateY(2px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-/* ===== Type Scale — OpenSea Design System =====
+
+/* ===== Type scale =====
    display  → 32px / 500 / 1.25
    heading  → 20px / 500 / 1.25
    body     → 16px / 400 / 1.5
@@ -311,7 +303,7 @@ h1.title {
   line-height: var(--leading-body-sm);
   max-width: 780px;
 }
-/* ============ Cards — Inset Border Card (OpenSea) ============ */
+/* ============ Cards ============ */
 .card {
   background: var(--color-slate-card);
   border-radius: var(--radius-cards);
@@ -320,7 +312,7 @@ h1.title {
   transition: box-shadow .15s ease;
 }
 .card:hover { box-shadow: var(--shadow-hover); }
-/* ============ Grids — OpenSea element gap ============ */
+/* ============ Grids ============ */
 .grid { display: grid; gap: var(--element-gap); }
 /* ============ Banner / Hero — Inset Border Card ============ */
 .hero {
@@ -346,7 +338,7 @@ h1.title {
   max-width: 1100px;
 }
 .hero-body b { color: var(--color-white-canvas); font-weight: var(--font-weight-medium); }
-/* ============ Buttons — Ghost Button (OpenSea) ============ */
+/* ============ Buttons ============ */
 .btn {
   font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; font-size: var(--text-body-sm); font-weight: var(--font-weight-medium);
   padding: var(--spacing-8) var(--spacing-16);
@@ -387,7 +379,7 @@ h1.title {
   box-shadow: 0 0 0 3px rgba(131,195,255,0.15);
 }
 .input::placeholder { color: var(--color-mute-whisper); }
-/* ============ Table — OpenSea compact style ============ */
+/* ============ Table ============ */
 table { width: 100%; border-collapse: collapse; font-size: var(--text-body-sm); }
 thead { position: sticky; top: 0; background: var(--color-ghost-fill); z-index: 1; }
 thead th {
@@ -428,7 +420,7 @@ tbody tr:hover { background: rgba(131, 195, 255, 0.05); }
 /* ============ API Lab — SaaS console style ============ */
 .method {
   font-family: var(--font-mono);
-  font-size: 12px; font-weight: var(--font-weight-medium);
+  font-size: 13px; font-weight: var(--font-weight-medium);
   padding: 2px 6px;
   border-radius: var(--radius-default);
   flex-shrink: 0;
@@ -489,37 +481,35 @@ footer { display: none !important; }
   z-index: 9999;
 }
 .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-/* ============ Game Design Studio polish ============ */
-:root { --studio-ink:#1c2430; --studio-canvas:#f5f6f8; --studio-line:#e4e7ec; --studio-accent:#3d6df2; --studio-sidebar-width:260px; }
-/* 바탕: 순백 대신 옅은 회색에 가장자리에서 번지는 은은한 빛 */
-body { background:
-  radial-gradient(900px 520px at 12% -8%, rgba(255,255,255,.95), rgba(255,255,255,0) 65%),
-  radial-gradient(1100px 620px at 92% -12%, rgba(206,216,255,.42), rgba(206,216,255,0) 62%),
-  radial-gradient(900px 700px at 70% 115%, rgba(236,228,255,.35), rgba(236,228,255,0) 60%),
-  var(--studio-canvas); background-attachment:fixed; }
+/* ============ Signal workspace ============ */
+:root { --studio-ink:var(--ui-ink, #191B23); --studio-canvas:var(--ui-canvas, #F7F7F5); --studio-line:var(--ui-line, #E2E4E7); --studio-accent:var(--ui-pos, #554BD2); --studio-sidebar-width:214px; }
+body { background:var(--studio-canvas); }
 .sidebar {
   width:var(--studio-sidebar-width);
   min-width:var(--studio-sidebar-width);
   max-width:var(--studio-sidebar-width);
   flex:0 0 var(--studio-sidebar-width);
-  padding:24px 16px;
-  border-right-color:rgba(15,23,42,.06);
+  padding:26px 18px;
+  border-right:0;
 }
-.sidebar-brand { margin-bottom:40px; font-size:20px; }
-.nav-group { margin-bottom:24px; }
-.nav-label { font-size:13px; letter-spacing:normal; }
+.sidebar-brand { margin-bottom:42px; font-size:20px; }
+.nav-group { margin-bottom:22px; }
+.nav-label { font-size:11px; letter-spacing:.08em; }
 .nav-item, .bottom-item { width:100%; border:0; background:transparent; text-align:left; font-family:inherit; }
-.bottom-item { color:var(--color-text-sub); }
+.nav-project { border:1px solid #414459; }
+.bottom-item { color:#B4B8CB; }
 .main-wrap { scrollbar-gutter:auto; scrollbar-width:thin; scrollbar-color:#c7ccd5 transparent; }
 .main-wrap::-webkit-scrollbar { width:10px; }
 .main-wrap::-webkit-scrollbar-track { background:transparent; margin:10px 3px; }
 .main-wrap::-webkit-scrollbar-thumb { background:#c7ccd5; border:3px solid transparent; background-clip:padding-box; border-radius:999px; }
 .main-wrap::-webkit-scrollbar-thumb:hover { background:#9ca5b3; border:3px solid transparent; background-clip:padding-box; }
-.topbar { background:rgba(246,247,249,.88); border-bottom:1px solid rgba(228,231,236,.8); }
-.topbar-inner { padding:18px 40px 10px; }
-main { padding:28px 40px 52px; }
+.topbar { background:#fff; border-bottom:1px solid var(--studio-line); }
+.topbar-inner { padding:12px 40px; }
+main { padding:34px 40px 60px; }
 h1.title { font-size:28px; letter-spacing:-.035em; }
 .subtitle { margin-bottom:20px; }
+.page:not([data-page="overview"]) > .title { font-size:34px; font-weight:750; letter-spacing:-.045em; }
+.page:not([data-page="overview"]) > .subtitle { color:#69717E; margin-bottom:26px; }
 .hero { padding:20px 22px 18px; margin-bottom:12px; }
 .hero-title { font-size:20px; line-height:1.4; }
 .hero-body { font-size:14px; line-height:1.65; }
@@ -532,14 +522,11 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
 .studio-field { display:grid; gap:7px; margin:16px 0; font-size:13px; font-weight:600; }
 .studio-field input { width:100%; border:1px solid #d8dde5; border-radius:8px; padding:11px 12px; font:inherit; outline:none; }
 .studio-field input:focus { border-color:var(--studio-accent); box-shadow:0 0 0 3px rgba(61,109,242,.12); }
-.studio-status { min-height:20px; color:#667085; font-size:12px; }
+.studio-status { min-height:20px; color:#667085; font-size:13px; }
 .studio-modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
 .studio-modal button { border:0; border-radius:8px; padding:10px 13px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
 .studio-modal .secondary { background:#f1f3f6; color:#344054; }
 .studio-modal .primary { background:var(--studio-ink); color:#fff; }
-.compact-density main { padding-top:20px; }
-.compact-density .card { padding:14px; }
-.compact-density .hero { padding:16px 18px 14px; }
 @media (max-width:900px) {
 .topbar-inner, main { padding-left:24px; padding-right:24px; }
 }
@@ -560,7 +547,7 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
     }
 .precision-label { font-size: 14px; font-weight: 600; color: var(--color-text-title); }
 .precision-badge { font-size: 13px; color: var(--color-text-sub); }
-.precision-badge b { font-size: 18px; color: var(--color-primary); font-weight: 700; }
+.precision-badge b { font-size: 18px; color: #4B42B9; font-weight: 700; }
 .precision-sub {
       margin: -8px 0 14px;
       font-size: 13px;
@@ -569,18 +556,18 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
     }
 .precision-curve-wrap { margin-bottom: 4px; }
 .precision-curve { display: block; width: 100%; height: 72px; overflow: visible; }
-.precision-curve-area { fill: rgba(49, 130, 246, .10); }
-.precision-curve-line { fill: none; stroke: #3182F6; stroke-width: 2; vector-effect: non-scaling-stroke; }
-.precision-curve-mark { stroke: #3182F6; stroke-width: 1; stroke-dasharray: 3 3; opacity: .5; vector-effect: non-scaling-stroke; }
-.precision-curve-dot { fill: #fff; stroke: #3182F6; stroke-width: 2; }
-.precision-curve-caption { margin-top: 6px; font-size: 12px; color: var(--color-text-sub); }
+.precision-curve-area { fill: rgba(85, 75, 210, .10); }
+.precision-curve-line { fill: none; stroke: #554BD2; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.precision-curve-mark { stroke: #554BD2; stroke-width: 1; stroke-dasharray: 3 3; opacity: .5; vector-effect: non-scaling-stroke; }
+.precision-curve-dot { fill: #fff; stroke: #554BD2; stroke-width: 2; }
+.precision-curve-caption { margin-top: 6px; font-size: 13px; color: var(--color-text-sub); }
 .precision-slider {
       width: 100%;
       margin: 10px 0 6px;
       height: 4px;
       -webkit-appearance: none;
       appearance: none;
-      border-radius: 999px;
+      border-radius: 6px;
       background: var(--color-border);
       cursor: pointer;
     }
@@ -604,7 +591,7 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
 .precision-ends {
       display: flex;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 13px;
       color: var(--color-text-sub);
       margin-bottom: 16px;
     }
@@ -625,7 +612,7 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       font-variant-numeric: tabular-nums;
       line-height: 1.3;
     }
-.precision-cell small { display: block; margin-top: 2px; font-size: 12px; color: var(--color-text-sub); }
+.precision-cell small { display: block; margin-top: 2px; font-size: 13px; color: var(--color-text-sub); }
 .precision-note {
       margin: 12px 0 0;
       font-size: 13px;
@@ -641,7 +628,7 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
       background: transparent;
       color: var(--color-primary);
       font: inherit;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
     }
@@ -700,31 +687,31 @@ body.no-analysis #ovBody { display: none; }
 /* ── 분석 시작 화면: 설정과 진행 ─────────────────────────────
    팝업이 아니라 본문 영역(사이드바 오른쪽)을 채우는 페이지다. 사이드바는 그대로 보이고,
    여백·배경은 다른 페이지 본문(main)과 같다. 넓은 화면에서는 왼쪽에 조건, 오른쪽에 수집량과 시작 버튼. */
-.run-modal { position:fixed; top:0; right:0; bottom:0; left:var(--studio-sidebar-width); z-index:9999; flex-direction:column; overflow-y:auto; box-sizing:border-box; padding:28px 40px 52px; background:var(--studio-canvas); scrollbar-gutter:stable; }
-.run-dialog { width:100%; max-width:1120px; box-sizing:border-box; margin:0 auto; color:#333D4B; }
-.run-title { margin:0 0 6px; font-size:24px; font-weight:700; letter-spacing:-.02em; color:#191F28; }
-.run-lead { margin:0 0 24px; font-size:14px; line-height:1.6; color:#4E5968; }
-.run-field { margin:0 0 16px; padding:20px 22px; border:1px solid #E5E8EB; border-radius:16px; background:#fff; }
+.run-modal { position:fixed; top:0; right:0; bottom:0; left:var(--studio-sidebar-width); z-index:9999; flex-direction:column; overflow-y:auto; box-sizing:border-box; padding:36px 40px 52px; background:#F7F7F5; scrollbar-gutter:stable; }
+.run-dialog { width:100%; max-width:1120px; box-sizing:border-box; margin:0 auto; color:#494C57; font-variant-numeric:tabular-nums; }
+.run-title { margin:0 0 6px; font-size:34px; font-weight:680; letter-spacing:-.055em; color:#191B23; }
+.run-lead { margin:0 0 24px; font-size:14px; line-height:1.6; color:#60636F; }
+.run-field { margin:0 0 16px; padding:20px 22px; border:1px solid #E4E5E7; border-radius:10px; background:#fff; box-shadow:none; }
 #pipelineSetupForm { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); column-gap:24px; align-items:start; }
 #pipelineSetupForm > .run-title, #pipelineSetupForm > .run-lead { grid-column:1 / -1; }
 #pipelineSetupForm > #precisionBlock { grid-column:2; grid-row:3 / span 3; }
 #pipelineSetupForm > .run-check { grid-column:2; grid-row:6; padding:0 4px; }
 #pipelineSetupForm > .run-actions { grid-column:2; grid-row:7; }
-#pipelineProgressView { max-width:720px; margin:0 auto; padding:28px 28px 24px; border:1px solid #E5E8EB; border-radius:16px; background:#fff; }
-.run-label { display:block; margin:0 0 8px; font-size:14px; font-weight:700; color:#191F28; }
-.run-label small { margin-left:6px; font-size:12px; font-weight:500; color:#4E5968; }
+#pipelineProgressView { max-width:720px; margin:0 auto; padding:28px 28px 24px; border:1px solid #E4E5E7; border-radius:10px; background:#fff; box-shadow:none; }
+.run-label { display:block; margin:0 0 8px; font-size:14px; font-weight:700; color:#191B23; }
+.run-label small { margin-left:6px; font-size:13px; font-weight:500; color:#4E5968; }
 .run-help { margin:8px 0 0; font-size:13px; line-height:1.55; color:#4E5968; }
 .run-help:empty { display:none; }
 .run-inline { display:flex; gap:8px; }
 .run-inline .input, .run-inline .select { flex:1; min-width:0; padding:11px 14px; }
-.run-dialog .select, .run-dialog .input { box-sizing:border-box; border:1px solid #D1D6DB; background:#fff; }
+.run-dialog .select, .run-dialog .input { box-sizing:border-box; border:1px solid #DADBE0; border-radius:7px; background:#fff; color:#191B23; }
 .run-game { margin-top:10px; padding:10px 12px; border-radius:10px; background:#F2F4F6; font-size:13px; line-height:1.55; }
 .run-game > b { display:block; font-size:15px; color:#191F28; }
 .run-game span span { color:#4E5968; }
-.run-seg { display:flex; gap:4px; padding:4px; border-radius:12px; background:#F2F4F6; }
-.run-seg button { flex:1; border:0; border-radius:9px; padding:10px 8px; background:transparent; font:inherit; font-size:14px; font-weight:600; color:#4E5968; cursor:pointer; }
+.run-seg { display:flex; gap:4px; padding:4px; border-radius:8px; background:#F1F1F3; }
+.run-seg button { flex:1; border:0; border-radius:6px; padding:10px 8px; background:transparent; font:inherit; font-size:14px; font-weight:600; color:#5D606A; cursor:pointer; }
 .run-seg button:hover { color:#191F28; }
-.run-seg button[aria-checked="true"] { background:#fff; color:#191F28; font-weight:700; box-shadow:0 1px 3px rgba(20,27,38,.12); }
+.run-seg button[aria-checked="true"] { background:#fff; color:#191B23; font-weight:700; box-shadow:0 1px 2px rgba(20,27,38,.08); }
 .run-sub-select { width:100%; margin-top:8px; padding:11px 14px; }
 .run-scope { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
 .run-scope .select, .run-scope .input { width:100%; padding:11px 14px; }
@@ -738,11 +725,11 @@ body.no-analysis #ovBody { display: none; }
 .run-check input { width:18px; height:18px; margin:2px 0 0; accent-color:var(--color-primary); }
 .run-check b { display:block; font-size:14px; color:#191F28; }
 .run-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
-.run-btn { border:0; border-radius:10px; padding:11px 18px; background:#191F28; color:#fff; font:inherit; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.run-btn { border:0; border-radius:7px; padding:11px 18px; background:#191B2A; color:#fff; font:inherit; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; }
 .run-btn:disabled { opacity:.5; cursor:default; }
-.run-btn.is-primary { background:var(--color-primary); }
-.run-btn.is-primary:hover { background:var(--color-primary-hover); }
-.run-btn.is-quiet { background:#F2F4F6; color:#333D4B; }
+.run-btn.is-primary { background:#554BD2; }
+.run-btn.is-primary:hover { background:#443AB9; }
+.run-btn.is-quiet { background:#EBEBEE; color:#363845; }
 .run-game-now { margin:0 0 4px; font-size:13px; font-weight:600; color:#4E5968; }
 .run-game-now:empty { display:none; }
 .run-total { height:8px; margin:16px 0 8px; border-radius:999px; background:#E5E8EB; overflow:hidden; }
@@ -753,7 +740,7 @@ body.no-analysis #ovBody { display: none; }
 .run-steps { margin:0; padding:0; list-style:none; }
 .run-steps li { display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:4px 12px; align-items:center; padding:12px 0; border-top:1px solid #E5E8EB; }
 .run-step-name { font-size:15px; font-weight:600; color:#191F28; }
-.run-step-name small { margin-left:8px; font-size:12px; font-weight:600; color:#4E5968; }
+.run-step-name small { margin-left:8px; font-size:13px; font-weight:600; color:#4E5968; }
 .run-step-detail { font-size:13px; color:#4E5968; text-align:right; font-variant-numeric:tabular-nums; }
 .run-step-detail.is-desc { grid-column:2 / -1; text-align:left; }
 .run-step-bar { grid-column:2 / -1; height:4px; border-radius:999px; background:#E5E8EB; overflow:hidden; }
@@ -788,10 +775,10 @@ body.no-analysis #ovBody { display: none; }
   .run-seg button { font-size:13px; padding:10px 4px; }
 }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20260927m">
-<script src="/static/review-dashboard.js?v=20260927m"></script>
-<link rel="stylesheet" href="/static/review-pages.css?v=20260927m">
-<script src="/static/review-pages.js?v=20260927m"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20261001-signal1">
+<script src="/static/review-dashboard.js?v=20261001-signal1"></script>
+<link rel="stylesheet" href="/static/review-pages.css?v=20261001-signal1">
+<script src="/static/review-pages.js?v=20261001-signal1"></script>
 <style>
 /* 공용 글꼴. 설치된 Pretendard가 있으면 그걸 쓰고, 없으면 스튜디오에 넣어 둔 파일을 쓴다(SIL OFL 1.1). */
 @font-face {
@@ -804,36 +791,30 @@ body.no-analysis #ovBody { display: none; }
 
 </style>
 </head>
-<body>
+<body class="page-overview">
 <div class="app">
 
-  <!-- ============ LEFT SIDEBAR ============ -->
+  <!-- ============ PRODUCT NAVIGATION ============ -->
   <aside class="sidebar">
-    <div class="sidebar-brand">
-      AI 리뷰데이터 분석
+    <a href="/" class="sidebar-brand" aria-label="전체 프로젝트" onclick="return goToProjectHome(event)"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 3 29 16 16 29 3 16 16 3Z" stroke="currentColor" stroke-width="1.8"/><path d="M16 9 23 16 16 23 9 16 16 9Z" fill="currentColor"/></svg></span><span class="brand-name">signal.<small>REVIEW INTELLIGENCE</small></span></a>
+
+    <div class="nav-group nav-projects">
+      <div class="nav-label">PROJECTS</div>
+      <a href="/" class="nav-item nav-project" aria-label="전체 프로젝트" onclick="return goToProjectHome(event)"><span class="nav-index">↗</span>모든 프로젝트</a>
     </div>
 
-    <div class="nav-group">
-      <div class="nav-label">프로젝트 관리</div>
-      <a href="/" class="nav-item" onclick="return goToProjectHome(event)">전체 프로젝트</a>
-    </div>
-
-    <div class="nav-group">
-      <div class="nav-label">리뷰 분석 파이프라인</div>
-      <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)">진단 요약</a>
-      <a href="#" class="nav-item" data-page="deep" onclick="navTo(this)">심층 분석</a>
-      <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)">리뷰 원문</a>
-      <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)">분석 설계</a>
+    <div class="nav-group nav-workspace">
+      <div class="nav-label">WORKSPACE</div>
+      <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)"><span class="nav-index" aria-hidden="true">01</span>진단 요약</a>
+      <a href="#" class="nav-item" data-page="deep" onclick="navTo(this)"><span class="nav-index" aria-hidden="true">02</span>심층 분석</a>
+      <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)"><span class="nav-index" aria-hidden="true">03</span>리뷰 원문</a>
+      <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)"><span class="nav-index" aria-hidden="true">04</span>분석 설계</a>
     </div>
 
     <div class="sidebar-bottom">
-      <button type="button" class="bottom-item" onclick="openApiKeyModal()">
+      <button type="button" class="bottom-item" aria-label="API Key 관리" onclick="openApiKeyModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
         API Key 관리
-      </button>
-      <button type="button" class="bottom-item" onclick="openSystemSettings()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><circle cx="12" cy="12" r="4"></circle></svg>
-        시스템 설정
       </button>
     </div>
   </aside>
@@ -843,12 +824,13 @@ body.no-analysis #ovBody { display: none; }
 
     <!-- ============ TOP BAR (search + game tabs) ============ -->
     <header class="topbar">
-      <!-- Row 1: Search + Status -->
+      <!-- Context + search -->
       <div class="topbar-inner">
+        <div class="topbar-context"><b id="currentGameName">—</b><span>/</span><span id="currentPageName">진단 요약</span></div>
         <!-- Steam App ID 검색바 -->
         <div class="search-bar" id="searchBar">
           <svg class="search-icon" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          <input type="text" id="searchInput" class="search-input" placeholder="Steam App ID 입력 (예: 1623730)" />
+          <input type="text" id="searchInput" class="search-input" placeholder="Steam App ID 검색" />
           <button class="search-btn" id="searchBtn" onclick="searchGame()">검색</button>
         </div>
 
@@ -858,10 +840,6 @@ body.no-analysis #ovBody { display: none; }
         </div>
       </div>
 
-      <!-- Row 2: Current Game Indicator -->
-      <div class="current-game-row">
-        <span>분석 중인 게임</span><b id="currentGameName">—</b>
-      </div>
     </header>
 
     <main>
@@ -871,10 +849,11 @@ body.no-analysis #ovBody { display: none; }
     <!-- ================================================================ -->
     <section class="page active" data-page="overview">
       <div class="rd-page-header">
-        <div class="rd-page-copy"><h1 class="title" id="overviewTitle">리뷰 진단</h1></div>
+        <div class="rd-page-copy">
+          <h1 class="title" id="overviewTitle">리뷰 진단</h1>
+        </div>
         <div class="rd-page-actions" id="rdPageActions"></div>
-        <p class="ov-coverage" id="ovCoverage"></p>
-        <p class="rd-summary" id="ovSummary"></p>
+        <p class="ov-coverage" id="ovCoverage" aria-label="분석 범위"></p>
       </div>
 
       <!-- 분석 전·옛 방식일 때만 보이는 안내 -->
@@ -886,6 +865,10 @@ body.no-analysis #ovBody { display: none; }
       </div>
 
       <div id="ovBody" class="rd"></div>
+      <details class="rd-overview-note" id="ovSummaryDetails">
+        <summary>전체 분석 요약</summary>
+        <p class="rd-summary" id="ovSummary"></p>
+      </details>
     </section>
 
     <!-- ================================================================ -->
@@ -1056,6 +1039,9 @@ function navTo(btn) {
   const p = btn.dataset.page;
   document.querySelectorAll('.nav-item, .bottom-item').forEach(function(t) { t.classList.toggle('active', t === btn); });
   document.querySelectorAll('section.page').forEach(function(s) { s.classList.toggle('active', s.dataset.page === p); });
+  document.body.classList.toggle('page-overview', p === 'overview');
+  const pageName = document.getElementById('currentPageName');
+  if (pageName) pageName.textContent = btn.textContent.trim().replace(/^\d{2}\s*/, '');
   const wrap = document.querySelector('.main-wrap');
   if (wrap) wrap.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1933,11 +1919,6 @@ function saveApiKey() {
   }
 }
 
-function openSystemSettings() {
-  document.getElementById('systemSettingsModal').classList.add('open');
-  document.getElementById('compactDensity').checked = document.body.classList.contains('compact-density');
-}
-
 function goToProjectHome(event) {
   event.preventDefault();
   const query = new URLSearchParams(window.location.search);
@@ -1945,13 +1926,6 @@ function goToProjectHome(event) {
   query.delete('new');
   window.location.href = `/?${query.toString()}`;
   return false;
-}
-
-function saveSystemSettings() {
-  const compact = document.getElementById('compactDensity').checked;
-  document.body.classList.toggle('compact-density', compact);
-  localStorage.setItem('reviewAnalytics.compactDensity', compact ? '1' : '0');
-  closeStudioModal('systemSettingsModal');
 }
 
 window.addEventListener('message', (event) => {
@@ -1965,7 +1939,6 @@ window.addEventListener('message', (event) => {
   if (message.type === 'ai:error') setStudioStatus(message.message || '키 관리 중 오류가 발생했습니다.');
 });
 
-if (localStorage.getItem('reviewAnalytics.compactDensity') === '1') document.body.classList.add('compact-density');
 </script>
 <div class="studio-modal-backdrop" id="apiKeyModal" role="dialog" aria-modal="true" aria-labelledby="apiKeyTitle" onclick="closeStudioModalOnBackdrop(event, 'apiKeyModal')">
   <div class="studio-modal">
@@ -1974,14 +1947,6 @@ if (localStorage.getItem('reviewAnalytics.compactDensity') === '1') document.bod
     <label class="studio-field">OpenRouter API Key<input id="apiKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="sk-or-…"></label>
     <div class="studio-status" id="apiKeyStatus"></div>
     <div class="studio-modal-actions"><button type="button" class="secondary" onclick="closeStudioModal('apiKeyModal')">닫기</button><button type="button" class="primary" onclick="saveApiKey()">연결</button></div>
-  </div>
-</div>
-<div class="studio-modal-backdrop" id="systemSettingsModal" role="dialog" aria-modal="true" aria-labelledby="systemSettingsTitle" onclick="closeStudioModalOnBackdrop(event, 'systemSettingsModal')">
-  <div class="studio-modal">
-    <h2 id="systemSettingsTitle">시스템 설정</h2>
-    <p>분석 결과의 밀도를 작업 방식에 맞게 조절합니다.</p>
-    <label class="studio-field" style="grid-template-columns:1fr auto;align-items:center">조밀한 화면<input id="compactDensity" type="checkbox" style="width:18px;height:18px"></label>
-    <div class="studio-modal-actions"><button type="button" class="secondary" onclick="closeStudioModal('systemSettingsModal')">닫기</button><button type="button" class="primary" onclick="saveSystemSettings()">적용</button></div>
   </div>
 </div>
 <div id="toast" class="toast"></div>

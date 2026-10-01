@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dashboard_evidence import build_evidence, evidence_page, review_hours
+from main import review_rows
 import analysis_design
 
 
@@ -47,6 +48,21 @@ class DashboardEvidenceTests(unittest.TestCase):
         e = build_evidence(self.folder, 42)
         self.assertEqual([c["n"] for c in e["cohorts"]], [1, 1, 0, 1])
         self.assertEqual(e["counts"]["unknown_playtime"], 1)
+
+    def test_review_cards_use_complete_source_without_analysis_csv(self):
+        self.rows[0]["content"] = "긴 원문 " * 100
+        self.rows[0]["language"] = "koreana"
+        for row in self.rows[1:]:
+            row["language"] = "koreana"
+        self.analyses[0]["k"] = "저장 개선 필요"
+        self.write()
+        cards = review_rows(self.folder)
+        self.assertEqual(len(cards), 3)
+        self.assertEqual(cards[0]["content"], self.rows[0]["content"])
+        self.assertEqual(cards[0]["playtime_h"], 0)
+        self.assertEqual(cards[0]["overall_sentiment"], "MIXED")
+        self.assertEqual(cards[0]["keywords"], "저장|건축")
+        self.assertEqual(cards[0]["language"], "koreana")
 
     def test_topic_counts_are_unique_and_distinct_from_recommendation(self):
         e = build_evidence(self.folder, 42)

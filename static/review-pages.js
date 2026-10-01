@@ -32,16 +32,17 @@ window.ReviewPages = (() => {
         <div class="rp-filter-row">
           <span class="rp-label">AI가 본 반응</span>
           <div class="rp-mood-bar" id="rpMoodBar"></div>
+          <div class="rp-mood-key" id="rpMoodKey" aria-label="반응별 리뷰 선택"></div>
         </div>
-        <div class="rp-filter-row">
-          <span class="rp-label">주제</span>
-          <div class="rp-chips" id="rpTopics"></div>
-        </div>
-        <div class="rp-filter-row">
+        <div class="rp-filter-row rp-filter-controls">
           <span class="rp-label">Steam 평가</span>
           <div class="rp-toggle" id="rpVote"><button data-vote="">전체</button><button data-vote="up">추천</button><button data-vote="down">비추천</button></div>
           <input class="rp-search" id="rpSearch" type="search" placeholder="리뷰 내용 검색" aria-label="리뷰 내용 검색" />
         </div>
+        <details class="rp-topic-disclosure" id="rpTopicDisclosure" ${topics.length ? '' : 'hidden'}>
+          <summary>주제 필터 <span id="rpTopicSummary"></span></summary>
+          <div class="rp-chips" id="rpTopics"></div>
+        </details>
       </div>
       <div class="rp-result-head"><span id="rpCount"></span><button class="rp-text-btn" id="rpReset">필터 초기화</button></div>
       <div class="rp-list" id="rpList"></div>`;
@@ -66,17 +67,23 @@ window.ReviewPages = (() => {
       const n = base.filter(r => r._mood === m.key).length;
       if (!n) return '';
       const w = n / total * 100;
-      return `<button class="rp-seg ${m.cls} ${filter.mood && filter.mood !== m.key ? 'is-dim' : ''}" data-mood="${m.key}" style="flex:${w} 1 0" aria-pressed="${filter.mood === m.key}" title="${m.label} ${num(n)}건 (${pct(w)})"><span>${w >= 9 ? `${m.label} ${Math.round(w)}%` : ''}</span></button>`;
+      const label = w >= 9 ? `${m.label} ${Math.round(w)}%` : '';
+      return `<button class="rp-seg ${m.cls} ${filter.mood && filter.mood !== m.key ? 'is-dim' : ''}" data-mood="${m.key}" style="flex:${w} 1 0" aria-pressed="${filter.mood === m.key}" aria-label="${m.label} ${num(n)}건 (${pct(w)})" title="${m.label} ${num(n)}건 (${pct(w)})"><span>${label}</span></button>`;
     }).join('');
-    // 주제 칩: 주제마다 불만 비율을 작은 막대로
+    document.getElementById('rpMoodKey').innerHTML = MOODS.map(m => {
+      const n = base.filter(r => r._mood === m.key).length;
+      if (!n) return '';
+      return `<button class="rp-mood-item ${m.cls}" data-mood="${m.key}" aria-pressed="${filter.mood === m.key}" aria-label="${m.label} ${num(n)}건 (${pct(n / total * 100)})">${m.label} <b>${Math.round(n / total * 100)}%</b></button>`;
+    }).join('');
+    // 주제는 이름으로 고른다. 불만 비율은 진단 차트에서 확인한다.
     document.getElementById('rpTopics').innerHTML = topics.map(t => {
-      const neg = t.mentions ? t.neg / t.mentions * 100 : 0;
-      return `<button class="rp-chip ${t.neg > t.pos ? 'is-neg' : ''}" data-topic="${esc(t.name)}" aria-pressed="${filter.topic === t.name}" title="${esc(t.name)} · 칭찬 ${num(t.pos)} · 불만 ${num(t.neg)}">${esc(t.name)}<i class="rp-chip-bar"><b style="width:${neg}%"></b></i></button>`;
+      return `<button class="rp-chip" data-topic="${esc(t.name)}" aria-pressed="${filter.topic === t.name}" title="${esc(t.name)} · 칭찬 ${num(t.pos)} · 불만 ${num(t.neg)}">${esc(t.name)}</button>`;
     }).join('');
+    document.getElementById('rpTopicSummary').textContent = filter.topic || `${topics.length}개 주제`;
     root.querySelectorAll('#rpVote button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.vote === filter.vote)));
     const list = rows.filter(r => matches(r));
     const active = filter.mood || filter.vote || filter.topic || filter.q;
-    document.getElementById('rpCount').innerHTML = `<b>${num(list.length)}건</b> / 전체 ${num(rows.length)}건`;
+    document.getElementById('rpCount').innerHTML = active ? `<b>${num(list.length)}건</b> / 전체 ${num(rows.length)}건` : `<b>총 ${num(rows.length)}건</b>`;
     document.getElementById('rpReset').hidden = !active;
     const moodLabel = Object.fromEntries(MOODS.map(m => [m.key, m]));
     document.getElementById('rpList').innerHTML = list.slice(0, shown).map(r => {

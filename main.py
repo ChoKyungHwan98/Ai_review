@@ -24,7 +24,7 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from config import cfg
-from dashboard_evidence import build_evidence, evidence_page, load_sources
+from dashboard_evidence import build_evidence, evidence_page, load_sources, review_hours
 import analysis_design
 import progress
 
@@ -332,19 +332,59 @@ def dashboard_data_v5(app_id: int = None):
                 data[key] = None
         else:
             data[key] = None
-    analysis_path = _game_file(app_id, "analysis_v3.csv")
-    data["reviews"] = []
-    if analysis_path:
-        with open(analysis_path, "r", encoding="utf-8-sig", newline="") as stream:
-            data["reviews"] = list(csv.DictReader(stream))
-    languages = (data.get("evidence") or {}).get("languages") or []
-    if len(languages) > 1:
-        source = load_sources(os.path.dirname(path))
-        by_id = source[0] if source else {}
-        for row in data["reviews"]:
-            row["language"] = (by_id.get(str(row.get("recommendationid"))) or {}).get("language", "")
+    data["reviews"] = review_rows(os.path.dirname(path))
     apply_design(data)
     return data
+
+
+def review_rows(directory):
+    """Build review cards from the same source files used for evidence.
+
+    The optional analysis_v3.csv can be absent after a resumed analysis and its
+    content column is truncated. reviews.csv keeps the complete original text.
+    """
+    source = load_sources(directory)
+    if not source:
+        return []
+    reviews, analyzed = source[:2]
+    sentiments = {"P": "POSITIVE", "N": "NEGATIVE", "M": "MIXED", "U": "NEUTRAL"}
+    area_names = {"graphics": "content", "gameplay": "content", "story": "content",
+                  "performance": "technical", "value": "value"}
+    areas = {}
+    themes_path = os.path.join(directory, "themes_v3.json")
+    if os.path.exists(themes_path):
+        with open(themes_path, encoding="utf-8") as stream:
+            areas = {theme["name"]: area_names.get(theme.get("area"), "content")
+                     for theme in json.load(stream) if theme.get("name")}
+    # Older projects may only have area tags in the optional analysis CSV.
+    legacy_tags = {}
+    analysis_path = os.path.join(directory, "analysis_v3.csv")
+    if os.path.exists(analysis_path):
+        with open(analysis_path, encoding="utf-8-sig", newline="") as stream:
+            legacy_tags = {row["recommendationid"]: row.get("keywords", "")
+                           for row in csv.DictReader(stream)}
+    rows = []
+    for rid, item in analyzed.items():
+        original = reviews[rid]
+        tags = [pair[0] for pair in item.get("t") or []
+                if isinstance(pair, (list, tuple)) and len(pair) == 2 and pair[0] != "기타"]
+        for tag in legacy_tags.get(rid, "").split("|"):
+            name, _, area = tag.partition("@")
+            if name and area:
+                areas.setdefault(name, area)
+        hours = review_hours(original)
+        rows.append({
+            "recommendationid": rid,
+            "content": original.get("content", ""),
+            "voted_up": original.get("voted_up", ""),
+            "playtime_h": hours,
+            "overall_sentiment": sentiments.get(item.get("s"), "NEUTRAL"),
+            "key_phrase": item.get("k", ""),
+            "keywords": "|".join(f"{name}@{areas[name]}" if name in areas else name
+                                  for name in dict.fromkeys(tags)),
+            "language": original.get("language", ""),
+        })
+    return rows
 
 
 def apply_design(data):
@@ -371,7 +411,7 @@ def apply_design(data):
                 name, _, area = tag.partition("@")
                 name = alias.get(name.strip(), name.strip())
                 if name and not any(t.startswith(name + "@") for t in tags):
-                    tags.append(f"{name}@{area}")
+                    tags.append(f"{name}@{area}" if area else name)
             row["keywords"] = "|".join(tags)
     data["design_log"] = analysis_design.design_log(
         data.get("sample_design_full"), evidence.get("counts"), data.get("usage"),
