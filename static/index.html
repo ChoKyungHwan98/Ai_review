@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Signal — 분석 프로젝트</title>
+  <title>AI 리뷰데이터 분석</title>
   <script>
     if (new URLSearchParams(window.location.search).get('embedded') === 'studio') {
       document.documentElement.classList.add('studio-embedded');
@@ -11,24 +11,24 @@
   </script>
   <style>
     :root {
-      /* Signal product tokens */
-      --color-bg-app: #F7F7F5;
+      /* Toss Light Theme Tokens */
+      --color-bg-app: #F2F4F6;
       --color-bg-surface: #FFFFFF;
       --color-bg-card-img: #1A1C23; /* Dark area for project preview */
-      --color-text-title: #191B23;
-      --color-text-body: #414957;
-      --color-text-sub: #69717E;
-      --color-primary: #554BD2;
-      --color-primary-hover: #4339BA;
-      --color-border: #E2E4E7;
-      --color-nav-active: #EEEFFA;
-      --color-nav-hover: #292C3F;
+      --color-text-title: #191F28;
+      --color-text-body: #333D4B;
+      --color-text-sub: #5F6977;
+      --color-primary: #1B64DA;
+      --color-primary-hover: #1B64DA;
+      --color-border: #E5E8EB;
+      --color-nav-active: #F2F4F6;
+      --color-nav-hover: #FAFAFA;
       
       --radius-sm: 8px;
-      --radius-md: 7px;
-      --radius-lg: 9px;
-      --radius-xl: 11px;
-      --studio-sidebar-width: 214px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --studio-sidebar-width: 260px;
       
       --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04);
       --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
@@ -66,11 +66,11 @@
       min-width: var(--studio-sidebar-width);
       max-width: var(--studio-sidebar-width);
       flex: 0 0 var(--studio-sidebar-width);
-      background-color: #191B2A;
-      border-right: 0;
+      background-color: var(--color-bg-surface);
+      border-right: 1px solid var(--color-border);
       display: flex;
       flex-direction: column;
-      padding: 26px 18px;
+      padding: 24px 16px;
       z-index: 10;
     }
     
@@ -79,84 +79,83 @@
       align-items: center;
       gap: 8px;
       font-size: 20px;
-      font-weight: 800;
+      font-weight: 700;
       line-height: 1.2;
-      color: #F7F7FC;
-      margin-bottom: 42px;
-      font-size:20px;
-      letter-spacing:-.05em;
-      text-decoration:none;
+      color: var(--color-text-title);
+      margin-bottom: 40px;
+      padding: 0 8px;
+      cursor: pointer;
     }
-    .brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:8px; color:#1B1C2D; background:#D2CFFA; flex:none; }
-    .brand-mark svg { width:22px; height:22px; }
-    .brand-name small { display:block; margin-top:2px; color:#AEB2C5; font-size:11px; font-weight:650; letter-spacing:.04em; line-height:1.1; }
     
     .nav-group {
-      margin-bottom: 22px;
+      margin-bottom: 24px;
     }
     .nav-label {
-      font-size: 10px;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
       line-height: 1;
-      color: #969CB3;
-      letter-spacing:.16em;
-      margin-bottom: 12px;
-      padding: 0 10px;
+      color: var(--color-text-sub);
+      margin-bottom: 8px;
+      padding: 0 8px;
     }
     
     .nav-item {
       display: flex;
       align-items: center;
-      padding: 12px 13px;
+      padding: 12px 16px;
       border-radius: var(--radius-md);
-      color: #CACDDB;
-      font-size: 14px;
+      color: var(--color-text-title);
+      font-size: 15px;
       font-weight: 500;
       line-height: 1;
       cursor: pointer;
       transition: background-color 0.2s ease, color 0.2s ease;
       text-decoration: none;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
       position: relative;
     }
     
     .nav-item:hover { background-color: var(--color-nav-hover); }
     .nav-item.active {
       background-color: var(--color-nav-active);
-      color: #191B2A;
-      font-weight:700;
+      color: var(--color-primary);
+      /* font-weight 변경 없음 → 레이아웃 시프트 방지 */
     }
-    .nav-index { display:inline-block; min-width:20px; margin-right:10px; color:#888EA5; font:600 11px ui-monospace,monospace; }
-    .nav-item.active .nav-index { color:#554BD2; }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 16px;
+      background-color: var(--color-primary);
+      border-radius: 2px;
+    }
 
     /* Main Content */
     .main {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 48px 44px;
+      padding: 40px 60px;
       overflow-y: auto;
       scrollbar-gutter: stable;  /* 스크롤바 공간 항상 확보 */
-      background: var(--color-bg-app);
+      background: linear-gradient(135deg, #F2F4F6 0%, #E8F3FF 100%);
     }
 
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      margin-bottom: 28px;
-      padding-bottom:28px;
-      border-bottom:1px solid var(--color-border);
+      margin-bottom: 32px;
     }
-    .page-kicker { margin-bottom:12px; color:var(--color-primary); font-size:11px; font-weight:800; letter-spacing:.16em; }
-    .header-lead { margin-top:10px; color:var(--color-text-sub); font-size:14px; }
     
     .header h1 {
-      font-size: 38px;
-      font-weight: 750;
+      font-size: 24px;
+      font-weight: 700;
       color: var(--color-text-title);
-      margin-bottom: 0;
-      letter-spacing:-.05em;
+      margin-bottom: 16px;
     }
     
     .header-controls {
@@ -167,12 +166,12 @@
     
     .search-input {
       font-family: var(--font-family);
-      background-color: #fff;
-      border: 1px solid var(--color-border);
-      padding: 10px 40px 10px 14px;
+      background-color: rgba(255, 255, 255, 0.6);
+      border: 1px solid transparent;
+      padding: 12px 40px 12px 16px;
       border-radius: var(--radius-md);
-      font-size: 13px;
-      width: 240px;
+      font-size: 15px;
+      width: 280px;
       color: var(--color-text-title);
       outline: none;
       transition: all 0.2s;
@@ -183,7 +182,7 @@
     .search-input:focus {
       background-color: #FFFFFF;
       border-color: var(--color-primary);
-      box-shadow:0 0 0 3px rgba(85,75,210,.10);
+      box-shadow: var(--shadow-sm);
     }
     
     .btn-primary {
@@ -191,9 +190,9 @@
       background-color: var(--color-text-title);
       color: #FFFFFF;
       border: none;
-      padding: 10px 15px;
+      padding: 12px 20px;
       border-radius: var(--radius-md);
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
@@ -205,33 +204,34 @@
     .btn-primary:active { transform: scale(0.96); }
 
     /* Project Grid */
-    .project-grid { display:grid; gap:0; background:#fff; border:1px solid var(--color-border); border-radius:var(--radius-xl); overflow:hidden; }
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
 
     .project-card {
       background-color: var(--color-bg-surface);
-      border-radius:0;
-      padding:16px 20px;
-      border-bottom:1px solid var(--color-border);
-      box-shadow:none;
+      border-radius: var(--radius-xl);
+      padding: 16px;
+      box-shadow: var(--shadow-md);
       cursor: pointer;
-      transition: background-color .15s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
       text-decoration: none;
-      display:grid;
-      grid-template-columns:120px minmax(0,1fr) auto;
-      gap:20px;
-      align-items:center;
+      display: flex;
+      flex-direction: column;
     }
-    .project-card:last-child { border-bottom:0; }
     
     .project-card:hover {
-      background:#F9F9FB;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
     }
     
     .card-preview {
       background-color: var(--color-bg-card-img);
       border-radius: var(--radius-lg);
-      height: 66px;
-      margin-bottom: 0;
+      height: 160px;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -243,29 +243,27 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      opacity: 1;
+      opacity: 0.9;
     }
     
     .card-title {
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--color-text-title);
       margin-bottom: 6px;
-      padding:0;
+      padding: 0 4px;
     }
     
     .card-meta {
       font-size: 13px;
       color: var(--color-text-sub);
-      padding:0;
+      padding: 0 4px;
     }
-    .card-info { min-width:0; }
-    .card-arrow { color:var(--color-primary); font-size:20px; font-weight:600; }
 
     /* Bottom Nav */
     .sidebar-bottom {
       margin-top: auto;
-      border-top: 1px solid #414459;
+      border-top: 1px solid var(--color-border);
       padding-top: 16px;
     }
     
@@ -276,12 +274,12 @@
       padding: 12px 16px;
       font-size: 14px;
       line-height: 1;
-      color: #B4B8CB;
+      color: var(--color-text-sub);
       cursor: pointer;
       border-radius: var(--radius-md);
       transition: background-color 0.2s;
     }
-    .bottom-item:hover { background-color: var(--color-nav-hover); color:#fff; }
+    .bottom-item:hover { background-color: var(--color-nav-hover); color: var(--color-text-title); }
 
     .bottom-item { width:100%; border:0; background:transparent; text-align:left; font-family:inherit; }
     .main { scrollbar-width:thin; scrollbar-color:#c7ccd5 transparent; }
@@ -303,29 +301,6 @@
     .studio-modal .secondary { background:#f1f3f6; color:#344054; }
     .studio-modal .primary { background:var(--color-text-title); color:#fff; }
     .studio-modal .danger { margin-right:auto; background:transparent; color:#d92d20; }
-    @media (max-width:760px) {
-      body { flex-direction:column; }
-      .sidebar { width:100%; min-width:0; max-width:none; height:48px; flex:0 0 48px; flex-direction:row; align-items:center; padding:7px 12px; gap:12px; }
-      .sidebar-brand { margin:0; font-size:15px; }
-      .brand-mark { width:27px; height:27px; border-radius:6px; }
-      .brand-mark svg { width:18px; height:18px; }
-      .brand-name small { display:none; }
-      .nav-group { margin:0; }
-      .nav-label, .nav-index { display:none; }
-      .nav-item { margin:0; padding:7px 9px; font-size:13px; }
-      .sidebar-bottom { margin:0 0 0 auto; padding:0; border:0; }
-      .bottom-item { width:30px; height:30px; justify-content:center; padding:5px; font-size:0; }
-      .bottom-item svg { flex:none; }
-      .main { padding:26px 16px; }
-      .header { align-items:flex-start; flex-direction:column; gap:20px; padding-bottom:22px; }
-      .header h1 { font-size:29px; }
-      .header-controls { width:100%; gap:8px; }
-      .search-input { flex:1; min-width:0; width:auto; }
-      .btn-primary { flex:none; }
-      .project-card { grid-template-columns:86px minmax(0,1fr) auto; gap:12px; padding:12px; }
-      .card-preview { height:55px; }
-      .card-title { font-size:15px; }
-    }
   </style>
   <style>
     /* 프로젝트 홈 — 우클릭 삭제. 이 도구는 폴더를 쓰지 않는다. */
@@ -369,19 +344,25 @@
 </head>
 <body>
 
-  <!-- Signal navigation -->
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <a href="/" class="sidebar-brand" aria-label="전체 프로젝트"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 3 29 16 16 29 3 16 16 3Z" stroke="currentColor" stroke-width="1.8"/><path d="M16 9 23 16 16 23 9 16 16 9Z" fill="currentColor"/></svg></span><span class="brand-name">signal.<small>REVIEW INTELLIGENCE</small></span></a>
+    <div class="sidebar-brand">
+      AI 리뷰데이터 분석
+    </div>
 
     <div class="nav-group">
-      <div class="nav-label">PROJECTS</div>
-      <a href="#" class="nav-item active"><span class="nav-index" aria-hidden="true">↗</span>모든 프로젝트</a>
+      <div class="nav-label">프로젝트 관리</div>
+      <a href="#" class="nav-item active">전체 프로젝트</a>
     </div>
 
     <div class="sidebar-bottom">
       <button type="button" class="bottom-item" onclick="openApiKeyModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
         API Key 관리
+      </button>
+      <button type="button" class="bottom-item" onclick="openSystemSettings()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><circle cx="12" cy="12" r="4"></circle></svg>
+        시스템 설정
       </button>
     </div>
   </aside>
@@ -390,8 +371,7 @@
   <main class="main">
     <div class="header">
       <div>
-        <h1>분석 프로젝트</h1>
-        <p class="header-lead">게임별 리뷰 분석 결과를 이어서 살펴보세요.</p>
+        <h1>전체 프로젝트</h1>
       </div>
       <div class="header-controls">
         <input type="text" class="search-input" placeholder="프로젝트 검색" id="searchInput">
@@ -452,17 +432,9 @@
       const meta = document.createElement('div');
       meta.className = 'card-meta';
       meta.textContent = 'App ID: ' + game.app_id;
-      const info = document.createElement('div');
-      info.className = 'card-info';
-      info.appendChild(title);
-      info.appendChild(meta);
-      const arrow = document.createElement('span');
-      arrow.className = 'card-arrow';
-      arrow.setAttribute('aria-hidden', 'true');
-      arrow.textContent = '↗';
       card.appendChild(preview);
-      card.appendChild(info);
-      card.appendChild(arrow);
+      card.appendChild(title);
+      card.appendChild(meta);
 
       // WebView2는 기본 컨텍스트 메뉴를 끄기 때문에 두 경로 모두에서 연다.
       card.addEventListener('contextmenu', (event) => {
@@ -658,6 +630,7 @@
       if (!key) return setStudioStatus('키를 입력해 주세요.');
       if (studioRequest('ai:keySave', { key })) { input.value = ''; setStudioStatus('안전하게 저장하는 중입니다.'); }
     }
+    function openSystemSettings() { document.getElementById('systemSettingsModal').classList.add('open'); }
     window.addEventListener('message', (event) => {
       if (!STUDIO_EMBEDDED || event.source !== window.parent) return;
       const message = event.data || {};
@@ -668,6 +641,9 @@
   </script>
   <div class="studio-modal-backdrop" id="apiKeyModal" role="dialog" aria-modal="true" aria-labelledby="apiKeyTitle" onclick="closeStudioModalOnBackdrop(event, 'apiKeyModal')">
     <div class="studio-modal"><h2 id="apiKeyTitle">API Key 관리</h2><p>한 번 연결하면 프로그램을 다시 열어도 계속 사용합니다. 키는 브라우저나 프로젝트 파일에 저장하지 않습니다.</p><label class="studio-field">OpenRouter API Key<input id="apiKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="sk-or-…"></label><div class="studio-status" id="apiKeyStatus"></div><div class="studio-modal-actions"><button type="button" class="secondary" onclick="closeStudioModal('apiKeyModal')">닫기</button><button type="button" class="primary" onclick="saveApiKey()">연결</button></div></div>
+  </div>
+  <div class="studio-modal-backdrop" id="systemSettingsModal" role="dialog" aria-modal="true" aria-labelledby="systemSettingsTitle" onclick="closeStudioModalOnBackdrop(event, 'systemSettingsModal')">
+    <div class="studio-modal"><h2 id="systemSettingsTitle">시스템 설정</h2><p>현재 분석 화면은 게임기획 스튜디오의 밝은 화면 밀도와 스크롤 규칙을 따릅니다.</p><div class="studio-modal-actions"><button type="button" class="primary" onclick="closeStudioModal('systemSettingsModal')">확인</button></div></div>
   </div>
 <script src="/static/studio-nav.js"></script>
 </body>

@@ -285,7 +285,7 @@ def main():
     # 비율 검증
     ratio_diff = abs(actual_pos / actual_total - pop["pos_rate"]) * 100
     if ratio_diff <= 2:
-        print(f"  ✅ 모집단 비율과 ±{ratio_diff:.1f}%p 이내 일치 — 대표성 확보")
+        print(f"  ✅ 할당한 추천·비추천 비율대로 수집됨 (차이 {ratio_diff:.1f}%p). 최신순 수집이라 무작위 표본은 아님")
     else:
         print(f"  ⚠️ 모집단 비율과 {ratio_diff:.1f}%p 차이 — 표본 부족 가능")
 

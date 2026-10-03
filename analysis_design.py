@@ -73,7 +73,7 @@ def merge_members(members, alias):
 
 
 def conclusion(themes):
-    """지킬 것·고칠 것. 화면(review-dashboard.js groups)과 같은 규칙."""
+    """칭찬 최다 · 불만 최다 주제. 화면(review-dashboard.js groups)과 같은 규칙. 무엇을 고칠지는 사람이 판단한다."""
     praised = sorted((t for t in themes if t["pos"] >= t["neg"] and t["pos"] > 0),
                      key=lambda t: (-t["pos"], t["neg"], t["name"]))
     disliked = sorted((t for t in themes if t["neg"] > t["pos"]), key=lambda t: (-t["neg"], t["pos"], t["name"]))
@@ -96,10 +96,11 @@ def design_log(sample_design, counts, usage, n_ai_topics, merges, themes, game="
     target = params.get("target_error_pct")
     how_much = []
     if planned:
-        how_much.append(f"{planned:,}건 계획" + (f" (목표 오차 ±{target}%)" if target else ""))
+        how_much.append(f"{planned:,}건 계획" + (f" (표본 크기를 정한 기준 ±{target}%)" if target else ""))
     if counts.get("collected") is not None:
         how_much.append(f"{counts['collected']:,}건 수집")
-    rows.append({"step": "얼마나", "who": "사람", "text": " → ".join(how_much) or "기록 없음"})
+    rows.append({"step": "얼마나", "who": "사람", "text": " → ".join(how_much) or "기록 없음",
+                 "details": ["±값은 몇 건을 모을지 정할 때 쓴 기준이다. 최신순으로 모은 리뷰라 결과의 정확도나 신뢰구간을 뜻하지 않는다"] if planned and target else []})
     if (usage or {}).get("model"):
         rows.append({"step": "분석 모델", "who": "사람", "text": usage["model"]})
     if counts.get("collected") is not None and counts.get("analyzed") is not None:
@@ -117,10 +118,10 @@ def design_log(sample_design, counts, usage, n_ai_topics, merges, themes, game="
     keep, fix = conclusion(themes)
     parts = []
     if keep:
-        parts.append(f"지킬 것 = {keep['name']} (칭찬 {keep['pos']:,}건)")
+        parts.append(f"칭찬 최다 = {keep['name']} (칭찬 {keep['pos']:,}건)")
     if fix:
-        parts.append(f"고칠 것 = {fix['name']} (불만 {fix['neg']:,}건)")
-    rows.append({"step": "결론", "who": "규칙",
+        parts.append(f"불만 최다 = {fix['name']} (불만 {fix['neg']:,}건)")
+    rows.append({"step": "강조한 주제", "who": "규칙",
                  "text": " · ".join(parts) or "칭찬·불만이 붙은 주제가 없습니다",
-                 "details": ["칭찬 우세 주제 중 칭찬이 가장 많은 것이 지킬 것, 불만 우세 주제 중 불만이 가장 많은 것이 고칠 것"]})
+                 "details": ["칭찬이 더 많은 주제 중 칭찬이 가장 많은 것과 불만이 더 많은 주제 중 불만이 가장 많은 것을 매트릭스에서 진하게 칠한다. 무엇을 고칠지는 사람이 판단한다"]})
     return rows

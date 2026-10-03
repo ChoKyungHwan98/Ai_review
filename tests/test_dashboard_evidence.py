@@ -170,11 +170,11 @@ class DashboardEvidenceTests(unittest.TestCase):
                                           [{"from": "세이브", "to": "저장", "overlap": 92, "reason": ""}], themes, "팰월드")
         by_step = {r["step"]: r for r in rows}
         self.assertEqual(by_step["무엇을"]["text"], "팰월드 · 한국어 · 2026.07.13 이후 · 최신순")
-        self.assertEqual(by_step["얼마나"]["text"], "400건 계획 (목표 오차 ±5%) → 380건 수집")
-        self.assertEqual([by_step[k]["who"] for k in ("무엇을", "얼마나", "분석 모델", "주제 제안", "주제 합치기", "결론")],
+        self.assertEqual(by_step["얼마나"]["text"], "400건 계획 (표본 크기를 정한 기준 ±5%) → 380건 수집")
+        self.assertEqual([by_step[k]["who"] for k in ("무엇을", "얼마나", "분석 모델", "주제 제안", "주제 합치기", "강조한 주제")],
                          ["사람", "사람", "사람", "AI", "규칙", "규칙"])
         self.assertEqual(by_step["주제 합치기"]["details"], ["세이브 → 저장 (겹침 92%)"])
-        self.assertEqual(by_step["결론"]["text"], "지킬 것 = 건축 (칭찬 2건) · 고칠 것 = 저장 (불만 2건)")
+        self.assertEqual(by_step["강조한 주제"]["text"], "칭찬 최다 = 건축 (칭찬 2건) · 불만 최다 = 저장 (불만 2건)")
 
     def test_empty_and_missing_sources_are_explicit(self):
         self.analyses = []

@@ -47,7 +47,7 @@ class DesignApiTests(unittest.TestCase):
         self.assertEqual(data["reviews"][0]["keywords"], "렉@technical")
         steps = {row["step"]: row for row in data["design_log"]}
         self.assertEqual(steps["주제 합치기"]["details"], ["최적화 → 렉 (겹침 100%)"])
-        self.assertEqual(steps["결론"]["text"], "고칠 것 = 렉 (불만 3건)")
+        self.assertEqual(steps["강조한 주제"]["text"], "불만 최다 = 렉 (불만 3건)")
         self.assertNotIn("decisions", data)
 
     def test_manual_edit_endpoints_are_gone(self):

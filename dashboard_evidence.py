@@ -128,6 +128,12 @@ def sorted_ids(ids, reviews):
                                        -(number(reviews[rid].get("timestamp_created")) or 0), rid))
 
 
+def min_stamp(reviews, positive):
+    """추천(또는 비추천) 리뷰 중 가장 오래된 글의 작성 시각."""
+    return min(t for t in (number(r.get("timestamp_created")) for r in reviews.values() if is_positive(r) == positive)
+               if t is not None and t > 0)
+
+
 def build_evidence(directory, app_id):
     source = load_sources(directory)
     if source is None:
@@ -167,15 +173,49 @@ def build_evidence(directory, app_id):
                    for item in analyzed.values())
     liked = [a for a in analyzed.values() if a.get("s") in ("P", "M")]
     fun_counts = Counter(f for a in liked for f in set(a.get("f") or []) if f in FUN)
+    # 유형마다 Steam 도움됨이 가장 많은 리뷰 하나. 같은 글이 두 유형에 나오지 않게 한다.
+    fun_example, used = {}, set()
+    for f, _ in fun_counts.most_common():
+        ids = [rid for rid, a in analyzed.items() if a.get("s") in ("P", "M") and f in (a.get("f") or []) and rid not in used]
+        if ids:
+            ids = [rid for rid in ids if is_positive(reviews[rid])] or ids   # 게임을 추천한 글을 먼저 고른다
+            rid = sorted_ids(ids, reviews)[0]
+            used.add(rid)
+            fun_example[f] = excerpt(reviews[rid], app_id, 180)
     timestamps = [number(r.get("timestamp_created")) for r in reviews.values()]
     timestamps = [t for t in timestamps if t is not None and t > 0]
     day = lambda stamp: datetime.fromtimestamp(stamp, timezone.utc).strftime("%Y-%m-%d")
+    # 리뷰를 쓴 날짜별 추천·비추천 수. 화면이 일·주·월로 묶어 추이를 그린다.
+    by_day = {}
+    for row in reviews.values():
+        stamp = number(row.get("timestamp_created"))
+        if stamp is None or stamp <= 0:
+            continue
+        slot = by_day.setdefault(day(stamp), [0, 0])
+        slot[0 if is_positive(row) else 1] += 1
+    analyzed_negative = sum(not is_positive(reviews[rid]) for rid in analyzed)
+    # 주제 화면의 숫자가 실제로 나오는 묶음: 주제가 하나라도 붙은 리뷰
+    themed = {rid for group in members.values() for key in ("P", "N") for rid in group[key]}
+    # 추천과 비추천은 따로 최신순으로 모은다. 두 묶음의 기간이 어긋났는지 화면이 알려 준다.
+    vote_periods = {}
+    for key, positive in (("up", True), ("down", False)):
+        stamps = [number(r.get("timestamp_created")) for r in reviews.values() if is_positive(r) == positive]
+        stamps = [t for t in stamps if t is not None and t > 0]
+        if stamps:
+            vote_periods[key] = {"start": day(min(stamps)), "end": day(max(stamps)), "days": round((max(stamps) - min(stamps)) / 86400) + 1}
+    start_gap = (round(abs(min_stamp(reviews, True) - min_stamp(reviews, False)) / 86400)
+                 if len(vote_periods) == 2 else None)
     return {"counts": {"collected": n, "analyzed": len(analyzed), "negative": n - up,
+                       "analyzed_negative": analyzed_negative,
+                       "themed": len(themed),
+                       "excluded_negative": (n - up) - analyzed_negative,
                        "complaint_reviews": len(complaint_ids),
                        "recommended_complaints": sum(is_positive(reviews[rid]) for rid in complaint_ids),
                        "unknown_playtime": sum(review_hours(r) is None for r in reviews.values()),
                        "skipped_analysis": skipped},
             "period": {"start": day(min(timestamps)), "end": day(max(timestamps))} if timestamps else None,
+            "vote_periods": vote_periods, "vote_period_gap_days": start_gap,
+            "daily": [{"date": d, "up": by_day[d][0], "down": by_day[d][1]} for d in sorted(by_day)],
             "language": (design.get("params") or {}).get("language", "unknown"),
             "languages": Counter(r.get("language") or "unknown" for r in reviews.values()).most_common(8),
             "sample_negative_rate": round((n - up) / n * 100, 1) if n else None,
@@ -185,7 +225,7 @@ def build_evidence(directory, app_id):
             "merges": merges, "n_ai_topics": n_ai_topics,
             "deep": build_deep(reviews, analyzed, members, complaints, app_id, alias),
             "fun_denominator": len(liked),
-            "fun": [{"name": f, "desc": FUN[f], "count": c, "share": round(c / len(liked) * 100, 1)}
+            "fun": [{"name": f, "desc": FUN[f], "count": c, "share": round(c / len(liked) * 100, 1), "example": fun_example.get(f)}
                     for f, c in fun_counts.most_common()]}
 
 
@@ -202,10 +242,17 @@ REQUEST_MARKS = ("해주", "해 주", "했으면", "좋겠", "추가", "수정",
 VAGUE = {"버그 수정", "버그 개선", "개선 필요", "최적화 필요", "최적화 개선", "수정 필요", "편의성 개선"}
 
 
+# 낱말로 세면 뜻이 없는 것: 꾸미는 말과 이어 주는 말
+DROP_WORDS = {"인한", "대한", "위한", "통한", "관한", "따른", "같은", "있음", "없음", "있는", "없는", "겁나", "엄청", "매우"}
+DROP_ENDINGS = ("는데", "지만", "어서", "아서", "면서", "니까", "려고", "하다", "한다", "된다", "있다", "없다")
+
+
 def words(text):
     """짧은 한국어 문장을 뜻 있는 낱말로. 형태소 분석기 없이 흔한 조사·어미만 떼어 낸다."""
     out = set()
     for w in re.findall(r"[0-9A-Za-z가-힣]+", text or ""):
+        if w in DROP_WORDS or w.endswith(DROP_ENDINGS):
+            continue
         for suffix in SUFFIXES:
             if len(w) > len(suffix) + 1 and w.endswith(suffix):
                 w = w[: -len(suffix)]
@@ -230,7 +277,7 @@ def build_deep(reviews, analyzed, members, complaints, app_id, alias=None):
     focus = sorted((name for name, g in members.items() if g["N"]),
                    key=lambda name: (-(len(members[name]["N"]) > len(members[name]["P"])), -len(members[name]["N"])))[:4]
 
-    # ① 불만 세부 원인: 주제별 불만 문장에서 여러 리뷰가 함께 쓴 낱말
+    # ① 불만에서 자주 나온 말: 주제별 불만 문장에서 여러 리뷰가 함께 쓴 낱말
     causes = []
     for name in focus:
         rows = parts.get(name) or []

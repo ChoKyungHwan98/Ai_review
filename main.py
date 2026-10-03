@@ -26,6 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import cfg
 from dashboard_evidence import build_evidence, evidence_page, load_sources, review_hours
 import analysis_design
+import steam_histogram
 import progress
 
 
@@ -35,14 +36,26 @@ app = FastAPI(
     version="5.0.0",
 )
 
-# CORS 설정 — 외부 프론트엔드 접근 허용 (강의 session-38 API 보안)
+# 이 서버는 내 컴퓨터에서만 쓴다. 화면을 여는 곳은 이 서버 자신과 스튜디오(studio.local)뿐이므로
+# 그 밖의 웹사이트가 브라우저를 통해 삭제·분석 실행(유료 모델 호출)을 보내지 못하게 막는다.
+ALLOWED_ORIGIN = r"^(https?://(localhost|127\.0\.0\.1)(:\d+)?|https://studio\.local)$"
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],     # 프로덕션에서는 특정 도메인으로 제한
-    allow_credentials=True,
+    allow_origin_regex=ALLOWED_ORIGIN,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def block_foreign_origin(request, call_next):
+    """CORS는 응답을 읽지 못하게 할 뿐 요청 자체는 막지 않는다. 바꾸는 요청은 출처를 직접 확인한다."""
+    import re
+    from fastapi.responses import JSONResponse
+    origin = request.headers.get("origin")
+    if request.method not in ("GET", "HEAD", "OPTIONS") and origin and not re.match(ALLOWED_ORIGIN, origin):
+        return JSONResponse(status_code=403, content={"detail": "허용되지 않은 출처의 요청입니다"})
+    return await call_next(request)
 
 
 # 화면 HTML은 주소가 고정이라 Cache-Control이 없으면 브라우저 휴리스틱 캐시가 걸린다.
@@ -255,6 +268,24 @@ def review_population_stats(app_id: int, language: str = "koreana"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/games/review-histogram", summary="Steam 전체 리뷰의 날짜별 추천·비추천 수", include_in_schema=False)
+def review_histogram(app_id: int = Query(..., gt=0), refresh: bool = False):
+    """저장해 둔 결과를 주고, refresh=true일 때만 Steam에서 다시 받는다. AI를 부르지 않는다."""
+    folder = _game_dir(app_id)
+    cached = steam_histogram.load(folder) if os.path.isdir(folder) else None
+    if cached and not refresh and "events" in cached:   # 공지가 없는 예전 저장본은 한 번 다시 받는다
+        return cached
+    try:
+        data = steam_histogram.fetch(app_id)
+    except Exception:
+        if cached:
+            return {**cached, "stale": True}   # 못 받으면 지난 결과를 그대로 보여준다
+        raise HTTPException(status_code=502, detail="Steam에서 리뷰 추이를 가져오지 못했습니다")
+    if os.path.isdir(folder):
+        steam_histogram.save(folder, data)
+    return data
+
+
 @app.get("/api/models", summary="OpenRouter 모델 목록 조회", include_in_schema=False)
 def get_openrouter_models():
     """Live text-capable models with published prices; never label an old slug free."""
@@ -332,6 +363,9 @@ def dashboard_data_v5(app_id: int = None):
                 data[key] = None
         else:
             data[key] = None
+    if data.get("quality_report"):
+        import quality_check
+        data["quality_report"] = quality_check.rescore(data["quality_report"])
     data["reviews"] = review_rows(os.path.dirname(path))
     apply_design(data)
     return data
@@ -383,6 +417,8 @@ def review_rows(directory):
             "keywords": "|".join(f"{name}@{areas[name]}" if name in areas else name
                                   for name in dict.fromkeys(tags)),
             "language": original.get("language", ""),
+            "helpful": original.get("votes_up", ""),          # 리뷰 원문 화면의 정렬에 쓴다
+            "created": original.get("timestamp_created", ""),
         })
     return rows
 

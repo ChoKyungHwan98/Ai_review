@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Signal — 리뷰 인텔리전스</title>
+<title>AI 리뷰데이터 분석</title>
 <script>
   if (new URLSearchParams(window.location.search).get('embedded') === 'studio') {
     document.documentElement.classList.add('studio-embedded');
@@ -15,20 +15,20 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
 <style>
-/* Signal review workspace */
+/* 스튜디오 공통 색·글자 (SHARED_PRODUCT_UI_GUIDELINE.md) */
 :root {
   /* ── Shared review workspace colors ── */
-  --color-midnight-ink:    var(--ui-canvas, #F7F7F5);     /* page bg */
+  --color-midnight-ink:    #F2F4F6;     /* page bg */
   --color-deep-graphite:   #FFFFFF;     /* nav/panel bg */
   --color-slate-card:      #FFFFFF;     /* card bg */
-  --color-steel-border:    var(--ui-line, #E5E8EB);     /* borders */
+  --color-steel-border:    #E5E8EB;     /* borders */
   --color-soft-stone:      #D1D6DB;     /* strong borders */
   --color-ghost-fill:      #F9FAFB;     /* ghost surfaces */
-  --color-white-canvas:    var(--ui-ink, #191B23);     /* primary text */
-  --color-silver-whisper:  var(--ui-text, #414957);     /* secondary text */
-  --color-mute-whisper:    #69717E;     /* muted text */
-  --color-electric-blue:   var(--ui-pos, #554BD2);     /* accent */
-  --color-electric-blue-2: var(--ui-pos, #554BD2);
+  --color-white-canvas:    #191F28;     /* primary text */
+  --color-silver-whisper:  #333D4B;     /* secondary text */
+  --color-mute-whisper:    #5F6977;     /* muted text */
+  --color-electric-blue:   #1B64DA;     /* accent */
+  --color-electric-blue-2: #1B64DA;
   --color-success-green:   #007A49;     /* positive */
   --color-error-red:       #D92D3D;     /* negative */
   --color-warn-amber:      #B85C00;
@@ -65,9 +65,9 @@
   --element-gap: 8px;
 
   /* ── Radius ── */
-  --radius-cards: var(--ui-card-radius, 12px);
-  --radius-buttons: var(--ui-control-radius, 8px);
-  --radius-default: var(--ui-control-radius, 8px);
+  --radius-cards: 16px;
+  --radius-buttons: 12px;
+  --radius-default: 8px;
 
   /* ── Floating layers only ── */
   --shadow-card: 0 4px 16px rgba(0,0,0,0.04);
@@ -75,21 +75,21 @@
   --shadow-hero: 0 12px 32px rgba(0,0,0,0.1);
 
   /* ── Home(index.html) 톤 일치를 위한 별칭 토큰 ── */
-  --color-bg-app:        var(--ui-canvas, #F7F7F5);
+  --color-bg-app:        #F2F4F6;
   --color-bg-surface:    #FFFFFF;
   --color-bg-card-img:   #1A1C23;
-  --color-text-title:    var(--ui-ink, #191B23);
-  --color-text-body:     var(--ui-text, #414957);
-  --color-text-sub:      #69717E;
-  --color-primary:       var(--ui-pos, #554BD2);
-  --color-primary-hover: #4339BA;
-  --color-border:        var(--ui-line, #E2E4E7);
-  --color-nav-active:    #EEEFFA;
-  --color-nav-hover:     #292C3F;
-  --radius-sm: var(--ui-control-radius, 8px);
-  --radius-md: var(--ui-control-radius, 8px);
-  --radius-lg: var(--ui-card-radius, 12px);
-  --radius-xl: var(--ui-card-radius, 12px);
+  --color-text-title:    #191F28;
+  --color-text-body:     #333D4B;
+  --color-text-sub:      #5F6977;
+  --color-primary:       #1B64DA;
+  --color-primary-hover: #1957C2;
+  --color-border:        #E5E8EB;
+  --color-nav-active:    #F2F4F6;
+  --color-nav-hover:     #FAFAFA;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
   --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
@@ -103,7 +103,7 @@ body {
   margin: 0; padding: 0;
   height: 100vh;
   overflow: hidden;
-  background: var(--ui-canvas, #F7F7F5);
+  background: var(--color-bg-app);
   color: var(--color-white-canvas);
   font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   font-size: 14px; line-height: 1.5;  /* index.html과 동일하게 고정 */
@@ -117,89 +117,84 @@ body {
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 /* ============ Layout — 사이드바 고정 + 메인 영역만 스크롤 ============ */
 .app { display: flex; width: 100%; height: 100vh; overflow: hidden; }
-/* 사이드바는 flex-shrink:0으로 너비 고정, overflow hidden으로 튀어나오지 않게 */
-.sidebar { flex-shrink: 0; height: 100vh; overflow: hidden; }
-/* Sidebar */
+/* Sidebar — 스튜디오 홈(index.html)과 같은 규격. 여기 한 곳에서만 정의한다. */
 .sidebar {
-      width: 214px;
-      background-color: #191B2A;
-      border-right: 0;
-      display: flex;
-      flex-direction: column;
-      padding: 26px 18px;
-      z-index: 10;
-    }
+  flex: 0 0 var(--studio-sidebar-width);
+  width: var(--studio-sidebar-width);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  background-color: var(--color-bg-surface);
+  border-right: 1px solid var(--color-border);
+  z-index: 10;
+}
 .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 20px;
-      font-weight: 800;
-      line-height: 1.2;
-      color: #F7F7FC;
-      margin-bottom: 42px;
-      letter-spacing:-.05em;
-      text-decoration:none;
-    }
-.brand-mark { display:grid; place-items:center; width:34px; height:34px; border-radius:8px; color:#1B1C2D; background:#D2CFFA; flex:none; }
-.brand-mark svg { width:22px; height:22px; }
-.brand-name small { display:block; margin-top:2px; color:#AEB2C5; font-size:11px; font-weight:650; letter-spacing:.04em; line-height:1.1; }
-.nav-group {
-      margin-bottom: 22px;
-    }
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text-title);
+  margin-bottom: 40px;
+  padding: 0 8px;
+}
+.nav-group { margin-bottom: 24px; }
 .nav-label {
-      font-size: 10px;
-      font-weight: 700;
-      line-height: 1;
-      color: #969CB3;
-      letter-spacing:.16em;
-      margin-bottom: 12px;
-      padding: 0 10px;
-    }
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-sub);
+  margin-bottom: 8px;
+  padding: 0 8px;
+}
+.nav-item, .bottom-item { width: 100%; border: 0; background: transparent; text-align: left; font-family: inherit; }
 .nav-item {
-      display: flex;
-      align-items: center;
-      padding: 12px 13px;
-      border-radius: 7px;
-      color: #CACDDB;
-      font-size: 14px;
-      font-weight: 500;
-      line-height: 1;
-      cursor: pointer;
-      transition: background-color 0.2s ease, color 0.2s ease;
-      text-decoration: none;
-      margin-bottom: 3px;
-      position: relative;
-    }
-.nav-index { display:inline-block; min-width:20px; margin-right:10px; color:#888EA5; font:600 11px var(--font-mono); }
-.nav-project { border:1px solid #414459; color:#E7E8F1; }
-.nav-project .nav-index { color:#B6B9CA; }
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-title);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-decoration: none;
+  margin-bottom: 4px;
+  position: relative;
+}
 .nav-item:hover { background-color: var(--color-nav-hover); }
-.nav-item.active {
-      background-color: var(--color-nav-active);
-      color: #191B2A;
-      font-weight: 700;
-    }
-.nav-item.active .nav-index { color:#554BD2; }
-/* Home(index.html)과 동일한 사이드바 하단 */
+/* 선택 상태에서 굵기를 바꾸지 않는다 (글자 위치가 흔들리지 않게) */
+.nav-item.active { background-color: var(--color-nav-active); color: var(--color-primary); }
+.nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 16px;
+  background-color: var(--color-primary);
+  border-radius: 2px;
+}
 .sidebar-bottom {
-      margin-top: auto;
-      border-top: 1px solid #414459;
-      padding-top: 16px;
-    }
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
+  padding-top: 16px;
+}
 .bottom-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      font-size: 14px;
-      line-height: 1;
-      color: #B4B8CB;
-      cursor: pointer;
-      border-radius: var(--radius-md);
-      transition: background-color 0.2s;
-    }
-.bottom-item:hover { background-color: var(--color-nav-hover); color:#fff; }
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--color-text-sub);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s;
+}
+.bottom-item:hover { background-color: var(--color-nav-hover); color: var(--color-text-title); }
 /* ── Right Content Area ── */
 .main-wrap {
   flex: 1;
@@ -210,53 +205,53 @@ body {
   scrollbar-gutter: stable;  /* 스크롤바 유무와 관계없이 공간 확보 */
   background: transparent;
 }
-/* ── Topbar (simplified: search + status) ── */
-.topbar { position:sticky; top:0; z-index:50; background:#fff; border-bottom:1px solid #E2E4E7; }
+/* ── Topbar: 현재 위치 + 검색 + 연결 상태 ── */
+.topbar { position: sticky; top: 0; z-index: 50; background: var(--color-bg-app); }
 .topbar-inner {
   max-width: var(--page-max); margin: 0 auto;
-  padding: 12px 40px;
+  padding: 20px 40px 8px;
   display: flex; align-items: center; gap: 16px;
 }
-.topbar-context { display:flex; align-items:center; gap:10px; color:#777F8C; font-size:13px; min-width:0; }
-.topbar-context b { color:#222631; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.topbar-context span { white-space:nowrap; }
-.topbar-context span:first-of-type { color:#C2C6CF; }
+.topbar-context { display: flex; align-items: center; gap: 8px; color: var(--color-text-sub); font-size: 14px; min-width: 0; }
+.topbar-context b { color: var(--color-text-title); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-context span { white-space: nowrap; }
+.topbar-context span:first-of-type { color: #B0B8C1; }
 .topbar-right {
-  margin-left: auto; display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 12px;
   font-size: 13px; color: var(--color-text-sub);
   white-space: nowrap;
 }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-success-green); display: inline-block; margin-right: 4px; }
 /* ── Search Bar ── */
 .search-bar {
-  flex:0 1 300px; max-width:300px; margin-left:auto;
+  flex: 0 1 320px; max-width: 320px; margin-left: auto;
   display: flex; align-items: center; gap: 8px;
+  height: 44px;
   background: #FFFFFF;
-  border: 1px solid #E2E4E7;
-  border-radius: 7px;
-  padding: 5px 8px 5px 12px;
-  transition: border-color .15s, background-color .15s, box-shadow .15s;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0 6px 0 14px;
+  transition: border-color .15s, box-shadow .15s;
 }
 .search-bar:focus-within {
-  background: #FFFFFF;
   border-color: var(--color-primary);
-  box-shadow:0 0 0 3px rgba(85,75,210,.10);
+  box-shadow: 0 0 0 3px rgba(27,100,218,.12);
 }
 .search-icon { color: var(--color-text-sub); flex-shrink: 0; }
 .search-input {
-  flex: 1; border: none; outline: none; background: transparent;
-  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
-  font-size: 13px;
+  flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  font-family: inherit;
+  font-size: 15px;
   color: var(--color-text-title);
 }
 .search-input::placeholder { color: var(--color-text-sub); }
 .search-btn {
   flex-shrink: 0;
   font-family: inherit;
-  font-size: 13px; font-weight: 600;
+  font-size: 14px; font-weight: 600;
   color: #FFFFFF; background: var(--color-text-title);
-  border: none; border-radius: 5px;
-  padding: 6px 12px; cursor: pointer;
+  border: none; border-radius: 8px;
+  padding: 7px 14px; cursor: pointer;
   transition: background .15s, transform .1s;
 }
 .search-btn:hover { background: #000000; }
@@ -276,7 +271,7 @@ body {
 .search-card-text span { font-size: 13px; color: var(--color-text-sub); }
 .search-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
 @media (max-width: 640px) { .search-card { flex-wrap: wrap; } .search-card img { display: none; } .search-card-actions { width: 100%; justify-content: flex-end; } }
-main { max-width: var(--page-max); margin: 0 auto; padding: 16px 60px 48px; width: 100%; }
+main { max-width: var(--page-max); margin: 0 auto; padding: 16px 40px 56px; width: 100%; }
 section.page { display: none; }
 section.page.active {
   display: block;
@@ -291,15 +286,15 @@ section.page.active {
    caption  → 12px / 400 / 1.5
 */
 h1.title {
-  font-size: var(--text-display); font-weight: var(--font-weight-medium);
+  font-size: 28px; font-weight: 700;
   margin: 0 0 var(--spacing-8);
-  line-height: var(--leading-display);
+  line-height: 1.3; letter-spacing: -.02em;
   color: var(--color-white-canvas);
 }
 .subtitle {
   color: var(--color-silver-whisper);
   font-size: var(--text-body-sm); font-weight: var(--font-weight-regular);
-  margin-bottom: var(--spacing-32);
+  margin-bottom: 20px;
   line-height: var(--leading-body-sm);
   max-width: 780px;
 }
@@ -307,11 +302,8 @@ h1.title {
 .card {
   background: var(--color-slate-card);
   border-radius: var(--radius-cards);
-  box-shadow: var(--shadow-card);  /* inset 1px border */
-  padding: var(--card-padding);
-  transition: box-shadow .15s ease;
+  padding: 24px;
 }
-.card:hover { box-shadow: var(--shadow-hover); }
 /* ============ Grids ============ */
 .grid { display: grid; gap: var(--element-gap); }
 /* ============ Banner / Hero — Inset Border Card ============ */
@@ -481,39 +473,16 @@ footer { display: none !important; }
   z-index: 9999;
 }
 .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-/* ============ Signal workspace ============ */
-:root { --studio-ink:var(--ui-ink, #191B23); --studio-canvas:var(--ui-canvas, #F7F7F5); --studio-line:var(--ui-line, #E2E4E7); --studio-accent:var(--ui-pos, #554BD2); --studio-sidebar-width:214px; }
-body { background:var(--studio-canvas); }
-.sidebar {
-  width:var(--studio-sidebar-width);
-  min-width:var(--studio-sidebar-width);
-  max-width:var(--studio-sidebar-width);
-  flex:0 0 var(--studio-sidebar-width);
-  padding:26px 18px;
-  border-right:0;
-}
-.sidebar-brand { margin-bottom:42px; font-size:20px; }
-.nav-group { margin-bottom:22px; }
-.nav-label { font-size:11px; letter-spacing:.08em; }
-.nav-item, .bottom-item { width:100%; border:0; background:transparent; text-align:left; font-family:inherit; }
-.nav-project { border:1px solid #414459; }
-.bottom-item { color:#B4B8CB; }
+/* ============ 작업 화면 공통 ============ */
+:root { --studio-ink:#191F28; --studio-canvas:#F2F4F6; --studio-line:#E5E8EB; --studio-accent:#1B64DA; --studio-sidebar-width:260px; }
 .main-wrap { scrollbar-gutter:auto; scrollbar-width:thin; scrollbar-color:#c7ccd5 transparent; }
 .main-wrap::-webkit-scrollbar { width:10px; }
 .main-wrap::-webkit-scrollbar-track { background:transparent; margin:10px 3px; }
 .main-wrap::-webkit-scrollbar-thumb { background:#c7ccd5; border:3px solid transparent; background-clip:padding-box; border-radius:999px; }
 .main-wrap::-webkit-scrollbar-thumb:hover { background:#9ca5b3; border:3px solid transparent; background-clip:padding-box; }
-.topbar { background:#fff; border-bottom:1px solid var(--studio-line); }
-.topbar-inner { padding:12px 40px; }
-main { padding:34px 40px 60px; }
-h1.title { font-size:28px; letter-spacing:-.035em; }
-.subtitle { margin-bottom:20px; }
-.page:not([data-page="overview"]) > .title { font-size:34px; font-weight:750; letter-spacing:-.045em; }
-.page:not([data-page="overview"]) > .subtitle { color:#69717E; margin-bottom:26px; }
 .hero { padding:20px 22px 18px; margin-bottom:12px; }
 .hero-title { font-size:20px; line-height:1.4; }
 .hero-body { font-size:14px; line-height:1.65; }
-.card { border:1px solid var(--studio-line); border-radius:12px; box-shadow:none; padding:18px; }
 .studio-modal-backdrop { position:fixed; inset:0; z-index:10001; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(20,27,38,.34); }
 .studio-modal-backdrop.open { display:flex; }
 .studio-modal { width:min(440px,100%); background:#fff; border:0; border-radius:16px; box-shadow:0 16px 32px rgba(20,27,38,.18); padding:22px; color:var(--studio-ink); }
@@ -547,7 +516,7 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
     }
 .precision-label { font-size: 14px; font-weight: 600; color: var(--color-text-title); }
 .precision-badge { font-size: 13px; color: var(--color-text-sub); }
-.precision-badge b { font-size: 18px; color: #4B42B9; font-weight: 700; }
+.precision-badge b { font-size: 18px; color: var(--color-primary); font-weight: 700; }
 .precision-sub {
       margin: -8px 0 14px;
       font-size: 13px;
@@ -556,10 +525,10 @@ h1.title { font-size:28px; letter-spacing:-.035em; }
     }
 .precision-curve-wrap { margin-bottom: 4px; }
 .precision-curve { display: block; width: 100%; height: 72px; overflow: visible; }
-.precision-curve-area { fill: rgba(85, 75, 210, .10); }
-.precision-curve-line { fill: none; stroke: #554BD2; stroke-width: 2; vector-effect: non-scaling-stroke; }
-.precision-curve-mark { stroke: #554BD2; stroke-width: 1; stroke-dasharray: 3 3; opacity: .5; vector-effect: non-scaling-stroke; }
-.precision-curve-dot { fill: #fff; stroke: #554BD2; stroke-width: 2; }
+.precision-curve-area { fill: rgba(49, 130, 246, .10); }
+.precision-curve-line { fill: none; stroke: #3182F6; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.precision-curve-mark { stroke: #3182F6; stroke-width: 1; stroke-dasharray: 3 3; opacity: .5; vector-effect: non-scaling-stroke; }
+.precision-curve-dot { fill: #fff; stroke: #3182F6; stroke-width: 2; }
 .precision-curve-caption { margin-top: 6px; font-size: 13px; color: var(--color-text-sub); }
 .precision-slider {
       width: 100%;
@@ -687,17 +656,17 @@ body.no-analysis #ovBody { display: none; }
 /* ── 분석 시작 화면: 설정과 진행 ─────────────────────────────
    팝업이 아니라 본문 영역(사이드바 오른쪽)을 채우는 페이지다. 사이드바는 그대로 보이고,
    여백·배경은 다른 페이지 본문(main)과 같다. 넓은 화면에서는 왼쪽에 조건, 오른쪽에 수집량과 시작 버튼. */
-.run-modal { position:fixed; top:0; right:0; bottom:0; left:var(--studio-sidebar-width); z-index:9999; flex-direction:column; overflow-y:auto; box-sizing:border-box; padding:36px 40px 52px; background:#F7F7F5; scrollbar-gutter:stable; }
+.run-modal { position:fixed; top:0; right:0; bottom:0; left:var(--studio-sidebar-width); z-index:9999; flex-direction:column; overflow-y:auto; box-sizing:border-box; padding:36px 40px 52px; background:var(--studio-canvas); scrollbar-gutter:stable; }
 .run-dialog { width:100%; max-width:1120px; box-sizing:border-box; margin:0 auto; color:#494C57; font-variant-numeric:tabular-nums; }
-.run-title { margin:0 0 6px; font-size:34px; font-weight:680; letter-spacing:-.055em; color:#191B23; }
+.run-title { margin:0 0 6px; font-size:24px; font-weight:700; letter-spacing:-.02em; color:#191F28; }
 .run-lead { margin:0 0 24px; font-size:14px; line-height:1.6; color:#60636F; }
-.run-field { margin:0 0 16px; padding:20px 22px; border:1px solid #E4E5E7; border-radius:10px; background:#fff; box-shadow:none; }
+.run-field { margin:0 0 16px; padding:20px 22px; border:1px solid #E5E8EB; border-radius:16px; background:#fff; box-shadow:none; }
 #pipelineSetupForm { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); column-gap:24px; align-items:start; }
 #pipelineSetupForm > .run-title, #pipelineSetupForm > .run-lead { grid-column:1 / -1; }
 #pipelineSetupForm > #precisionBlock { grid-column:2; grid-row:3 / span 3; }
 #pipelineSetupForm > .run-check { grid-column:2; grid-row:6; padding:0 4px; }
 #pipelineSetupForm > .run-actions { grid-column:2; grid-row:7; }
-#pipelineProgressView { max-width:720px; margin:0 auto; padding:28px 28px 24px; border:1px solid #E4E5E7; border-radius:10px; background:#fff; box-shadow:none; }
+#pipelineProgressView { max-width:720px; margin:0 auto; padding:28px 28px 24px; border:1px solid #E5E8EB; border-radius:16px; background:#fff; box-shadow:none; }
 .run-label { display:block; margin:0 0 8px; font-size:14px; font-weight:700; color:#191B23; }
 .run-label small { margin-left:6px; font-size:13px; font-weight:500; color:#4E5968; }
 .run-help { margin:8px 0 0; font-size:13px; line-height:1.55; color:#4E5968; }
@@ -725,10 +694,10 @@ body.no-analysis #ovBody { display: none; }
 .run-check input { width:18px; height:18px; margin:2px 0 0; accent-color:var(--color-primary); }
 .run-check b { display:block; font-size:14px; color:#191F28; }
 .run-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
-.run-btn { border:0; border-radius:7px; padding:11px 18px; background:#191B2A; color:#fff; font:inherit; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.run-btn { border:0; border-radius:12px; padding:11px 18px; background:#191F28; color:#fff; font:inherit; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; }
 .run-btn:disabled { opacity:.5; cursor:default; }
-.run-btn.is-primary { background:#554BD2; }
-.run-btn.is-primary:hover { background:#443AB9; }
+.run-btn.is-primary { background:var(--color-primary); }
+.run-btn.is-primary:hover { background:var(--color-primary-hover); }
 .run-btn.is-quiet { background:#EBEBEE; color:#363845; }
 .run-game-now { margin:0 0 4px; font-size:13px; font-weight:600; color:#4E5968; }
 .run-game-now:empty { display:none; }
@@ -775,10 +744,11 @@ body.no-analysis #ovBody { display: none; }
   .run-seg button { font-size:13px; padding:10px 4px; }
 }
 </style>
-<link rel="stylesheet" href="/static/review-dashboard.css?v=20261001-signal1">
-<script src="/static/review-dashboard.js?v=20261001-signal1"></script>
-<link rel="stylesheet" href="/static/review-pages.css?v=20261001-signal1">
-<script src="/static/review-pages.js?v=20261001-signal1"></script>
+<link rel="stylesheet" href="/static/review-dashboard.css?v=20261003-flow1">
+<script src="/static/vendor/apexcharts.min.js?v=3.54.1"></script>
+<script src="/static/review-dashboard.js?v=20261003-flow1"></script>
+<link rel="stylesheet" href="/static/review-pages.css?v=20261003-flow1">
+<script src="/static/review-pages.js?v=20261003-flow1"></script>
 <style>
 /* 공용 글꼴. 설치된 Pretendard가 있으면 그걸 쓰고, 없으면 스튜디오에 넣어 둔 파일을 쓴다(SIL OFL 1.1). */
 @font-face {
@@ -794,21 +764,25 @@ body.no-analysis #ovBody { display: none; }
 <body class="page-overview">
 <div class="app">
 
-  <!-- ============ PRODUCT NAVIGATION ============ -->
+  <!-- ============ LEFT SIDEBAR ============ -->
   <aside class="sidebar">
-    <a href="/" class="sidebar-brand" aria-label="전체 프로젝트" onclick="return goToProjectHome(event)"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 3 29 16 16 29 3 16 16 3Z" stroke="currentColor" stroke-width="1.8"/><path d="M16 9 23 16 16 23 9 16 16 9Z" fill="currentColor"/></svg></span><span class="brand-name">signal.<small>REVIEW INTELLIGENCE</small></span></a>
-
-    <div class="nav-group nav-projects">
-      <div class="nav-label">PROJECTS</div>
-      <a href="/" class="nav-item nav-project" aria-label="전체 프로젝트" onclick="return goToProjectHome(event)"><span class="nav-index">↗</span>모든 프로젝트</a>
+    <div class="sidebar-brand">
+      AI 리뷰데이터 분석
     </div>
 
-    <div class="nav-group nav-workspace">
-      <div class="nav-label">WORKSPACE</div>
-      <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)"><span class="nav-index" aria-hidden="true">01</span>진단 요약</a>
-      <a href="#" class="nav-item" data-page="deep" onclick="navTo(this)"><span class="nav-index" aria-hidden="true">02</span>심층 분석</a>
-      <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)"><span class="nav-index" aria-hidden="true">03</span>리뷰 원문</a>
-      <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)"><span class="nav-index" aria-hidden="true">04</span>분석 설계</a>
+    <div class="nav-group">
+      <div class="nav-label">프로젝트 관리</div>
+      <a href="/" class="nav-item" onclick="return goToProjectHome(event)">전체 프로젝트</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">리뷰 분석 파이프라인</div>
+      <a href="#" class="nav-item active" data-page="overview" onclick="navTo(this)">개요</a>
+      <a href="#" class="nav-item" data-page="topics" onclick="navTo(this)">주제별 보기</a>
+      <a href="#" class="nav-item" data-page="character" onclick="navTo(this)">칭찬 분석</a>
+      <a href="#" class="nav-item" data-page="deep" onclick="navTo(this)">불만 분석</a>
+      <a href="#" class="nav-item" data-page="reviews" onclick="navTo(this)">리뷰 원문</a>
+      <a href="#" class="nav-item" data-page="sample" onclick="navTo(this)">분석 방법</a>
     </div>
 
     <div class="sidebar-bottom">
@@ -826,7 +800,7 @@ body.no-analysis #ovBody { display: none; }
     <header class="topbar">
       <!-- Context + search -->
       <div class="topbar-inner">
-        <div class="topbar-context"><b id="currentGameName">—</b><span>/</span><span id="currentPageName">진단 요약</span></div>
+        <div class="topbar-context"><b id="currentGameName">—</b><span>/</span><span id="currentPageName">개요</span></div>
         <!-- Steam App ID 검색바 -->
         <div class="search-bar" id="searchBar">
           <svg class="search-icon" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 13l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -836,7 +810,7 @@ body.no-analysis #ovBody { display: none; }
 
         <div class="topbar-right">
           <span><span class="dot"></span><span id="serverStatus">연결됨</span></span>
-          <span class="mono" id="lastUpdate">—</span>
+          <span>마지막 분석 <span class="mono" id="lastUpdate">—</span></span>
         </div>
       </div>
 
@@ -851,9 +825,9 @@ body.no-analysis #ovBody { display: none; }
       <div class="rd-page-header">
         <div class="rd-page-copy">
           <h1 class="title" id="overviewTitle">리뷰 진단</h1>
+          <p class="ov-coverage" id="ovCoverage" aria-label="분석 범위"></p>
         </div>
         <div class="rd-page-actions" id="rdPageActions"></div>
-        <p class="ov-coverage" id="ovCoverage" aria-label="분석 범위"></p>
       </div>
 
       <!-- 분석 전·옛 방식일 때만 보이는 안내 -->
@@ -865,24 +839,48 @@ body.no-analysis #ovBody { display: none; }
       </div>
 
       <div id="ovBody" class="rd"></div>
-      <details class="rd-overview-note" id="ovSummaryDetails">
-        <summary>전체 분석 요약</summary>
-        <p class="rd-summary" id="ovSummary"></p>
-      </details>
     </section>
 
     <!-- ================================================================ -->
     <!-- 2) REVIEWS                                                        -->
     <!-- ================================================================ -->
+    <section class="page" data-page="topics">
+      <div class="rd-page-header">
+        <div class="rd-page-copy">
+          <h1 class="title">주제별 보기</h1>
+          <p class="subtitle">주제마다 칭찬과 불만이 얼마나 나왔는지 봅니다</p>
+        </div>
+      </div>
+      <div id="tpBody" class="rd"></div>
+    </section>
+
+    <section class="page" data-page="character">
+      <div class="rd-page-header">
+        <div class="rd-page-copy">
+          <h1 class="title">칭찬 분석</h1>
+          <p class="subtitle">플레이어가 무엇을 칭찬하고 무엇을 즐겼는지 봅니다</p>
+        </div>
+      </div>
+      <div id="chBody" class="rd"></div>
+    </section>
+
     <section class="page" data-page="deep">
-      <h1 class="title">심층 분석</h1>
-      <p class="subtitle">불만을 더 잘게 나누고, 누가 떠났고, 무엇에 공감했고, 무엇을 원하는지</p>
+      <div class="rd-page-header">
+        <div class="rd-page-copy">
+          <h1 class="title">불만 분석</h1>
+          <p class="subtitle">불만에 어떤 말이 나오고, 유저가 무엇을 원하는지 봅니다</p>
+        </div>
+      </div>
       <div id="rpDeep" class="rp"></div>
     </section>
 
     <section class="page" data-page="reviews">
-      <h1 class="title">리뷰 원문</h1>
-      <p class="subtitle">AI가 분석한 리뷰를 반응·주제·평가로 걸러 봅니다</p>
+      <div class="rd-page-header">
+        <div class="rd-page-copy">
+          <h1 class="title">리뷰 원문</h1>
+          <p class="subtitle">AI가 분석한 리뷰를 반응·주제·평가로 걸러 봅니다</p>
+        </div>
+      </div>
       <div id="rpReviews" class="rp"></div>
     </section>
 
@@ -890,8 +888,12 @@ body.no-analysis #ovBody { display: none; }
     <!-- 3) SAMPLE DESIGN                                                  -->
     <!-- ================================================================ -->
     <section class="page" data-page="sample">
-      <h1 class="title">분석 설계</h1>
-      <p class="subtitle">리뷰를 어떻게 가공하도록 설계했는지, 단계마다 누가(사람 · AI · 규칙) 처리했는지 적습니다.</p>
+      <div class="rd-page-header">
+        <div class="rd-page-copy">
+          <h1 class="title">분석 방법</h1>
+          <p class="subtitle">리뷰를 어떻게 모으고 분석했는지, 단계마다 누가(사람 · AI · 규칙) 처리했는지 적습니다</p>
+        </div>
+      </div>
       <div id="rpSample" class="rp"></div>
     </section>
 
@@ -1041,9 +1043,37 @@ function navTo(btn) {
   document.querySelectorAll('section.page').forEach(function(s) { s.classList.toggle('active', s.dataset.page === p); });
   document.body.classList.toggle('page-overview', p === 'overview');
   const pageName = document.getElementById('currentPageName');
-  if (pageName) pageName.textContent = btn.textContent.trim().replace(/^\d{2}\s*/, '');
+  if (pageName) pageName.textContent = btn.textContent.trim();
+  // 숨겨져 있던 화면의 차트는 폭을 모른 채 그려졌으므로 다시 그린다
+  window.ReviewDashboard?.refresh?.();
   const wrap = document.querySelector('.main-wrap');
   if (wrap) wrap.scrollTo({ top: 0, behavior: 'smooth' });
+  enterPage();
+}
+
+// 화면에 들어올 때의 움직임: 카드가 떠오르고 막대가 자라고(CSS), 숫자 카드의 값이 0에서 올라간다.
+function enterPage() {
+  const page = document.querySelector('section.page.active');
+  if (!page) return;
+  page.classList.remove('is-entering');
+  void page.offsetWidth;
+  page.classList.add('is-entering');
+  clearTimeout(enterPage.timer);
+  enterPage.timer = setTimeout(function() { page.classList.remove('is-entering'); }, 1400);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  page.querySelectorAll('.rd-kpi-value b').forEach(function(el) {
+    const text = el.dataset.final || el.textContent, match = text.match(/^[\d,]+(\.\d+)?$/);
+    if (!match) return;
+    el.dataset.final = text;
+    const end = Number(text.replace(/,/g, '')), digits = match[1] ? match[1].length - 1 : 0, start = performance.now();
+    const step = function(now) {
+      const k = Math.min(1, (now - start) / 600), value = end * (1 - Math.pow(1 - k, 3));
+      el.textContent = k === 1 ? text : value.toLocaleString('ko-KR', {minimumFractionDigits: digits, maximumFractionDigits: digits});
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    setTimeout(function() { el.textContent = text; }, 900);   // 화면이 가려져 그리기가 멈춰도 끝값은 맞춘다
+  });
 }
 
 /* ============ Current Game Badge ============ */
@@ -1202,6 +1232,7 @@ function setNoAnalysisState(on, title, body, cta) {
   document.body.classList.toggle('no-analysis', !!on);
   if (!on) return;
   document.getElementById('rdPageActions')?.replaceChildren();
+  document.querySelector('.rd-thumb')?.remove();
   document.getElementById('ovSummary')?.replaceChildren();
   const titleEl = document.getElementById('execTitle');
   const bodyEl = document.getElementById('execSummary');
@@ -1240,6 +1271,7 @@ async function load(appId) {
   try { renderReviews(); } catch (error) { console.error('리뷰 목록 오류:', error); }
   try { renderSample(); } catch (error) { console.error('표본 화면 오류:', error); }
   try { ReviewPages.renderDeep(DATA); } catch (error) { console.error('심층 분석 오류:', error); }
+  enterPage();
 }
 
 /* ============ Overview ============ */

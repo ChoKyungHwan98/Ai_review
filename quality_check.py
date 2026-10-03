@@ -41,12 +41,25 @@ def get_pop_pos_rate():
 
 
 # ─── 가중치 (4축 100점) ────────────────────────────────────────────────
+# 대표성은 점수에 넣지 않는다. 수집할 때 Steam 전체의 추천·비추천 비율에 맞춰 건수를 나누므로
+# 그 비율이 맞는지 다시 재면 언제나 만점에 가깝게 나온다. 수치는 참고용으로만 남긴다.
 WEIGHTS = {
-    "completeness": 0.30,
-    "consistency": 0.25,
-    "representativeness": 0.20,
-    "accuracy": 0.25,
+    "completeness": 0.375,
+    "consistency": 0.3125,
+    "representativeness": 0.0,
+    "accuracy": 0.3125,
 }
+
+
+def rescore(report):
+    """저장된 보고서의 종합 점수를 지금 가중치로 다시 계산한다(예전 가중치로 저장된 프로젝트용)."""
+    dims = (report or {}).get("dimensions")
+    if not dims:
+        return report
+    overall = sum((dims.get(key) or {}).get("score", 0) * weight for key, weight in WEIGHTS.items())
+    grade, grade_kr = (("PASS", "통과") if overall >= PASS_THRESHOLD
+                       else ("WARN", "주의") if overall >= WARN_THRESHOLD else ("FAIL", "실패"))
+    return {**report, "overall_score": round(overall, 1), "grade": grade, "grade_kr": grade_kr, "weights": WEIGHTS}
 
 # ─── 임계값 ────────────────────────────────────────────────────────────
 PASS_THRESHOLD = 80
